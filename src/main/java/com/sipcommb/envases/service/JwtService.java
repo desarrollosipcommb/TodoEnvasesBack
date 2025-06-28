@@ -1,17 +1,22 @@
 package com.sipcommb.envases.service;
 
+import com.sipcommb.envases.entity.Role;
 import com.sipcommb.envases.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class JwtService {
@@ -23,6 +28,9 @@ public class JwtService {
     // JWT expiration time (24 hours)
     @Value("${jwt.expiration:86400000}")
     private Long jwtExpirationMs;
+
+    @Autowired
+    private RoleService roleService;
 
     /**
      * Generate JWT token for user
@@ -109,5 +117,12 @@ public class JwtService {
             .build()
             .parseClaimsJws(token)
             .getBody();
+    }
+
+    public Set<String> getAuthoritiesFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+
+        Set<String> roles = roleService.getPermissionsByRole(claims.get("role").toString());
+        return roles != null ? roles : java.util.Collections.emptySet();
     }
 }

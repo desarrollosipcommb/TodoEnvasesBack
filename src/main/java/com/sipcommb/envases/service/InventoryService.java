@@ -31,10 +31,7 @@ public class InventoryService {
     @Autowired
     private SaleItemRepository saleItemRepository;
     
-    // Jar inventory management
-    public List<Jar> getAllJars() {
-        return jarRepository.findAll();
-    }
+   
     
 
 }

@@ -12,30 +12,46 @@ public class SaleItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sale_id", nullable = false)
     private Sale sale;
-    
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "item_type", nullable = false)
+    private ItemType itemType;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "jar_id")
     private Jar jar;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cap_id")
     private Cap cap;
-    
+
     @Min(1)
     @Column(nullable = false)
     private Integer quantity;
-    
+
     @DecimalMin("0.0")
     @Column(name = "unit_price", precision = 10, scale = 2, nullable = false)
     private BigDecimal unitPrice;
-    
+
     @DecimalMin("0.0")
-    @Column(name = "total_price", precision = 10, scale = 2, nullable = false)
-    private BigDecimal totalPrice;
+    @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
+    private BigDecimal subtotal;
+
+    public enum ItemType {
+        JAR, CAP, COMBO
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void calculateSubtotal() {
+        if (unitPrice != null && quantity != null) {
+            this.subtotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
+        }
+    }
     
     // Constructors
     public SaleItem() {}
@@ -45,7 +61,7 @@ public class SaleItem {
         this.jar = jar;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
-        this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
+        
     }
     
     public SaleItem(Sale sale, Cap cap, Integer quantity, BigDecimal unitPrice) {
@@ -53,16 +69,10 @@ public class SaleItem {
         this.cap = cap;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
-        this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
+       
     }
     
-    @PrePersist
-    @PreUpdate
-    private void calculateTotalPrice() {
-        if (unitPrice != null && quantity != null) {
-            this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
-        }
-    }
+    
     
     // Getters and Setters
     public Long getId() { return id; }
@@ -76,21 +86,6 @@ public class SaleItem {
     
     public Cap getCap() { return cap; }
     public void setCap(Cap cap) { this.cap = cap; }
-    
-    public Integer getQuantity() { return quantity; }
-    public void setQuantity(Integer quantity) { 
-        this.quantity = quantity;
-        calculateTotalPrice();
-    }
-    
-    public BigDecimal getUnitPrice() { return unitPrice; }
-    public void setUnitPrice(BigDecimal unitPrice) { 
-        this.unitPrice = unitPrice;
-        calculateTotalPrice();
-    }
-    
-    public BigDecimal getTotalPrice() { return totalPrice; }
-    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
     
     // Helper methods
     public String getItemType() {

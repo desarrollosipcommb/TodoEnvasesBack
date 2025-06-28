@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -35,6 +36,18 @@ public class RoleService {
      */
     public Optional<Role> getRoleByName(String name) {
         return roleRepository.findByName(name);
+    }
+
+    /**
+     * Get permissions 
+     */
+    public Set<String> getPermissionsByRole(String roleName) {
+        Optional<Role> roleOptional = roleRepository.findByName(roleName);
+        if (roleOptional.isEmpty()) {
+            throw new RuntimeException("No se encontro el rol: " + roleName);
+        }
+        Role role = roleOptional.get();
+        return role.getPermissions(); // Assuming Role has a method to get permissions
     }
 
     /**

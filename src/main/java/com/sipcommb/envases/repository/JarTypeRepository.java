@@ -10,12 +10,5 @@ import java.util.Optional;
 @Repository
 public interface JarTypeRepository extends JpaRepository<JarType, Long> {
     
-    // Find jar type by name
-    Optional<JarType> findByName(String name);
-    
-    // Check if jar type name already exists
-    boolean existsByName(String name);
-    
-    // Find all jar types ordered by name
-    List<JarType> findAllByOrderByNameAsc();
+  
 }

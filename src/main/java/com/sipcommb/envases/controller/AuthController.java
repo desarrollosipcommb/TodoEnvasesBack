@@ -2,7 +2,13 @@ package com.sipcommb.envases.controller;
 
 import com.sipcommb.envases.dto.LoginRequest;
 import com.sipcommb.envases.dto.LoginResponse;
+import com.sipcommb.envases.entity.User;
+import com.sipcommb.envases.service.UserService;
+
 import javax.validation.Valid;
+
+import org.apache.commons.logging.Log;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,11 +17,14 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 @CrossOrigin(origins = "*")
 public class AuthController {
+
+    @Autowired
+    private UserService userService;
     
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-        // TODO: Implement authentication logic
-        LoginResponse response = new LoginResponse("dummy-token", loginRequest.getUsername(), "admin", new String[]{"read", "write"});
+        LoginResponse response = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
+        //TODO handle exceptions properly
         return ResponseEntity.ok(response);
     }
     

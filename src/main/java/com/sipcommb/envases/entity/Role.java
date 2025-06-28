@@ -22,8 +22,10 @@ public class Role {
     @Column(columnDefinition = "TEXT")
     private String description;
     
-    @Column(columnDefinition = "JSON")
-    private String permissions;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id"))
+    @Column(name = "permission")
+    private Set<String> permissions; // Store permissions as a set of strings
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -37,7 +39,7 @@ public class Role {
     // Constructors
     public Role() {}
     
-    public Role(String name, String description, String permissions) {
+    public Role(String name, String description, Set<String> permissions) {
         this.name = name;
         this.description = description;
         this.permissions = permissions;
@@ -64,8 +66,8 @@ public class Role {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
     
-    public String getPermissions() { return permissions; }
-    public void setPermissions(String permissions) { this.permissions = permissions; }
+    public Set<String> getPermissions() { return permissions; }
+    public void setPermissions(Set<String> permissions) { this.permissions = permissions; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
