@@ -22,9 +22,8 @@ public class Role {
     @Column(columnDefinition = "TEXT")
     private String description;
     
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id"))
-    @Column(name = "permission")
+    @Convert(converter = com.sipcommb.envases.converter.StringSetToJsonConverter.class)
+    @Column(name = "permissions", columnDefinition = "json")
     private Set<String> permissions; // Store permissions as a set of strings
     
     @Column(name = "created_at")

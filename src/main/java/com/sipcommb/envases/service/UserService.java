@@ -185,7 +185,7 @@ public class UserService {
      *  Login user with username and password
      */
     public LoginResponse login(String username, String password) {
-        if(userFound(username)) {
+        if(!userFound(username)) {
             throw new BadCredentialsException("El usuario no existe");
         }
         Optional<User> userOptional = userRepository.findByUsername(username);
@@ -206,7 +206,7 @@ public class UserService {
     /**
      * Register new user
      */
-    public UserDTO register(String username, String email, String password, String firstName, String lastName, String roleName) {
+    public UserDTO register(String username, String email, String password, String firstName, String lastName, String phoneNumber, String roleName) {
         // Check if username already exists
         if (userFound(username)) {
             throw new RuntimeException("Ya existe el usuario");  
@@ -228,9 +228,11 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(password));
         user.setFirstName(firstName);
         user.setLastName(lastName);
+        user.setPhoneNumber(phoneNumber);
         user.setRole(roleOptional.get());
         user.setIsActive(true);
-
+        // Save user
+        user = userRepository.save(user);
         return new UserDTO(user);
     }
        

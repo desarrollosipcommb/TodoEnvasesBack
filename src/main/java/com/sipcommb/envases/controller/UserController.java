@@ -5,6 +5,7 @@ import com.sipcommb.envases.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/users")
@@ -18,18 +19,19 @@ public class UserController {
      * Register the first user
      */
     @PostMapping("/register")
-    public ResponseEntity<UserDTO> registerUser(
+    public ResponseEntity<?> registerUser(
             @RequestParam String username,
             @RequestParam String email,
             @RequestParam String password,
             @RequestParam String firstName,
             @RequestParam String lastName,
+            @RequestParam String phoneNumber,
             @RequestParam String roleName) {
         try {
-            UserDTO userDTO = userService.register(username, email, password, firstName, lastName, roleName);
+            UserDTO userDTO = userService.register(username, email, password, firstName, lastName, phoneNumber, roleName);
             return ResponseEntity.ok(userDTO);
         } catch (RuntimeException ex) {
-            return ResponseEntity.badRequest().body(null); // Handle errors gracefully
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", ex.getMessage())); // Handle errors gracefully
         }
     }
 }

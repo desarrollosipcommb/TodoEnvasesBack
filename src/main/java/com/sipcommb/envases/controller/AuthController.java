@@ -2,8 +2,9 @@ package com.sipcommb.envases.controller;
 
 import com.sipcommb.envases.dto.LoginRequest;
 import com.sipcommb.envases.dto.LoginResponse;
-import com.sipcommb.envases.entity.User;
 import com.sipcommb.envases.service.UserService;
+
+import java.util.Collections;
 
 import javax.validation.Valid;
 
@@ -22,10 +23,16 @@ public class AuthController {
     private UserService userService;
     
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-        LoginResponse response = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
-        //TODO handle exceptions properly
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        try{
+            LoginResponse response = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
+       
+            return ResponseEntity.ok(response);
+
+        }catch (Exception e) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage())); // Handle errors gracefully
+        }
+        
     }
     
     @PostMapping("/logout")
