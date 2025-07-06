@@ -1,6 +1,7 @@
 package com.sipcommb.envases.controller;
 
 import com.sipcommb.envases.dto.UserDTO;
+import com.sipcommb.envases.dto.UserRequestDTO;
 import com.sipcommb.envases.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,15 +21,17 @@ public class UserController {
      */
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(
-            @RequestParam String username,
-            @RequestParam String email,
-            @RequestParam String password,
-            @RequestParam String firstName,
-            @RequestParam String lastName,
-            @RequestParam String phoneNumber,
-            @RequestParam String roleName) {
+            @RequestBody UserRequestDTO userRequestDTO) {
         try {
-            UserDTO userDTO = userService.register(username, email, password, firstName, lastName, phoneNumber, roleName);
+            UserDTO userDTO = userService.register(
+                    userRequestDTO.getUsername(),
+                    userRequestDTO.getEmail(),
+                    userRequestDTO.getPassword(),
+                    userRequestDTO.getFirstName(),
+                    userRequestDTO.getLastName(),
+                    userRequestDTO.getPhoneNumber(),
+                    userRequestDTO.getRoleName()
+            );
             return ResponseEntity.ok(userDTO);
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", ex.getMessage())); // Handle errors gracefully
