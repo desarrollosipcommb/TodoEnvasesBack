@@ -137,7 +137,7 @@ CREATE TABLE sale_items (
 CREATE TABLE transactions (
     id INT PRIMARY KEY AUTO_INCREMENT,
     item_type ENUM('jar', 'cap') NOT NULL,
-    item_id INT NOT NULL,
+    item_id INT NOT NULL, -- TODO revisar posible cambio a varchar para ubicar más facil el item afectado
     quantity_change INT NOT NULL, -- Positive for additions, negative for subtractions
     transaction_type ENUM('sale', 'restock', 'adjustment', 'damage', 'return') NOT NULL,
     reference_id INT NULL, -- Links to sale_id, purchase_order_id, etc.

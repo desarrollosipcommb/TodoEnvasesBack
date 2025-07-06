@@ -13,6 +13,8 @@ import java.util.Optional;
 
 @Repository
 public interface CapRepository extends JpaRepository<Cap, Long> {
+
+    boolean existsByName(String name);
     
 
 }

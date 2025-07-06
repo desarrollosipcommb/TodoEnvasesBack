@@ -1,6 +1,5 @@
 package com.sipcommb.envases.service;
 
-import com.sipcommb.envases.entity.Role;
 import com.sipcommb.envases.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 

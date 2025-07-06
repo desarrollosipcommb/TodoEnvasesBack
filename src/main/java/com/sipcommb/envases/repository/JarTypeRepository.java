@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface JarTypeRepository extends JpaRepository<JarType, Long> {
-    
-  
+
+    Optional<JarType> getTypeByName(String name);
+
 }
