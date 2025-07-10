@@ -75,7 +75,7 @@ public class UserService {
 
         // Find role
         Optional<Role> roleOptional = roleRepository.findByName(roleName);
-        if (roleOptional.isEmpty()) {
+        if (!roleOptional.isPresent()) {
             throw new RuntimeException("Role not found: " + roleName);
         }
 
@@ -97,7 +97,7 @@ public class UserService {
      */
     public User updateUser(Long userId, String firstName, String lastName, String email) {
         Optional<User> userOptional = userRepository.findById(userId);
-        if (userOptional.isEmpty()) {
+        if (!userOptional.isPresent()) {
             throw new RuntimeException("User not found");
         }
 
@@ -120,7 +120,7 @@ public class UserService {
      */
     public void changePassword(Long userId, String oldPassword, String newPassword) {
         Optional<User> userOptional = userRepository.findById(userId);
-        if (userOptional.isEmpty()) {
+        if (!userOptional.isPresent()) {
             throw new RuntimeException("User not found");
         }
 
@@ -141,7 +141,7 @@ public class UserService {
      */
     public void deactivateUser(Long userId) {
         Optional<User> userOptional = userRepository.findById(userId);
-        if (userOptional.isEmpty()) {
+        if (!userOptional.isPresent()) {
             throw new RuntimeException("User not found");
         }
 
@@ -155,7 +155,7 @@ public class UserService {
      */
     public void activateUser(Long userId) {
         Optional<User> userOptional = userRepository.findById(userId);
-        if (userOptional.isEmpty()) {
+        if (!userOptional.isPresent()) {
             throw new RuntimeException("User not found");
         }
 
@@ -218,7 +218,7 @@ public class UserService {
 
         // Find role
         Optional<Role> roleOptional = roleRepository.findByName(roleName);
-        if (roleOptional.isEmpty()) {
+        if (!roleOptional.isPresent()) {
             throw new RuntimeException("Role not found: " + roleName);
         }
         // Create user

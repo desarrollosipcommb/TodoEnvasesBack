@@ -12,12 +12,14 @@ USE envases_inventory;
 -- 1. JAR TYPES TABLE
 -- ============================================
 CREATE TABLE jar_types (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    diameter VARCHAR(50) PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE,
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+ALTER TABLE jar_types CHANGE id diameter VARCHAR(50) NOT NULL;
 
 -- ============================================
 -- 2. ROLES TABLE
@@ -57,16 +59,28 @@ CREATE TABLE jars (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     description TEXT,
-    jar_type_id INT NOT NULL,
-    quantity INT NOT NULL DEFAULT 0,
+    cap_diameter VARCHAR(50),
+    quantity INT NOT NULL DEFAULT 0, -- Stock quantity
     unit_price DECIMAL(10, 2) DEFAULT 0.00,
+    docena_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a dozen jars
+    cien_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a hundred jars
+    paca_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a pack of jars
+    units_in_paca INT DEFAULT 0, -- Number of jars in a pack
+    volume DECIMAL(10, 2) DEFAULT 0.00, -- Volume in liters or milliliters
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (jar_type_id) REFERENCES jar_types(id) ON DELETE RESTRICT,
-    CHECK (quantity >= 0)
+    FOREIGN KEY (cap_diameter) REFERENCES jar_types(diameter) ON DELETE RESTRICT
 );
 
+ALTER TABLE jars ADD COLUMN docena_price DECIMAL(10, 2) DEFAULT 0.00; -- Price for a dozen jars
+ALTER TABLE jars ADD COLUMN cien_price DECIMAL(10, 2) DEFAULT 0.00; -- Price for a hundred jars
+ALTER TABLE jars ADD COLUMN paca_price DECIMAL(10, 2) DEFAULT 0.00; -- Price for a pack of jars
+ALTER TABLE jars ADD COLUMN units_in_paca INT DEFAULT 0; -- Number of jars in a pack   
+ALTER TABLE jars ADD COLUMN volume DECIMAL(10, 2) DEFAULT 0.00; -- Volume in liters or milliliters
+ALTER TABLE jars CHANGE diameter diameter VARCHAR(50); -- Change jar_type_id to diameter
+
+ALTER TABLE jars ADD CONSTRAINT fk_jars_cap_diameter FOREIGN KEY (cap_diameter) REFERENCES jar_types(diameter) ON DELETE RESTRICT;
 -- ============================================
 -- 5. CAPS TABLE
 -- ============================================
@@ -74,16 +88,28 @@ CREATE TABLE caps (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     description TEXT,
-    jar_type_id INT NOT NULL, -- Must match jar type for compatibility
+    diameter VARCHAR(50) NOT NULL, -- Must match jar type for compatibility
     color VARCHAR(50),
-    quantity INT NOT NULL DEFAULT 0,
+    quantity INT NOT NULL DEFAULT 0,-- Stock quantity
     unit_price DECIMAL(10, 2) DEFAULT 0.00,
+    docena_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a dozen jars
+    cien_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a hundred jars
+    paca_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a pack of jars
+    units_in_paca INT DEFAULT 0, -- Number of caps in a pack
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (jar_type_id) REFERENCES jar_types(id) ON DELETE RESTRICT,
-    CHECK (quantity >= 0)
+    FOREIGN KEY (diameter) REFERENCES jar_types(diameter) ON DELETE RESTRICT
 );
+
+ALTER TABLE caps ADD COLUMN docena_price DECIMAL(10, 2) DEFAULT 0.00; -- Price for a dozen caps
+ALTER TABLE caps ADD COLUMN cien_price DECIMAL(10, 2) DEFAULT 0.00; -- Price for a hundred caps
+ALTER TABLE caps ADD COLUMN paca_price DECIMAL(10, 2) DEFAULT 0.00; -- Price for a pack of caps
+ALTER TABLE caps ADD COLUMN units_in_paca INT DEFAULT 0; -- Number of caps in a pack
+
+ALTER TABLE caps CHANGE jar_type_id diameter VARCHAR(50) NOT NULL; -- Change jar_type_id to diameter
+
+ALTER TABLE caps ADD CONSTRAINT fk_caps_diameter FOREIGN KEY (diameter) REFERENCES jar_types(diameter) ON DELETE RESTRICT;
 
 -- ============================================
 -- 6. SALES TABLE
@@ -113,7 +139,8 @@ CREATE TABLE sale_items (
     item_type ENUM('jar', 'cap', 'combo') NOT NULL,
     jar_id INT NULL, -- If selling jar or combo
     cap_id INT NULL, -- If selling cap or combo
-    quantity INT NOT NULL,
+    quantity_jar INT NOT NULL,
+    quantity_cap INT NOT NULL,
     unit_price DECIMAL(10, 2) NOT NULL,
     subtotal DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -151,24 +178,56 @@ CREATE TABLE transactions (
 );
 
 -- ============================================
+-- 9. COMBOS TABLE (table for jar and cap sale combinations)
+-- ============================================
+
+CREATE TABLE combos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    jar_ids JSON NOT NULL, -- Array of jar IDs in the combo
+    cap_ids JSON NOT NULL, -- Array of cap IDs in the combo
+    quantity INT NOT NULL DEFAULT 0, -- Stock quantity
+    unit_price DECIMAL(10, 2) DEFAULT 0.00,
+    docena_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a dozen combos
+    cien_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a hundred combos
+    paca_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a pack of combos
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- 10. IS compatible (table for jar and cap sale combinations)
+-- ============================================
+CREATE TABLE jar_cap_compatibility (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    jar_id INT NOT NULL,
+    cap_id INT NOT NULL,
+    is_compatible BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (jar_id) REFERENCES jars(id) ON DELETE CASCADE,
+    FOREIGN KEY (cap_id) REFERENCES caps(id) ON DELETE CASCADE,
+    UNIQUE (jar_id, cap_id) -- Ensure no duplicate compatibility entries
+);
+
+-- ============================================
 -- INSERT DEFAULT DATA
 -- ============================================
 
 -- Insert default jar types
-INSERT INTO jar_types (name, description) VALUES
-('Circular', 'Round-shaped jars'),
-('Square', 'Square-shaped jars'),
-('Rectangular', 'Rectangular-shaped jars');
+INSERT INTO jar_types (diameter,name, description) VALUES
+(28,'diámetro de 28mm', 'Round-shaped jars'),
+(30, 'diámetro de 30mm', 'Square-shaped jars'),
+(32, 'diámetro de 32mm', 'Rectangular-shaped jars');
 
 -- Insert default roles
 INSERT INTO roles (name, description, permissions) VALUES
-('admin', 'Administrator with full access', '["create", "read", "update", "delete", "manage_users", "view_reports"]'),
-('seller', 'Sales person with limited access', '["read_inventory", "create_sales", "view_own_sales"]');
+('admin', 'Administrator with full access', '["create", "read", "update", "delete", "manage_users"]'),
+('seller', 'Sales person with limited access', '["read"]');
 
 -- Insert default admin user (password: admin123 - should be hashed in production)
-INSERT INTO users (username, email, password_hash, first_name, last_name, phone_number, role_id) VALUES
-('admin', 'admin@envases.com', '$2b$10$example_hash_here', 'Admin', 'User', '1234567890', 1);
-
 
 -- ============================================
 -- INDEXES FOR PERFORMANCE
@@ -176,108 +235,11 @@ INSERT INTO users (username, email, password_hash, first_name, last_name, phone_
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_role ON users(role_id);
-CREATE INDEX idx_jars_type ON jars(jar_type_id);
-CREATE INDEX idx_caps_type ON caps(jar_type_id);
+CREATE INDEX idx_jars_type ON jars(jar_diameter);
+CREATE INDEX idx_caps_type ON caps(cap_diameter);
 CREATE INDEX idx_sales_user ON sales(user_id);
 CREATE INDEX idx_sales_date ON sales(sale_date);
 CREATE INDEX idx_sale_items_sale ON sale_items(sale_id);
 CREATE INDEX idx_transactions_item ON transactions(item_type, item_id);
 CREATE INDEX idx_transactions_date ON transactions(transaction_date);
 
--- ============================================
--- TRIGGERS FOR INVENTORY TRACKING
--- ============================================
-
--- Trigger to log transactions when jar quantity changes
-DELIMITER //
-CREATE TRIGGER jar_quantity_change_log
-AFTER UPDATE ON jars
-FOR EACH ROW
-BEGIN
-    IF OLD.quantity != NEW.quantity THEN
-        INSERT INTO transactions (
-            item_type, 
-            item_id, 
-            quantity_change, 
-            transaction_type, 
-            notes,
-            transaction_date
-        ) VALUES (
-            'jar', 
-            NEW.id, 
-            NEW.quantity - OLD.quantity, 
-            'adjustment', 
-            CONCAT('Direct quantity change from ', OLD.quantity, ' to ', NEW.quantity),
-            NOW()
-        );
-    END IF;
-END//
-DELIMITER ;
-
--- Trigger to log transactions when cap quantity changes
-DELIMITER //
-CREATE TRIGGER cap_quantity_change_log
-AFTER UPDATE ON caps
-FOR EACH ROW
-BEGIN
-    IF OLD.quantity != NEW.quantity THEN
-        INSERT INTO transactions (
-            item_type, 
-            item_id, 
-            quantity_change, 
-            transaction_type, 
-            notes,
-            transaction_date
-        ) VALUES (
-            'cap', 
-            NEW.id, 
-            NEW.quantity - OLD.quantity, 
-            'adjustment', 
-            CONCAT('Direct quantity change from ', OLD.quantity, ' to ', NEW.quantity),
-            NOW()
-        );
-    END IF;
-END//
-DELIMITER ;
-
--- ============================================
--- SAMPLE QUERIES FOR TESTING
--- ============================================
-
-/*
--- Get current inventory
-SELECT * FROM inventory_status;
-
--- Get low stock items
-SELECT * FROM inventory_status WHERE stock_status IN ('Low Stock', 'Out of Stock');
-
--- Get compatible jars and caps
-SELECT 
-    j.name as jar_name,
-    c.name as cap_name,
-    jt.name as type_name,
-    j.quantity as jar_stock,
-    c.quantity as cap_stock
-FROM jars j
-JOIN caps c ON j.jar_type_id = c.jar_type_id
-JOIN jar_types jt ON j.jar_type_id = jt.id
-WHERE j.is_active = TRUE AND c.is_active = TRUE;
-
--- Get sales by user
-SELECT 
-    u.username,
-    COUNT(s.id) as total_sales,
-    SUM(s.total_amount) as total_revenue
-FROM users u
-LEFT JOIN sales s ON u.id = s.user_id
-GROUP BY u.id, u.username;
-
--- Get transaction history for an item
-SELECT 
-    t.*,
-    CONCAT(u.first_name, ' ', u.last_name) as performed_by_name
-FROM transactions t
-LEFT JOIN users u ON t.performed_by = u.id
-WHERE t.item_type = 'jar' AND t.item_id = 1
-ORDER BY t.transaction_date DESC;
-*/

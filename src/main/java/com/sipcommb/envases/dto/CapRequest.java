@@ -1,14 +1,77 @@
 package com.sipcommb.envases.dto;
 
+import javax.validation.constraints.NotBlank;
+
 public class CapRequest {
 
+
+    @NotBlank(message = "El nombre es obligatorio")
     private String name;
+
     private String description;
-    private String typeName;
+
+    @NotBlank(message = "El color es obligatorio")
     private String color;
+
+    @NotBlank(message = "El diámetro es obligatorio")
+    private String diameter;
+
+    @NotBlank(message = "La cantidad es obligatoria")
     private int quantity;
+
+    @NotBlank(message = "El precio unitario es obligatorio")
     private double unitPrice;
+
+    private double docenaPrice;
+
+    private double cienPrice;
+
+    private double pacaPrice;
+
+
+    private int unitsInPaca;
+
     // Getters and Setters
+
+    public String getDiameter() {
+        return diameter;
+    }
+
+    public void setDiameter(String diameter) {
+        this.diameter = diameter;
+    }
+
+    public double getDocenaPrice() {
+        return docenaPrice;
+    }
+
+    public void setDocenaPrice(double docenaPrice) {
+        this.docenaPrice = docenaPrice;
+    }
+
+    public double getCienPrice() {
+        return cienPrice;
+    }
+
+    public void setCienPrice(double cienPrice) {
+        this.cienPrice = cienPrice;
+    }
+
+    public double getPacaPrice() {
+        return pacaPrice;
+    }
+
+    public void setPacaPrice(double pacaPrice) {
+        this.pacaPrice = pacaPrice;
+    }
+
+    public int getUnitsInPaca() {
+        return unitsInPaca;
+    }
+
+    public void setUnitsInPaca(int unitsInPaca) {
+        this.unitsInPaca = unitsInPaca;
+    }
 
     public String getName() {
         return name;
@@ -23,14 +86,6 @@ public class CapRequest {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public String getTypeName() {
-        return typeName;
-    }
-
-    public void setTypeName(String typeName) {
-        this.typeName = typeName;
     }
 
     public String getColor() {

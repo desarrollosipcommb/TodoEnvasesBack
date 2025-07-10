@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "caps")
 public class Cap {
+
+
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,7 +34,22 @@ public class Cap {
     @DecimalMin("0.0")
     @Column(name = "unit_price", precision = 10, scale = 2)
     private BigDecimal unitPrice = BigDecimal.ZERO;
-    
+
+    @DecimalMin("0.0")
+    @Column(name = "docena_price", precision = 10, scale = 2)
+    private BigDecimal docenaPrice = BigDecimal.ZERO;
+
+    @DecimalMin("0.0")
+    @Column(name = "cien_price", precision = 10, scale = 2)
+    private BigDecimal cienPrice = BigDecimal.ZERO;
+
+    @DecimalMin("0.0")
+    @Column(name = "paca_price", precision = 10, scale = 2)
+    private BigDecimal pacaPrice = BigDecimal.ZERO;
+
+    @Column(name = "units_in_paca")
+    private Integer unitsInPaca = 0;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
     
@@ -43,7 +60,7 @@ public class Cap {
     private LocalDateTime updatedAt;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "jar_type_id", nullable = false)
+    @JoinColumn(name = "diameter", nullable = true)
     private JarType jarType;
     
     // Constructors
@@ -68,8 +85,22 @@ public class Cap {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
     
     // Getters and Setters
+
+    public BigDecimal getDocenaPrice() { return docenaPrice; }
+    public void setDocenaPrice(BigDecimal docenaPrice) { this.docenaPrice = docenaPrice; }
+
+    public BigDecimal getCienPrice() { return cienPrice; }
+    public void setCienPrice(BigDecimal cienPrice) { this.cienPrice = cienPrice; }
+
+    public BigDecimal getPacaPrice() { return pacaPrice; }
+    public void setPacaPrice(BigDecimal pacaPrice) { this.pacaPrice = pacaPrice; }
+
+    public Integer getUnitsInPaca() { return unitsInPaca; }
+    public void setUnitsInPaca(Integer unitsInPaca) { this.unitsInPaca = unitsInPaca; }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     

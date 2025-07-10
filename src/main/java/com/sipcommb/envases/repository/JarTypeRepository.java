@@ -12,4 +12,8 @@ public interface JarTypeRepository extends JpaRepository<JarType, Long> {
 
     Optional<JarType> getTypeByName(String name);
 
+    Optional<JarType> getTypeByDiameter(String diameter);
+
+
+
 }

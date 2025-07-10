@@ -43,7 +43,7 @@ public class RoleService {
      */
     public Set<String> getPermissionsByRole(String roleName) {
         Optional<Role> roleOptional = roleRepository.findByName(roleName);
-        if (roleOptional.isEmpty()) {
+        if (!roleOptional.isPresent()) {
             throw new RuntimeException("No se encontro el rol: " + roleName);
         }
         Role role = roleOptional.get();
@@ -71,7 +71,7 @@ public class RoleService {
      */
     public Role updateRole(Long roleId, String name, String description) {
         Optional<Role> roleOptional = roleRepository.findById(roleId);
-        if (roleOptional.isEmpty()) {
+        if (!roleOptional.isPresent()) {
             throw new RuntimeException("Role not found");
         }
 
@@ -93,7 +93,7 @@ public class RoleService {
      */
     public void deleteRole(Long roleId) {
         Optional<Role> roleOptional = roleRepository.findById(roleId);
-        if (roleOptional.isEmpty()) {
+        if (!roleOptional.isPresent()) {
             throw new RuntimeException("Role not found");
         }
 
