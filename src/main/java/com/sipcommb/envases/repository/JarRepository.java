@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface JarRepository extends JpaRepository<Jar, Long> {
 
-    Optional<String> getByName(String name);
+    Optional<Jar> getByName(String name);
 
     @Query("SELECT j FROM Jar j WHERE j.name LIKE %:name%")
     Optional<List<Jar>> getFromNameLike(String name);
@@ -20,4 +20,9 @@ public interface JarRepository extends JpaRepository<Jar, Long> {
     @Query("SELECT j FROM Jar j WHERE j.jarType.diameter = :diameter")
     Optional<List<Jar>> getFromDiameter(@Param("diameter") String diameter);
 
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 1")
+    Optional<List<Jar>> getAllActiveJars();
+
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 0")
+    Optional<List<Jar>> getAllInactiveJars();
 }

@@ -166,7 +166,7 @@ CREATE TABLE transactions (
     item_type ENUM('jar', 'cap') NOT NULL,
     item_id INT NOT NULL, -- TODO revisar posible cambio a varchar para ubicar más facil el item afectado
     quantity_change INT NOT NULL, -- Positive for additions, negative for subtractions
-    transaction_type ENUM('sale', 'restock', 'adjustment', 'damage', 'return') NOT NULL,
+    transaction_type ENUM('sale', 'restock', 'adjustment', 'damage', 'return') NOT NULL, -- TODO revisar si cambiar los enums
     reference_id INT NULL, -- Links to sale_id, purchase_order_id, etc.
     reference_type VARCHAR(50), -- 'sale', 'purchase_order', 'manual_adjustment', etc.
     notes TEXT,

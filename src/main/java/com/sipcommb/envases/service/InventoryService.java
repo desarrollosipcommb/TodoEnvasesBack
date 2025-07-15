@@ -1,13 +1,9 @@
 package com.sipcommb.envases.service;
 
-import com.sipcommb.envases.repository.JarRepository;
 import com.sipcommb.envases.entity.ItemType;
 import com.sipcommb.envases.entity.Transaction;
 import com.sipcommb.envases.entity.TransactionType;
-import com.sipcommb.envases.repository.CapRepository;
 import com.sipcommb.envases.repository.InventoryRepository;
-import com.sipcommb.envases.repository.JarTypeRepository;
-import com.sipcommb.envases.repository.SaleItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

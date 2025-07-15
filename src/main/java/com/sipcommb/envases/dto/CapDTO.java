@@ -18,6 +18,7 @@ public class CapDTO {
     private double cienPrice;
     private double pacaPrice;
     private int unitsInPaca;
+    private boolean isActive;
 
 
 
@@ -36,6 +37,7 @@ public class CapDTO {
         this.cienPrice = cap.getCienPrice().doubleValue();
         this.pacaPrice = cap.getPacaPrice().doubleValue();
         this.unitsInPaca = cap.getUnitsInPaca();
+        this.isActive = cap.getIsActive();
 
 
     }
@@ -116,6 +118,14 @@ public class CapDTO {
 
     public void setUnitsInPaca(int unitsInPaca) {
         this.unitsInPaca = unitsInPaca;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean isActive) {
+        this.isActive = isActive;
     }
 
     

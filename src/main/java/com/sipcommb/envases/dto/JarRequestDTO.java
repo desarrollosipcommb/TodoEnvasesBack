@@ -9,13 +9,10 @@ public class JarRequestDTO {
 
     private String description;
 
-    @NotBlank(message = "El diámetro es obligatorio")
     private String diameter;
 
-    @NotBlank(message = "La cantidad es obligatoria")
-    private int quantity;
+    private Integer quantity;
 
-    @NotBlank(message = "El precio unitario es obligatorio")
     private Double unitPrice;
 
     private Double docenaPrice;
@@ -24,7 +21,7 @@ public class JarRequestDTO {
 
     private Double pacaPrice;
 
-    private int unitsInPaca;
+    private Integer unitsInPaca;
 
     private String[] compatibleCaps;
 
@@ -58,11 +55,11 @@ public class JarRequestDTO {
         this.diameter = diameter;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
@@ -98,11 +95,11 @@ public class JarRequestDTO {
         this.pacaPrice = pacaPrice;
     }
 
-    public int getUnitsInPaca() {
+    public Integer getUnitsInPaca() {
         return unitsInPaca;
     }
 
-    public void setUnitsInPaca(int unitsInPaca) {
+    public void setUnitsInPaca(Integer unitsInPaca) {
         this.unitsInPaca = unitsInPaca;
     }
 

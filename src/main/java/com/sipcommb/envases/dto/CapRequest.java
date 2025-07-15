@@ -2,6 +2,9 @@ package com.sipcommb.envases.dto;
 
 import javax.validation.constraints.NotBlank;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
+
 public class CapRequest {
 
 
@@ -16,20 +19,18 @@ public class CapRequest {
     @NotBlank(message = "El diámetro es obligatorio")
     private String diameter;
 
-    @NotBlank(message = "La cantidad es obligatoria")
-    private int quantity;
+    @JsonSetter(nulls = Nulls.SKIP)
+    private Integer quantity = 0;
 
-    @NotBlank(message = "El precio unitario es obligatorio")
-    private double unitPrice;
+    private Double unitPrice;
 
-    private double docenaPrice;
+    private Double docenaPrice;
 
-    private double cienPrice;
+    private Double cienPrice;
 
-    private double pacaPrice;
+    private Double pacaPrice;
 
-
-    private int unitsInPaca;
+    private Integer unitsInPaca;
 
     // Getters and Setters
 
@@ -41,35 +42,35 @@ public class CapRequest {
         this.diameter = diameter;
     }
 
-    public double getDocenaPrice() {
+    public Double getDocenaPrice() {
         return docenaPrice;
     }
 
-    public void setDocenaPrice(double docenaPrice) {
+    public void setDocenaPrice(Double docenaPrice) {
         this.docenaPrice = docenaPrice;
     }
 
-    public double getCienPrice() {
+    public Double getCienPrice() {
         return cienPrice;
     }
 
-    public void setCienPrice(double cienPrice) {
+    public void setCienPrice(Double cienPrice) {
         this.cienPrice = cienPrice;
     }
 
-    public double getPacaPrice() {
+    public Double getPacaPrice() {
         return pacaPrice;
     }
 
-    public void setPacaPrice(double pacaPrice) {
+    public void setPacaPrice(Double pacaPrice) {
         this.pacaPrice = pacaPrice;
     }
 
-    public int getUnitsInPaca() {
+    public Integer getUnitsInPaca() {
         return unitsInPaca;
     }
 
-    public void setUnitsInPaca(int unitsInPaca) {
+    public void setUnitsInPaca(Integer unitsInPaca) {
         this.unitsInPaca = unitsInPaca;
     }
 
@@ -96,19 +97,19 @@ public class CapRequest {
         this.color = color;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
-    public double getUnitPrice() {
+    public Double getUnitPrice() {
         return unitPrice;
     }
 
-    public void setUnitPrice(double unitPrice) {
+    public void setUnitPrice(Double unitPrice) {
         this.unitPrice = unitPrice;
     }
 

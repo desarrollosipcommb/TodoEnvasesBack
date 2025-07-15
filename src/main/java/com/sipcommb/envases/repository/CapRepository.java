@@ -26,4 +26,16 @@ public interface CapRepository extends JpaRepository<Cap, Long> {
     @Query("SELECT c FROM Cap c WHERE c.jarType.diameter = :diameter")
     Optional<List<Cap>> getFromCapDiameter(@Param("diameter") String diameter);
 
+    @Query("SELECT c FROM Cap c WHERE c.name LIKE %:name%")
+    Optional<List<Cap>> getFromNameLike(@Param("name") String name);
+
+    @Query("SELECT c FROM Cap c WHERE c.color LIKE %:color%")
+    Optional<List<Cap>> getFromColor(@Param("color") String color);
+
+    @Query("SELECT c FROM Cap c WHERE c.isActive = 1")
+    List<Cap> findAllByIsActive();
+
+    @Query("SELECT c FROM Cap c WHERE c.isActive = 0")
+    List<Cap> findAllByIsActiveFalse();
+   
 }
