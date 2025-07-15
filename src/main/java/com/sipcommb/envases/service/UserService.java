@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -75,7 +76,7 @@ public class UserService {
 
         // Find role
         Optional<Role> roleOptional = roleRepository.findByName(roleName);
-        if (roleOptional.isEmpty()) {
+        if (!roleOptional.isPresent()) {
             throw new RuntimeException("Role not found: " + roleName);
         }
 
@@ -97,7 +98,7 @@ public class UserService {
      */
     public User updateUser(Long userId, String firstName, String lastName, String email) {
         Optional<User> userOptional = userRepository.findById(userId);
-        if (userOptional.isEmpty()) {
+        if (!userOptional.isPresent()) {
             throw new RuntimeException("User not found");
         }
 
@@ -120,7 +121,7 @@ public class UserService {
      */
     public void changePassword(Long userId, String oldPassword, String newPassword) {
         Optional<User> userOptional = userRepository.findById(userId);
-        if (userOptional.isEmpty()) {
+        if (!userOptional.isPresent()) {
             throw new RuntimeException("User not found");
         }
 
@@ -141,7 +142,7 @@ public class UserService {
      */
     public void deactivateUser(Long userId) {
         Optional<User> userOptional = userRepository.findById(userId);
-        if (userOptional.isEmpty()) {
+        if (!userOptional.isPresent()) {
             throw new RuntimeException("User not found");
         }
 
@@ -155,7 +156,7 @@ public class UserService {
      */
     public void activateUser(Long userId) {
         Optional<User> userOptional = userRepository.findById(userId);
-        if (userOptional.isEmpty()) {
+        if (!userOptional.isPresent()) {
             throw new RuntimeException("User not found");
         }
 
@@ -193,7 +194,8 @@ public class UserService {
         if(!passwordEncoder.matches(password, user.getPassword())) {
             throw new BadCredentialsException("Contraseña incorrecta");
         }
-        
+
+        user.setLastLogin(LocalDateTime.now());
         String token = jwtService.generateToken(user);
         return new LoginResponse(
             token,
@@ -218,7 +220,7 @@ public class UserService {
 
         // Find role
         Optional<Role> roleOptional = roleRepository.findByName(roleName);
-        if (roleOptional.isEmpty()) {
+        if (!roleOptional.isPresent()) {
             throw new RuntimeException("Role not found: " + roleName);
         }
         // Create user

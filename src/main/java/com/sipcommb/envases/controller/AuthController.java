@@ -3,12 +3,7 @@ package com.sipcommb.envases.controller;
 import com.sipcommb.envases.dto.LoginRequest;
 import com.sipcommb.envases.dto.LoginResponse;
 import com.sipcommb.envases.service.UserService;
-
 import java.util.Collections;
-
-import javax.validation.Valid;
-
-import org.apache.commons.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

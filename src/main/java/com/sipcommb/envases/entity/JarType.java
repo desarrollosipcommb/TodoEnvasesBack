@@ -9,10 +9,21 @@ import java.util.List;
 @Entity
 @Table(name = "jar_types")
 public class JarType {
+
+    /*
+
+    CREATE TABLE jar_types (
+    diameter TEXT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    );
+      
+    */
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String diameter;
     
     @NotBlank
     @Size(max = 100)
@@ -51,8 +62,8 @@ public class JarType {
     }
     
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getDiameter() { return diameter; }
+    public void setDiameter(String diameter) { this.diameter = diameter; }
     
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

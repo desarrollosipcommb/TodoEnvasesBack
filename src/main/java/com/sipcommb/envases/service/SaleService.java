@@ -1,10 +1,6 @@
 package com.sipcommb.envases.service;
 
-import com.sipcommb.envases.entity.Sale;
-import com.sipcommb.envases.entity.SaleItem;
-import com.sipcommb.envases.entity.User;
-import com.sipcommb.envases.entity.Jar;
-import com.sipcommb.envases.entity.Cap;
+
 import com.sipcommb.envases.repository.SaleRepository;
 import com.sipcommb.envases.repository.SaleItemRepository;
 import com.sipcommb.envases.repository.UserRepository;
@@ -14,10 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+
 
 @Service
 @Transactional

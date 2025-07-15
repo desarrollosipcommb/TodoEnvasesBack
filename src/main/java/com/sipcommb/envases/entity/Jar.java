@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "jars")
 public class Jar {
+
+    // TODO : añadir los cambios que se le hicieron a la tabla jar
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,8 +42,20 @@ public class Jar {
     private LocalDateTime updatedAt;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "jar_type_id", nullable = false)
+    @JoinColumn(name = "cap_diameter", nullable = true)
     private JarType jarType;
+
+    @Column(name = "docena_price", precision = 10, scale = 2)
+    private BigDecimal docenaPrice = BigDecimal.ZERO;
+
+    @Column(name = "cien_price", precision = 10, scale = 2)
+    private BigDecimal cienPrice = BigDecimal.ZERO;
+
+    @Column(name = "paca_price", precision = 10, scale = 2)
+    private BigDecimal pacaPrice = BigDecimal.ZERO;
+
+    @Column(name = "units_in_paca")
+    private int unitsInPaca = 0;
     
     // Constructors
     public Jar() {}
@@ -92,4 +106,18 @@ public class Jar {
     
     public JarType getJarType() { return jarType; }
     public void setJarType(JarType jarType) { this.jarType = jarType; }
+
+    public BigDecimal getDocenaPrice() { return docenaPrice; }
+    public void setDocenaPrice(BigDecimal docenaPrice) { this.docenaPrice = docenaPrice; }
+
+    public BigDecimal getCienPrice() { return cienPrice; }
+    public void setCienPrice(BigDecimal cienPrice) { this.cienPrice = cienPrice; }
+
+    public BigDecimal getPacaPrice() { return pacaPrice; }
+    public void setPacaPrice(BigDecimal pacaPrice) { this.pacaPrice = pacaPrice; }
+
+    public int getUnitsInPaca() { return unitsInPaca; }
+    public void setUnitsInPaca(int unitsInPaca) { this.unitsInPaca = unitsInPaca; }
+
+    
 }

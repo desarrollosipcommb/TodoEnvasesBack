@@ -1,37 +1,38 @@
 package com.sipcommb.envases.service;
 
-import com.sipcommb.envases.entity.Jar;
-import com.sipcommb.envases.entity.Cap;
-import com.sipcommb.envases.entity.JarType;
-import com.sipcommb.envases.repository.JarRepository;
-import com.sipcommb.envases.repository.CapRepository;
-import com.sipcommb.envases.repository.JarTypeRepository;
-import com.sipcommb.envases.repository.SaleItemRepository;
+import com.sipcommb.envases.entity.ItemType;
+import com.sipcommb.envases.entity.Transaction;
+import com.sipcommb.envases.entity.TransactionType;
+import com.sipcommb.envases.repository.InventoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
 public class InventoryService {
-    
+
     @Autowired
-    private JarRepository jarRepository;
+    private InventoryRepository inventoryRepository;
+
+        public void newItem(Long id, String itemType, int quantity, String transactionType, int userId, String notes) {
+        // Convert strings to enums
+        ItemType itemTypeEnum = ItemType.valueOf(itemType);
+        TransactionType transactionTypeEnum = TransactionType.valueOf(transactionType);
     
-    @Autowired
-    private CapRepository capRepository;
+        // Create and populate Transaction entity
+        Transaction tx = new Transaction();
+        tx.setItemId(id.intValue());
+        tx.setItemType(itemTypeEnum);
+        tx.setQuantityChange(quantity);
+        tx.setTransactionType(transactionTypeEnum);
+        tx.setPerformedBy(userId);
+        tx.setNotes(notes);
+        tx.setTransactionDate(java.time.LocalDateTime.now());
     
-    @Autowired
-    private JarTypeRepository jarTypeRepository;
-    
-    @Autowired
-    private SaleItemRepository saleItemRepository;
-    
-   
-    
+        // Save using standard JPA save method
+        inventoryRepository.save(tx);
+    }
 
 }
