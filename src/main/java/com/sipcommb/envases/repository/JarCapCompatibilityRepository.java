@@ -1,5 +1,6 @@
 package com.sipcommb.envases.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,7 +15,7 @@ import com.sipcommb.envases.entity.JarCapCompatibility;
 public interface JarCapCompatibilityRepository extends JpaRepository<JarCapCompatibility, Long> {
 
     @Query("SELECT jcc.cap FROM JarCapCompatibility jcc WHERE jcc.jar.id = :jarId")
-    Optional<Cap[]> findByJarId(@Param("jarId") Long jarId);
+    Optional<List<Cap>> findByJarId(@Param("jarId") Long jarId);
 
     @Query("SELECT jcc FROM JarCapCompatibility jcc WHERE jcc.jar.id = :jarId AND jcc.cap.id = :capId")
     Optional<JarCapCompatibility> findByJarAndCap(@Param("jarId") Long jarId, @Param("capId") Long capId);

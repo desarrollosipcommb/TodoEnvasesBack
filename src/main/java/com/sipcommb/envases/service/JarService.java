@@ -129,7 +129,6 @@ public class JarService {
     private void addToCompatible(List<Cap> compatible, Jar jar, boolean isCompatible) {
         for (Cap cap : compatible) {
             if(jarCapCompatibilityRepository.findByJarAndCap(jar.getId(), cap.getId()).isPresent()) {
-                // Si ya existe la compatibilidad, actualizamos el estado
                 JarCapCompatibility existingCompatibility = jarCapCompatibilityRepository.findByJarAndCap(jar.getId(), cap.getId()).get();
                
                 existingCompatibility.setCompatible(isCompatible);
@@ -229,10 +228,25 @@ public class JarService {
         if(!jarOptional.isPresent()) {
             throw new IllegalArgumentException("No existe un frasco con ese nombre.");
         }
+
+        //Okay, que pasa aqui,
+        // Tenemos que trear todas las tapas nuevas que concidan con el arreglo de tapas que nos diernon, ese es el caps =getCaps(capNames, jar);
+        // Luego tenemos que trear todas las tapas que no estan presentes en el arreglo pero que concidan en diametro
+        // luego tenemos que trear todas las tapas que ya estan con la compatibilidad del frasco, porque no deseamos sobre escribirlas (a menos que esten en caps)
+        // Luego tenemos que restar las tapas que ya estan presentes en el frasco, y las de caps
+        // Y hacemos algo parecido al inicial, asumimos que todo es caps es lo que diga la variable isCompatible
+        // y todo lo que no este en caps o ya en el frasco es lo contrario a isCompatible
+        // de esta manera, si se añaden 30 tapas nuevas y solo 1 es compatible, se envia un arreglo solo con la tapa compatible y se asume que las otras 29 son incompatibles
         Jar jar = jarOptional.get();
         List<Cap> caps = getCaps(capNames, jar);
+        List<Cap> capsNotPresent = capRepository.getFromCapDiameter(jar.getJarType().getDiameter()).get();
+        capsNotPresent.removeAll(caps);
+        List<Cap> existingCaps = jarCapCompatibilityRepository.findByJarId(jar.getId()).get();
+        capsNotPresent.removeAll(existingCaps);
+        
         jar.setUpdatedAt(LocalDateTime.now());
         addToCompatible(caps, jar, isCompatible);
+        addToCompatible(capsNotPresent, jar, !isCompatible);
         return new JarDTO(jar);
 
     }
