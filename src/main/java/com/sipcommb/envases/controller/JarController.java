@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 
 import com.sipcommb.envases.dto.JarDTO;
 import com.sipcommb.envases.dto.JarRequestDTO;
@@ -31,6 +34,11 @@ public class JarController {
     private JarService jarService;
 
     @PostMapping("/add")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Frasco creado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al crear el frasco")
+    })
     public ResponseEntity<?> addJar(@RequestBody JarRequestDTO jarRequest, @RequestHeader("Authorization") String authHeader) {
 
         if(!permissionService.hasPermission(authHeader, "create")) {
@@ -47,6 +55,11 @@ public class JarController {
     }
 
     @GetMapping("/all")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de frascos obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de frascos")
+    })
     public ResponseEntity<?> getAllJars(@RequestHeader("Authorization") String authHeader) {
 
         if(!permissionService.hasPermission(authHeader, "read")) {
@@ -63,6 +76,11 @@ public class JarController {
 
     
     @GetMapping("/all/active")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de frascos activos obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de frascos activos")
+    })
     public ResponseEntity<?> getAllActiveJars(@RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
@@ -76,6 +94,11 @@ public class JarController {
     }
 
     @GetMapping("/all/inactive")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de frascos inactivos obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de frascos inactivos")
+    })
     public ResponseEntity<?> getAllInactiveJars(@RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
@@ -89,6 +112,11 @@ public class JarController {
     }
 
     @PutMapping("/update")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Frasco actualizado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al actualizar el frasco")
+    })
     public ResponseEntity<?> updateJar(@RequestBody JarRequestDTO jarRequest, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar frascos");
@@ -102,6 +130,11 @@ public class JarController {
     }
 
     @PutMapping("/update/compatible")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Frasco actualizado con capacidades compatibles exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al actualizar el frasco con capacidades compatibles")
+    })
     public ResponseEntity<?> updateJarCompatibleCaps(@RequestBody UpdateCompatibleCapsRequest request, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar frascos");
@@ -115,6 +148,11 @@ public class JarController {
     }
 
     @PutMapping("/delete")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Frasco eliminado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al eliminar el frasco")
+    })
     public ResponseEntity<?> deleteJar(@RequestBody String jarName, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "delete")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para eliminar frascos");
@@ -128,6 +166,11 @@ public class JarController {
     }
 
     @PutMapping("/activate")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Frasco activado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al activar el frasco")
+    })
     public ResponseEntity<?> activateJar(@RequestBody String jarName, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para activar frascos");
@@ -142,6 +185,11 @@ public class JarController {
     }
 
     @GetMapping("/by-name")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Frasco obtenido exitosamente por nombre", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "404", description = "Frasco no encontrado")
+    })
     public ResponseEntity<?> getJarByName(@RequestBody String name, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer frascos");

@@ -16,6 +16,9 @@ import com.sipcommb.envases.dto.ComboResponse;
 import com.sipcommb.envases.service.ComboService;
 import com.sipcommb.envases.service.PermissionService;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 @RestController
 @RequestMapping("/combos")
 @CrossOrigin(origins = "*")
@@ -28,6 +31,11 @@ public class ComboController {
     private ComboService comboService;
 
     @PostMapping("/add")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Combo creado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ComboResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al crear el combo")
+    })
     public ResponseEntity<?> addCombo(@RequestBody ComboRequest comboRequest, @RequestHeader("Authorization") String authHeader) {
 
         if(!permissionService.hasPermission(authHeader, "create")) {
@@ -43,6 +51,10 @@ public class ComboController {
     }
 
     @GetMapping("/all")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de combos obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ComboResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado")
+    })
     public ResponseEntity<?> getAllCombos(@RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver los combos");
@@ -55,6 +67,11 @@ public class ComboController {
     }
 
     @GetMapping("/by-name")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Combo obtenido exitosamente por nombre", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ComboResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "404", description = "Combo no encontrado")
+    })
     public ResponseEntity<?> getComboByName(@RequestHeader("Authorization") String authHeader, @RequestBody String comboName) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver los combos");
@@ -66,8 +83,13 @@ public class ComboController {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
-
+    
     @PutMapping("/update")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Combo actualizado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ComboResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al actualizar el combo")
+    })    
     public ResponseEntity<?> updateCombo(@RequestBody ComboRequest comboRequest, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar combos");
@@ -81,6 +103,11 @@ public class ComboController {
     }
 
     @PutMapping("/active")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Combo activado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ComboResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al activar el combo")
+    })
     public ResponseEntity<?> toggleComboActive(@RequestBody String comboName, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar combos");
@@ -94,6 +121,11 @@ public class ComboController {
     }
 
     @PutMapping("/deactivate")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Combo desactivado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ComboResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al desactivar el combo")
+    })
     public ResponseEntity<?> toggleComboInactive(@RequestBody String comboName, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update"))
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar combos");
@@ -106,6 +138,11 @@ public class ComboController {
     }
 
     @GetMapping("/all/active")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de combos activos obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ComboResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de combos activos")
+    })
     public ResponseEntity<?> getAllActiveCombos(@RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver los combos activos");
@@ -119,6 +156,11 @@ public class ComboController {
     }
 
     @GetMapping("/all/inactive")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de combos inactivos obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ComboResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de combos inactivos")
+    })
     public ResponseEntity<?> getAllInactiveCombos(@RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver los combos inactivos");

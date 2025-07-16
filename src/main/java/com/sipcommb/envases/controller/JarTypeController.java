@@ -16,6 +16,9 @@ import com.sipcommb.envases.dto.JarTypeDTO;
 import com.sipcommb.envases.service.JarTypeService;
 import com.sipcommb.envases.service.PermissionService;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 @RestController
 @RequestMapping("/jar-types")
 @CrossOrigin(origins = "*")
@@ -28,6 +31,11 @@ public class JarTypeController {
     private PermissionService permissionService;
 
     @PostMapping("/add")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Tipo de tapa creado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al crear el tipo de tapa")
+    })
     public ResponseEntity<?> addJarType(@RequestBody JarTypeDTO jarTypeDTO, @RequestHeader("Authorization") String authHeader) {
 
         try {
@@ -45,6 +53,11 @@ public class JarTypeController {
     }
 
     @GetMapping("/by-diameter")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Tipo de tapa obtenido exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener el tipo de tapa")
+    })
     public ResponseEntity<?> getJarTypeByDiameter(@RequestBody String diameter, @RequestHeader("Authorization") String authHeader) {
         try {
             if(!permissionService.hasPermission(authHeader, "read")) {
@@ -59,6 +72,11 @@ public class JarTypeController {
     }
 
     @GetMapping("/all")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de tipos de tapa obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tipos de tapa")
+    })
     public ResponseEntity<?> getAllJarTypes(@RequestHeader("Authorization") String authHeader) {
         try {
             if(!permissionService.hasPermission(authHeader, "read")) {
