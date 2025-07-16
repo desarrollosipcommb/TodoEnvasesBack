@@ -185,16 +185,17 @@ CREATE TABLE combos (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     description TEXT,
-    jar_ids JSON NOT NULL, -- Array of jar IDs in the combo
-    cap_ids JSON NOT NULL, -- Array of cap IDs in the combo
-    quantity INT NOT NULL DEFAULT 0, -- Stock quantity
+    jar_id INT NOT NULL, -- Array of jar IDs in the combo
+    cap_id INT NOT NULL, -- Array of cap IDs in the combo
     unit_price DECIMAL(10, 2) DEFAULT 0.00,
     docena_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a dozen combos
     cien_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a hundred combos
     paca_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a pack of combos
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (jar_id) REFERENCES jars(id) ON DELETE RESTRICT,
+    FOREIGN KEY (cap_id) REFERENCES caps(id) ON DELETE RESTRICT
 );
 
 -- ============================================
@@ -216,16 +217,10 @@ CREATE TABLE jar_cap_compatibility (
 -- INSERT DEFAULT DATA
 -- ============================================
 
--- Insert default jar types
-INSERT INTO jar_types (diameter,name, description) VALUES
-(28,'diámetro de 28mm', 'Round-shaped jars'),
-(30, 'diámetro de 30mm', 'Square-shaped jars'),
-(32, 'diámetro de 32mm', 'Rectangular-shaped jars');
-
 -- Insert default roles
 INSERT INTO roles (name, description, permissions) VALUES
 ('admin', 'Administrator with full access', '["create", "read", "update", "delete", "manage_users"]'),
-('seller', 'Sales person with limited access', '["read"]');
+('seller', 'Sales person with limited access', '["read", "create_sales", "view_own_sales"]');
 
 -- Insert default admin user (password: admin123 - should be hashed in production)
 

@@ -273,7 +273,14 @@ public class JarService {
         return new JarDTO(jarRepository.save(jar));
     }
 
-
+    public JarDTO getJarByName(String jarName) {
+        Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
+        
+        if(!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        return new JarDTO(jarOptional.get());
+    }
 
     
 }

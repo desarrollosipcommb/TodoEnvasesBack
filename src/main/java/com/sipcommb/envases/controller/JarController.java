@@ -141,4 +141,17 @@ public class JarController {
         }
     }
 
+    @GetMapping("/by-name")
+    public ResponseEntity<?> getJarByName(@RequestBody String name, @RequestHeader("Authorization") String authHeader) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer frascos");
+        }
+        try {
+            JarDTO jarDTO = jarService.getJarByName(name);
+            return ResponseEntity.ok(jarDTO);
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body("Error: " + e.getMessage()); 
+        }
+    }
+
 }
