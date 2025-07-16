@@ -1,0 +1,77 @@
+package com.sipcommb.envases.dto;
+
+public class SaleItemRequest {
+
+    private String comboName;
+
+    private String jarName;
+
+    private String capName;
+
+    private String capColor;
+
+    private String diameter;
+
+    private Integer quantity;
+
+    public SaleItemRequest() {
+    }
+
+    public SaleItemRequest(String comboName, String jarName, String capName, String capColor, String diameter, Integer quantity) {
+        this.comboName = comboName;
+        this.jarName = jarName;
+        this.capName = capName;
+        this.capColor = capColor;
+        this.diameter = diameter;
+        this.quantity = quantity;
+    }
+
+    public String getComboName() {
+        return comboName;
+    }
+
+    public void setComboName(String comboName) {
+        this.comboName = comboName;
+    }
+
+    public String getJarName() {
+        return jarName;
+    }
+    public void setJarName(String jarName) {
+        this.jarName = jarName;
+    }
+
+    public String getCapName() {
+        return capName;
+    }
+
+    public void setCapName(String capName) {
+        this.capName = capName;
+    }
+
+    public String getCapColor() {
+        return capColor;
+    }
+
+    public void setCapColor(String capColor) {
+        this.capColor = capColor;
+    }
+
+    public String getDiameter() {
+        return diameter;
+    }
+
+    public void setDiameter(String diameter) {
+        this.diameter = diameter;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    
+}

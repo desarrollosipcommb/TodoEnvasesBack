@@ -113,4 +113,12 @@ public class Sale {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public void addPrice(BigDecimal price) {
+        if (this.totalAmount == null) {
+            this.totalAmount = BigDecimal.ZERO;
+        }
+        this.totalAmount = this.totalAmount.add(price);
+    }
+    
 }

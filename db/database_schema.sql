@@ -163,7 +163,7 @@ CREATE TABLE sale_items (
 -- ============================================
 CREATE TABLE transactions (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    item_type ENUM('jar', 'cap') NOT NULL,
+    item_type ENUM('jar', 'cap', 'combo') NOT NULL,
     item_id INT NOT NULL, -- TODO revisar posible cambio a varchar para ubicar más facil el item afectado
     quantity_change INT NOT NULL, -- Positive for additions, negative for subtractions
     transaction_type ENUM('sale', 'restock', 'adjustment', 'damage', 'return') NOT NULL, -- TODO revisar si cambiar los enums
@@ -219,8 +219,8 @@ CREATE TABLE jar_cap_compatibility (
 
 -- Insert default roles
 INSERT INTO roles (name, description, permissions) VALUES
-('admin', 'Administrator with full access', '["create", "read", "update", "delete", "manage_users"]'),
-('seller', 'Sales person with limited access', '["read", "create_sales", "view_own_sales"]');
+('admin', 'Administrator with full access', '["create", "read", "update", "delete", "sales"]'),
+('seller', 'Sales person with limited access', '["read", "sales", "view_own_sales"]');
 
 -- Insert default admin user (password: admin123 - should be hashed in production)
 

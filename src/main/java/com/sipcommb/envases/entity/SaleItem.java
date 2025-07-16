@@ -41,16 +41,10 @@ public class SaleItem {
     @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
     private BigDecimal subtotal;
 
+    
+
     public enum ItemType {
         JAR, CAP, COMBO
-    }
-
-    @PrePersist
-    @PreUpdate
-    private void calculateSubtotal() {
-        if (unitPrice != null && quantity != null) {
-            this.subtotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
-        }
     }
     
     // Constructors
@@ -86,13 +80,17 @@ public class SaleItem {
     
     public Cap getCap() { return cap; }
     public void setCap(Cap cap) { this.cap = cap; }
-    
-    // Helper methods
-    public String getItemType() {
-        return jar != null ? "JAR" : "CAP";
-    }
-    
-    public String getItemName() {
-        return jar != null ? jar.getName() : (cap != null ? cap.getName() : "Unknown");
-    }
+
+    public Integer getQuantity() { return quantity; }
+
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+
+    public BigDecimal getUnitPrice() { return unitPrice; }
+    public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice;}
+
+    public BigDecimal getSubtotal() { return subtotal; }
+    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
+
+    public ItemType getItemType() { return itemType; }
+    public void setItemType(ItemType itemType) { this.itemType = itemType;}
 }
