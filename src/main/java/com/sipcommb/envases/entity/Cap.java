@@ -2,7 +2,6 @@ package com.sipcommb.envases.entity;
 
 import javax.persistence.*;
 import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.math.BigDecimal;
@@ -28,7 +27,7 @@ public class Cap {
     @Size(max = 50)
     private String color;
     
-    @Min(0)
+
     private Integer quantity = 0;
     
     @DecimalMin("0.0")

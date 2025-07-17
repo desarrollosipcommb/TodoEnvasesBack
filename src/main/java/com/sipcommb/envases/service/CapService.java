@@ -154,6 +154,8 @@ public class CapService {
 
         if(capRequest.getQuantity() != null) {
             cap.setQuantity(capRequest.getQuantity());
+            inventoryService.newItem(cap.getId(), "cap", cap.getQuantity().intValue(), "adjustment", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo la tapa: "+cap.getName());
+
         }
 
         if(capRequest.getDescription() != null && !capRequest.getDescription().isEmpty()) {
@@ -194,8 +196,7 @@ public class CapService {
         cap.setUpdatedAt(LocalDateTime.now());
         capRepository.save(cap);
 
-        inventoryService.newItem(cap.getId(), "cap", cap.getQuantity().intValue(), "adjustment", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo la tapa: "+cap.getName());
-        
+                
 
         return new CapDTO(cap);
     }
