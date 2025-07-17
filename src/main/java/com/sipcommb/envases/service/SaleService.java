@@ -61,6 +61,8 @@ public class SaleService {
     private InventoryService inventoryService;
 
 
+
+
     //Lo mismo que addSale pero no guarda la venta en la base de datos, solo crea el objeto SaleDTO
     //maybe se podria crear un metodo para no duplicar codigo, pero no se me ocurre como hacerlo :(
     public SaleDTO planSale(SaleRequest saleRequest, String token) {
@@ -393,6 +395,46 @@ public class SaleService {
         }
     }
        
-    
-    
+    public List<SaleDTO> getAllSales() {
+
+        List<Sale> sales = saleRepository.findAll();
+        List<SaleDTO> saleDTOs = new ArrayList<>();
+        for(Sale sale : sales){
+            SaleDTO saleDTO = toSaleDTO(sale);
+            saleDTOs.add(saleDTO);
+        }
+        return saleDTOs;
+    }
+
+    public List<SaleDTO> getSalesByUser(String email) {
+        Optional<User> userOpt = userRepository.findByEmail(email.trim());
+        if(!userOpt.isPresent()){
+            throw new IllegalArgumentException("Usuario no encontrado: " + email);
+        }
+
+        List<Sale> sales = saleRepository.findBySeller(userOpt.get().getId());
+        List<SaleDTO> saleDTOs = new ArrayList<>();
+        for(Sale sale : sales){
+            SaleDTO saleDTO = toSaleDTO(sale);
+            saleDTOs.add(saleDTO);
+        }
+        return saleDTOs;
+    }
+
+    private SaleDTO toSaleDTO(Sale sale){
+         List<SaleItem> saleItems = saleItemRepository.findBySale(sale.getId());
+            List<SaleItemDTO> saleItemDTOs = new ArrayList<>();
+            for(SaleItem saleItem : saleItems){
+                if(saleItem.getItemType() == SaleItem.ItemType.COMBO){
+                    saleItemDTOs.add(new SaleItemDTO(comboRepository.findByJarAndCap(saleItem.getJar().getId(), saleItem.getCap().getId()).orElse(null).getName(), saleItem));
+                } else if(saleItem.getItemType() == SaleItem.ItemType.JAR){
+                    saleItemDTOs.add(new SaleItemDTO(jarRepository.findById(saleItem.getJar().getId()).orElse(null).getName(), saleItem));
+                } else if(saleItem.getItemType() == SaleItem.ItemType.CAP){
+                    saleItemDTOs.add(new SaleItemDTO(capRepository.findById(saleItem.getCap().getId()).orElse(null).getName(), saleItem));
+                }
+            }
+            SaleDTO saleDTO = new SaleDTO(sale, saleItemDTOs);
+            return saleDTO;
+    }
+
 }

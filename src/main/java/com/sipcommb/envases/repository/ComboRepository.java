@@ -19,4 +19,7 @@ public interface ComboRepository extends JpaRepository<Combo, Long> {
 
     @Query("SELECT c FROM Combo c WHERE c.active = 0")
     List<Combo> findAllInactiveCombos();
+
+    @Query("SELECT c FROM Combo c WHERE c.jar.id = :jarId AND c.cap.id = :capId")
+    Optional<Combo> findByJarAndCap(@Param("jarId") Long jarId, @Param("capId") Long capId);
 }
