@@ -2,6 +2,8 @@ package com.sipcommb.envases.service;
 
 
 
+import com.sipcommb.envases.dto.SaleDTO;
+import com.sipcommb.envases.dto.SaleItemDTO;
 import com.sipcommb.envases.dto.SaleItemRequest;
 import com.sipcommb.envases.dto.SaleRequest;
 import com.sipcommb.envases.entity.Cap;
@@ -18,6 +20,8 @@ import com.sipcommb.envases.repository.SaleRepository;
 import com.sipcommb.envases.repository.UserRepository;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -53,17 +57,21 @@ public class SaleService {
     @Autowired
     private UserRepository userRepository;
 
-    jwtService.getUserIdFromToken(token).intValue()
+    @Autowired
+    private InventoryService inventoryService;
 
-    public void addSale(SaleRequest saleRequest, String token){
-        Sale sale = new Sale();
 
-        if(saleRequest.getItems().size() == 0 || saleRequest.getItems() == null || saleRequest.getItems().isEmpty()){
+    //Lo mismo que addSale pero no guarda la venta en la base de datos, solo crea el objeto SaleDTO
+    //maybe se podria crear un metodo para no duplicar codigo, pero no se me ocurre como hacerlo :(
+    public SaleDTO planSale(SaleRequest saleRequest, String token) {
+         Sale sale = new Sale();
+
+        if( saleRequest.getItems() == null || saleRequest.getItems().size() == 0 || saleRequest.getItems().isEmpty()){
             throw new IllegalArgumentException("Debe especificar al menos un item de venta");
         }
 
         try{
-            sale.setPaymentMethod(Sale.PaymentMethod.valueOf(saleRequest.getPaymentMethod()));
+           sale.setPaymentMethod(Sale.PaymentMethod.valueOf(saleRequest.getPaymentMethod().toUpperCase()));
         }catch (Exception e) {
             throw new IllegalArgumentException("Problema al establecer el método de pago: " + e.getMessage());
         }
@@ -79,25 +87,111 @@ public class SaleService {
 
         sale.setSeller(userOpt.get());
         sale.setNotes(saleRequest.getDescripion() != null ? saleRequest.getDescripion() : "");
-        // Convert String to LocalDateTime
-        java.time.LocalDateTime saleDate = java.time.LocalDateTime.parse(saleRequest.getSaleDate());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        java.time.LocalDate saleDate = java.time.LocalDate.parse(saleRequest.getSaleDate(), formatter);
         sale.setSaleDate(saleDate);
 
         List<SaleItemRequest> saleItems = saleRequest.getItems();
 
         List<SaleItem> saleItemList = new ArrayList<>();
+        List<SaleItemDTO> saleItemDTOList = new ArrayList<>();
         for(SaleItemRequest saleItemRequest : saleItems){
             SaleItem saleItem = checkSaleItems(saleItemRequest);
+
             saleItem.setSale(sale);
             saleItemList.add(saleItem);
-            saleItem.setSale(sale);
             sale.addPrice(saleItem.getSubtotal());
+
+            if(saleItem.getItemType() == SaleItem.ItemType.COMBO){
+                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getComboName(), saleItem));
+            } else if(saleItem.getItemType() == SaleItem.ItemType.JAR){
+                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getJarName(), saleItem));
+            } else if(saleItem.getItemType() == SaleItem.ItemType.CAP){
+                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getCapName(), saleItem));
+            }
+
         }
 
-        saleItemRepository.saveAll(saleItemList);
+        return new SaleDTO(sale, saleItemDTOList);
+       
+    }
+
+    
+
+    public SaleDTO addSale(SaleRequest saleRequest, String token){
+        Sale sale = new Sale();
+
+        if(saleRequest.getItems() == null || saleRequest.getItems().size() == 0 ||  saleRequest.getItems().isEmpty()){
+            throw new IllegalArgumentException("Debe especificar al menos un item de venta");
+        }
+
+        try{
+            sale.setPaymentMethod(Sale.PaymentMethod.valueOf(saleRequest.getPaymentMethod().toUpperCase()));
+        }catch (Exception e) {
+            throw new IllegalArgumentException("Problema al establecer el método de pago: " + e.getMessage());
+        }
+
+        sale.setClientName(saleRequest.getClientName());
+        sale.setClientEmail(saleRequest.getClientEmail());
+        sale.setClientPhone(saleRequest.getClientPhone());
+        Optional<User> userOpt = userRepository.findById(jwtService.getUserIdFromToken(token));
+       
+        if(!userOpt.isPresent()){
+            throw new IllegalArgumentException("Usuario no encontrado");
+        }
+
+        sale.setSeller(userOpt.get());
+        sale.setNotes(saleRequest.getDescripion() != null ? saleRequest.getDescripion() : "");
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        java.time.LocalDate saleDate = java.time.LocalDate.parse(saleRequest.getSaleDate(), formatter);
+        sale.setSaleDate(saleDate);
+
+        List<SaleItemRequest> saleItems = saleRequest.getItems();
+
+        List<SaleItem> saleItemList = new ArrayList<>();
+        List<SaleItemDTO> saleItemDTOList = new ArrayList<>();
+        sale.setTotalAmount(BigDecimal.ZERO);
+        saleRepository.save(sale);
+
+        for(SaleItemRequest saleItemRequest : saleItems){
+            SaleItem saleItem = checkSaleItems(saleItemRequest);
+
+            saleItem.setSale(sale);
+            saleItemList.add(saleItem);
+            
+
+            sale.addPrice(saleItem.getSubtotal());
+             if(saleItem.getItemType() == SaleItem.ItemType.COMBO){
+                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getComboName(), saleItem));
+            } else if(saleItem.getItemType() == SaleItem.ItemType.JAR){
+                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getJarName(), saleItem));
+            } else if(saleItem.getItemType() == SaleItem.ItemType.CAP){
+                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getCapName(), saleItem));
+            }
+        }
+
+        for(SaleItem saleItem : saleItemList){
+           
+             System.out.println("SaleItem: " +
+        "sale=" + (saleItem.getSale() != null ? saleItem.getSale().getId() : null) +
+        ", itemType=" + saleItem.getItemType() +
+        ", quantity=" + saleItem.getQuantity() +
+        ", unitPrice=" + saleItem.getUnitPrice() +
+        ", subtotal=" + saleItem.getSubtotal() +
+        ", jar=" + (saleItem.getJar() != null ? saleItem.getJar().getId() : null) +
+        ", cap=" + (saleItem.getCap() != null ? saleItem.getCap().getId() : null)
+    );
+            modifyInventory(saleItem, userOpt.get().getId().intValue());
+        }
+
+       
         sale.setCreatedAt(java.time.LocalDateTime.now());
         sale.setUpdatedAt(java.time.LocalDateTime.now());
         saleRepository.save(sale);
+        saleItemRepository.saveAll(saleItemList);
+
+        return new SaleDTO(sale, saleItemDTOList);
 
     }
 
@@ -149,7 +243,6 @@ public class SaleService {
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(java.math.BigDecimal.valueOf(saleItemRequest.getQuantity())));
         saleItem.setItemType(SaleItem.ItemType.COMBO);
         saleItem.setSale(null); 
-
         return saleItem;
     }
 
@@ -162,8 +255,7 @@ public class SaleService {
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(java.math.BigDecimal.valueOf(saleItemRequest.getQuantity())));
         saleItem.setItemType(SaleItem.ItemType.JAR);
         saleItem.setSale(null); 
-
-        return saleItem;
+       return saleItem;
     }
 
     private SaleItem createSaleItem(Cap cap, SaleItemRequest saleItemRequest) {
@@ -212,7 +304,7 @@ public class SaleService {
     private Cap manageCap(String capName, String diameter, String color) {
         Optional<Cap> capOpt = capRepository.findByNameAndDiameterAndColor(capName, diameter, color);
         if(!capOpt.isPresent()){
-            throw new IllegalArgumentException("Tapa no encontrada: " + capName);
+            throw new IllegalArgumentException("Tapa no encontrada: " + capName+ " con diámetro: " + diameter + " y color: " + color);
         }
       
         Cap cap = capOpt.get();
@@ -238,7 +330,7 @@ public class SaleService {
     }
 
     private BigDecimal determinePrice(Jar jar, SaleItemRequest saleItemRequest) {
-        if(saleItemRequest.getQuantity() == jar.getUnitsInPaca()){
+        if(saleItemRequest.getQuantity() == jar.getUnitsInPaca() && (jar.getPacaPrice() != null && jar.getPacaPrice().compareTo(java.math.BigDecimal.ZERO) > 0)){
             return jar.getPacaPrice();
         }
 
@@ -270,6 +362,37 @@ public class SaleService {
         return cap.getUnitPrice();
 
     }
+
+    private void modifyInventory(SaleItem saleItem, int userId) {
+        if(saleItem.getItemType() == SaleItem.ItemType.COMBO){
+            Jar jar = saleItem.getJar();
+            Cap cap = saleItem.getCap();
+            jar.setQuantity(jar.getQuantity() - saleItem.getQuantity());
+            cap.setQuantity(cap.getQuantity() - saleItem.getQuantity());
+            jar.setUpdatedAt(LocalDateTime.now());
+            cap.setUpdatedAt(LocalDateTime.now());
+            jarRepository.save(jar);
+            capRepository.save(cap);
+            inventoryService.newItem(jar.getId(), "jar", saleItem.getQuantity(), "sale", userId, "Se vendieron " + saleItem.getQuantity() + " del envase en combo: " + jar.getName());
+            inventoryService.newItem(cap.getId(), "cap", saleItem.getQuantity(), "sale", userId, "Se vendieron " + saleItem.getQuantity() + " de tapa en combo: " + cap.getName());
+        } else if(saleItem.getItemType() == SaleItem.ItemType.JAR){
+            Jar jar = saleItem.getJar();
+            jar.setQuantity(jar.getQuantity() - saleItem.getQuantity());
+            jar.setUpdatedAt(LocalDateTime.now());
+            jarRepository.save(jar);
+            inventoryService.newItem(jar.getId(), "jar", saleItem.getQuantity(), "sale", userId, "Se vendieron " + saleItem.getQuantity() + " de tarro: " + jar.getName());
+        } else if(saleItem.getItemType() == SaleItem.ItemType.CAP){
+            Cap cap = saleItem.getCap();
+            cap.setQuantity(cap.getQuantity() - saleItem.getQuantity());
+            cap.setUpdatedAt(LocalDateTime.now());
+            capRepository.save(cap);
+            inventoryService.newItem(cap.getId(), "cap", saleItem.getQuantity(), "sale", userId, "Se vendieron " + saleItem.getQuantity() + " de tapa: " + cap.getName());
+        } 
+        else {
+            throw new IllegalArgumentException("Tipo de item de venta no reconocido: " + saleItem.getItemType());
+        }
+    }
+       
     
     
 }

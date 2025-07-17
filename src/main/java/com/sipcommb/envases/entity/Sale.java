@@ -4,6 +4,7 @@ import javax.persistence.*;
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Size;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -42,7 +43,7 @@ public class Sale {
     private String notes;
 
     @Column(name = "sale_date", nullable = false)
-    private LocalDateTime saleDate;
+    private LocalDate saleDate;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -63,7 +64,7 @@ public class Sale {
         this.clientName = clientName;
         this.totalAmount = totalAmount;
         this.paymentMethod = paymentMethod;
-        this.saleDate = LocalDateTime.now();
+        this.saleDate = LocalDate.now();
     }
 
     @PrePersist
@@ -71,7 +72,7 @@ public class Sale {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (saleDate == null) {
-            saleDate = LocalDateTime.now();
+            saleDate = LocalDate.now();
         }
     }
 
@@ -105,8 +106,8 @@ public class Sale {
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
 
-    public LocalDateTime getSaleDate() { return saleDate; }
-    public void setSaleDate(LocalDateTime saleDate) { this.saleDate = saleDate; }
+    public LocalDate getSaleDate() { return saleDate; }
+    public void setSaleDate(LocalDate saleDate) { this.saleDate = saleDate; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
@@ -120,5 +121,7 @@ public class Sale {
         }
         this.totalAmount = this.totalAmount.add(price);
     }
+
+    
     
 }
