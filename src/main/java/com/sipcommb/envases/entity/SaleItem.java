@@ -29,6 +29,14 @@ public class SaleItem {
     @JoinColumn(name = "cap_id")
     private Cap cap;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quimico_id")
+    private Quimicos quimico;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "extracto_id")
+    private Extractos extracto;
+
     @Min(1)
     @Column(nullable = false)
     private Integer quantity;
@@ -44,7 +52,7 @@ public class SaleItem {
     
 
     public enum ItemType {
-        JAR, CAP, COMBO
+        JAR, CAP, COMBO, QUIMICO, EXTRACTO
     }
     
     // Constructors
@@ -58,12 +66,14 @@ public class SaleItem {
         
     }
     
-    public SaleItem(Sale sale, Cap cap, Integer quantity, BigDecimal unitPrice) {
+    public SaleItem(Sale sale, Cap cap, Integer quantity, BigDecimal unitPrice, Quimicos quimico, Extractos extracto) {
         this.sale = sale;
         this.cap = cap;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
-       
+        this.quimico = quimico;
+        this.extracto = extracto;
+    
     }
     
     
@@ -93,4 +103,15 @@ public class SaleItem {
 
     public ItemType getItemType() { return itemType; }
     public void setItemType(ItemType itemType) { this.itemType = itemType;}
+
+    public Quimicos getQuimico() { return quimico; }
+    public void setQuimico(Quimicos quimico) {
+        this.quimico = quimico;
+    }
+
+    public Extractos getExtracto() { return extracto; }
+    public void setExtracto(Extractos extracto) {
+        this.extracto = extracto;
+    }
+
 }

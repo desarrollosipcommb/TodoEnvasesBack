@@ -3,6 +3,7 @@ package com.sipcommb.envases.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -86,5 +87,39 @@ public class SaleController {
             return ResponseEntity.badRequest().body("Error: " + cause.getMessage());
         }
              
+    }
+
+    @GetMapping("/all")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de ventas obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas")
+    })
+    public ResponseEntity<?> getAllSales(@RequestHeader("Authorization") String authHeader) {
+        if(!permissionService.hasPermission(authHeader, "sales")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las ventas");
+        }
+        try {
+            return ResponseEntity.ok(saleService.getAllSales());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al obtener las ventas: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/byUser")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de ventas del usuario obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas del usuario")
+    })
+    public ResponseEntity<?> getSalesByUser(@RequestHeader("Authorization") String authHeader, @RequestBody String email) {
+        if(!permissionService.hasPermission(authHeader, "sales")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las ventas");
+        }
+        try {
+            return ResponseEntity.ok(saleService.getSalesByUser(email));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 }
