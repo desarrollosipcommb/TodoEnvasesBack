@@ -136,17 +136,23 @@ CREATE TABLE sales (
 CREATE TABLE sale_items (
     id INT PRIMARY KEY AUTO_INCREMENT,
     sale_id INT NOT NULL,
-    item_type ENUM('jar', 'cap', 'combo') NOT NULL,
+    item_type ENUM('jar', 'cap', 'combo', 'quimico', 'extracto') NOT NULL,
     jar_id INT NULL, -- If selling jar or combo
     cap_id INT NULL, -- If selling cap or combo
+    quimico_id INT NULL, -- If selling quimico
+    extracto_id INT NULL, -- If selling extracto
     quantity_jar INT NOT NULL,
     quantity_cap INT NOT NULL,
+    quantity_quimico INT NOT NULL,
+    quantity_extracto INT NOT NULL,
     unit_price DECIMAL(10, 2) NOT NULL,
     subtotal DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
     FOREIGN KEY (jar_id) REFERENCES jars(id) ON DELETE RESTRICT,
     FOREIGN KEY (cap_id) REFERENCES caps(id) ON DELETE RESTRICT,
+    FOREIGN KEY (quimico_id) REFERENCES quimicos(id) ON DELETE RESTRICT,
+    FOREIGN KEY (extracto_id) REFERENCES extractos(id) ON DELETE RESTRICT,
     CHECK (quantity > 0),
     CHECK (unit_price >= 0),
     CHECK (subtotal >= 0),
@@ -157,6 +163,13 @@ CREATE TABLE sale_items (
         (item_type = 'combo' AND jar_id IS NOT NULL AND cap_id IS NOT NULL)
     )
 );
+
+
+ALTER TABLE sale_items ADD COLUMN quimico_id INT;
+ALTER TABLE sale_items ADD COLUMN extracto_id INT;
+
+ALTER TABLE sale_items ADD CONSTRAINT FOREIGN KEY (quimico_id) REFERENCES quimicos(id) ON DELETE RESTRICT;
+ALTER TABLE sale_items ADD CONSTRAINT FOREIGN KEY (extracto_id) REFERENCES extractos(id) ON DELETE RESTRICT;
 
 -- ============================================
 -- 8. TRANSACTIONS TABLE (Inventory movements)

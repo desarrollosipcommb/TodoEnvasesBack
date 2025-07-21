@@ -14,15 +14,22 @@ public class SaleItemRequest {
 
     private Integer quantity;
 
+    private String quimicoName;
+
+    private String extractoName;
+
     public SaleItemRequest() {
     }
 
-    public SaleItemRequest(String comboName, String jarName, String capName, String capColor, String diameter, Integer quantity) {
+    public SaleItemRequest(String comboName, String jarName, String capName, String capColor, String diameter, Integer quantity, String quimicoName, String extractoName) {
         this.comboName = comboName;
         this.jarName = jarName;
         this.capName = capName;
         this.capColor = capColor;
         this.diameter = diameter;
+        this.quantity = quantity;
+        this.quimicoName = quimicoName;
+        this.extractoName = extractoName;
         this.quantity = quantity;
     }
 
@@ -71,6 +78,22 @@ public class SaleItemRequest {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    public String getQuimicoName() {
+        return quimicoName;
+    }
+
+    public void setQuimicoName(String quimicoName) {
+        this.quimicoName = quimicoName;
+    }
+
+    public String getExtractoName() {
+        return extractoName;
+    }
+
+    public void setExtractoName(String extractoName) {
+        this.extractoName = extractoName;
     }
 
     
