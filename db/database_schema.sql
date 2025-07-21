@@ -214,6 +214,40 @@ CREATE TABLE jar_cap_compatibility (
 );
 
 -- ============================================
+-- 11. quimicos
+-- ============================================
+
+CREATE TABLE quimicos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    quantity INT NOT NULL DEFAULT 0, -- Stock quantity
+    unit_price DECIMAL(10, 2) DEFAULT 0.00
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+
+-- ============================================
+-- 11. Extractos
+-- ============================================
+
+CREATE TABLE extractos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    quantity INT NOT NULL DEFAULT 0, -- Stock quantity
+    price22ml DECIMAL(10, 2) DEFAULT 0.00 NOT NULL,
+    price60ml DECIMAL(10, 2) DEFAULT 0.00,
+    price125ml DECIMAL(10, 2) DEFAULT 0.00,
+    price250ml DECIMAL(10, 2) DEFAULT 0.00,
+    price500ml DECIMAL(10, 2) DEFAULT 0.00,
+    price1000ml DECIMAL(10, 2) DEFAULT 0.00,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+
+
+-- ============================================
 -- INSERT DEFAULT DATA
 -- ============================================
 
