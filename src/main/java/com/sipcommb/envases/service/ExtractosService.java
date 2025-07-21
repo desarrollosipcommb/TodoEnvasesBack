@@ -105,7 +105,7 @@ public class ExtractosService {
 
         if (extractosDTO.getPrice22ml() != null && extractosDTO.getPrice22ml() > 0) {
             extractoToUpdate.setPrice22ml(java.math.BigDecimal.valueOf(extractosDTO.getPrice22ml()));
-        }else if(extractosDTO.getPrice22ml() < 0) {
+        }else if(extractosDTO.getPrice22ml() != null && extractosDTO.getPrice22ml() < 0) {
             throw new IllegalArgumentException("El precio para 22ml no puede ser negativo o cero.");
         }
 
@@ -129,7 +129,7 @@ public class ExtractosService {
             extractoToUpdate.setPrice1000ml(java.math.BigDecimal.valueOf(extractosDTO.getPrice1000ml()));
         }
 
-        if(extractosDTO.getQuantity() != null) {
+        if(extractosDTO.getQuantity() != null && extractosDTO.getQuantity() != extractoToUpdate.getQuantity()) {
             extractoToUpdate.setQuantity(extractosDTO.getQuantity());
             inventoryService.newItem(
                 extractoToUpdate.getId().longValue(),

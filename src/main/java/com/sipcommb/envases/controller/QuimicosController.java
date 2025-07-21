@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,7 +17,7 @@ import com.sipcommb.envases.dto.QuimicosDTO;
 import com.sipcommb.envases.service.PermissionService;
 import com.sipcommb.envases.service.QuimicosService;
 
-
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
@@ -106,7 +107,7 @@ public class QuimicosController {
         }
     }
 
-    @PostMapping("/update")
+    @PutMapping("/update")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Quimico actualizado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = QuimicosDTO.class))),
         @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
@@ -125,7 +126,7 @@ public class QuimicosController {
         }
     }
 
-    @PostMapping("/delete")
+    @PutMapping("/delete")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Quimico eliminado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = QuimicosDTO.class))),
         @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
@@ -137,14 +138,14 @@ public class QuimicosController {
         }
 
         try{
-            quimicosService.deactivateQuimico(quimicoDTO);
-            return ResponseEntity.ok("Quimico eliminado exitosamente");
+            QuimicosDTO deactivatedQuimico = quimicosService.deactivateQuimico(quimicoDTO);
+            return ResponseEntity.ok(deactivatedQuimico);
         }catch(Exception e){
             return ResponseEntity.badRequest().body("Error al eliminar el quimico: " + e.getMessage());
         }
     }
 
-    @PostMapping("/activate")
+    @PutMapping("/activate")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Quimico activado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = QuimicosDTO.class))),
         @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
@@ -163,7 +164,12 @@ public class QuimicosController {
         }    
     }
 
-    @PostMapping("/restock")
+    @Operation(
+        summary = "Añadir inventario a un quimico", 
+        description = "Permite añadir inventario a un quimico existente en la base de datos. Solo necesita el numero a añadir y el nombre del quimico. \\n\\n" + //
+                        "Si el quimico no existe, lanzará un error.")
+
+    @PutMapping("/restock")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Quimico reabastecido exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = QuimicosDTO.class))),
         @ApiResponse(responseCode = "400", description = "Error en la solicitud"),

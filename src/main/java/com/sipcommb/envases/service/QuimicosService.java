@@ -90,7 +90,7 @@ public class QuimicosService {
             quimico.setDescription(quimicoDTO.getDescription());
         }
 
-        if(quimicoDTO.getQuantity() != null) {
+        if(quimicoDTO.getQuantity() != null && quimicoDTO.getQuantity() != quimico.getQuantity()) {
             quimico.setQuantity(quimicoDTO.getQuantity());
             inventoryService.newItem(quimico.getId().longValue(), "quimico", quimico.getQuantity().intValue(), "adjustment", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo el inventario del quimico " + quimico.getName());
         }

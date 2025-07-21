@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -101,7 +102,7 @@ public class ExtractosController {
         }
     }
 
-    @PostMapping("/update")
+    @PutMapping("/update")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Extracto actualizado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
         @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
@@ -119,7 +120,7 @@ public class ExtractosController {
         }
     }
 
-    @PostMapping("/delete")
+    @PutMapping("/delete")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Extracto eliminado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
         @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
@@ -137,7 +138,7 @@ public class ExtractosController {
         }
     }
 
-    @PostMapping("/activate")
+    @PutMapping("/activate")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Extracto activado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
         @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
@@ -152,6 +153,24 @@ public class ExtractosController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al activar el extracto: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/restock")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Extracto reabastecido exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado")
+    })
+    public ResponseEntity<?> restockExtracto(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractosDTO extractosDTO) {
+        if(!permissionService.hasPermission(authHeader, "update")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para reabastecer extractos");
+        }
+        try {
+            ExtractosDTO restockedExtracto = extractosService.restock(extractosDTO, authHeader.trim().replace("Bearer ", ""));
+            return ResponseEntity.ok(restockedExtracto);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al reabastecer el extracto: " + e.getMessage());
         }
     }
 }
