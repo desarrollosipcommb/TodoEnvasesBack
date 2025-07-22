@@ -99,14 +99,14 @@ public class UserService {
     public User updateUser(Long userId, String firstName, String lastName, String email) {
         Optional<User> userOptional = userRepository.findById(userId);
         if (!userOptional.isPresent()) {
-            throw new RuntimeException("User not found");
+            throw new RuntimeException("no se encontró el");
         }
 
         User user = userOptional.get();
         
         // Check if new email is already taken by another user
         if (!user.getEmail().equals(email) && userRepository.existsByEmail(email)) {
-            throw new RuntimeException("Email already exists");
+            throw new RuntimeException("Ya existe un usuario con este email");
         }
 
         user.setFirstName(firstName);
@@ -122,14 +122,14 @@ public class UserService {
     public void changePassword(Long userId, String oldPassword, String newPassword) {
         Optional<User> userOptional = userRepository.findById(userId);
         if (!userOptional.isPresent()) {
-            throw new RuntimeException("User not found");
+            throw new RuntimeException("no se encontró el usuario");
         }
 
         User user = userOptional.get();
 
         // Verify old password
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new RuntimeException("Current password is incorrect");
+            throw new RuntimeException("La contraseña actual es incorrecta");
         }
 
         // Update password
@@ -143,7 +143,7 @@ public class UserService {
     public void deactivateUser(Long userId) {
         Optional<User> userOptional = userRepository.findById(userId);
         if (!userOptional.isPresent()) {
-            throw new RuntimeException("User not found");
+            throw new RuntimeException("no se encontró el usuario");
         }
 
         User user = userOptional.get();
@@ -157,7 +157,7 @@ public class UserService {
     public void activateUser(Long userId) {
         Optional<User> userOptional = userRepository.findById(userId);
         if (!userOptional.isPresent()) {
-            throw new RuntimeException("User not found");
+            throw new RuntimeException("no se encontró el usuario");
         }
 
         User user = userOptional.get();
