@@ -51,9 +51,7 @@ public class SaleItem {
 
     
 
-    public enum ItemType {
-        JAR, CAP, COMBO, QUIMICO, EXTRACTO
-    }
+
     
     // Constructors
     public SaleItem() {}

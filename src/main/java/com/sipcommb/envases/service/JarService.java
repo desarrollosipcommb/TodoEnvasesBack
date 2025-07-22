@@ -183,7 +183,7 @@ public class JarService {
         
         if(jarRequestDTO.getQuantity() != null){
             
-            inventoryService.newItem(jar.getId(), "jar", jar.getQuantity().intValue(), "adjustment", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo "+jar.getName());
+            inventoryService.newItem(jar.getId(), "jar", jar.getQuantity().intValue(), "adjustment", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo "+jar.getName()+" su inventario ahora es: "+jar.getQuantity());
             jar.setQuantity(jarRequestDTO.getQuantity());
         }
        
@@ -280,6 +280,30 @@ public class JarService {
             throw new IllegalArgumentException("No existe un frasco con ese nombre.");
         }
         return new JarDTO(jarOptional.get());
+    }
+
+    public JarDTO changeInventory(JarRequestDTO jarRequestDTO, String token) {
+        Optional<Jar> jarOptional = jarRepository.getByName(jarRequestDTO.getName().trim().toLowerCase());
+
+        if(!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        Jar jar = jarOptional.get();
+
+        if(jarRequestDTO.getQuantity() == null) {
+            throw new IllegalArgumentException("La cantidad no puede ser nula.");
+        }
+
+        if(jarRequestDTO.getQuantity() < 0) {
+            jar.setQuantity(jar.getQuantity() + jarRequestDTO.getQuantity());
+            inventoryService.newItem(jar.getId(), "jar", jar.getQuantity().intValue(), "damage", jwtService.getUserIdFromToken(token).intValue(), "Se reporto un daño en "+jar.getName()+" su inventario ahora es: "+jar.getQuantity());
+            return new JarDTO(jarRepository.save(jar));
+        }
+
+        jar.setQuantity(jarRequestDTO.getQuantity() + jar.getQuantity());
+        inventoryService.newItem(jar.getId(), "jar", jar.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo "+jar.getName()+" su inventario ahora es: "+jar.getQuantity());
+
+        return new JarDTO(jarRepository.save(jar));
     }
 
     

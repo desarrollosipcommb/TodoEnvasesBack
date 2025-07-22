@@ -9,6 +9,7 @@ import com.sipcommb.envases.dto.SaleRequest;
 import com.sipcommb.envases.entity.Cap;
 import com.sipcommb.envases.entity.Combo;
 import com.sipcommb.envases.entity.Extractos;
+import com.sipcommb.envases.entity.ItemType;
 import com.sipcommb.envases.entity.Jar;
 import com.sipcommb.envases.entity.Quimicos;
 import com.sipcommb.envases.entity.Sale;
@@ -114,15 +115,15 @@ public class SaleService {
             saleItemList.add(saleItem);
             sale.addPrice(saleItem.getSubtotal());
 
-            if(saleItem.getItemType() == SaleItem.ItemType.COMBO){
+            if(saleItem.getItemType() == ItemType.COMBO){
                 saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getComboName(), saleItem));
-            } else if(saleItem.getItemType() == SaleItem.ItemType.JAR){
+            } else if(saleItem.getItemType() == ItemType.JAR){
                 saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getJarName(), saleItem));
-            } else if(saleItem.getItemType() == SaleItem.ItemType.CAP){
+            } else if(saleItem.getItemType() == ItemType.CAP){
                 saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getCapName(), saleItem));
-            }else if(saleItem.getItemType() == SaleItem.ItemType.QUIMICO){
+            }else if(saleItem.getItemType() == ItemType.QUIMICO){
                 saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getQuimicoName(), saleItem));
-            } else if(saleItem.getItemType() == SaleItem.ItemType.EXTRACTO){
+            } else if(saleItem.getItemType() == ItemType.EXTRACTO){
                 saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getExtractoName(), saleItem));
             }
 
@@ -178,30 +179,20 @@ public class SaleService {
             
 
             sale.addPrice(saleItem.getSubtotal());
-             if(saleItem.getItemType() == SaleItem.ItemType.COMBO){
+             if(saleItem.getItemType() == ItemType.COMBO){
                 saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getComboName(), saleItem));
-            } else if(saleItem.getItemType() == SaleItem.ItemType.JAR){
+            } else if(saleItem.getItemType() == ItemType.JAR){
                 saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getJarName(), saleItem));
-            } else if(saleItem.getItemType() == SaleItem.ItemType.CAP){
+            } else if(saleItem.getItemType() == ItemType.CAP){
                 saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getCapName(), saleItem));
-            } else if(saleItem.getItemType() == SaleItem.ItemType.QUIMICO){
+            } else if(saleItem.getItemType() == ItemType.QUIMICO){
                 saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getQuimicoName(), saleItem));
-            } else if(saleItem.getItemType() == SaleItem.ItemType.EXTRACTO){
+            } else if(saleItem.getItemType() == ItemType.EXTRACTO){
                 saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getExtractoName(), saleItem));
             }
         }
 
         for(SaleItem saleItem : saleItemList){
-           
-             System.out.println("SaleItem: " +
-        "sale=" + (saleItem.getSale() != null ? saleItem.getSale().getId() : null) +
-        ", itemType=" + saleItem.getItemType() +
-        ", quantity=" + saleItem.getQuantity() +
-        ", unitPrice=" + saleItem.getUnitPrice() +
-        ", subtotal=" + saleItem.getSubtotal() +
-        ", jar=" + (saleItem.getJar() != null ? saleItem.getJar().getId() : null) +
-        ", cap=" + (saleItem.getCap() != null ? saleItem.getCap().getId() : null)
-    );
             modifyInventory(saleItem, userOpt.get().getId().intValue());
         }
 
@@ -277,7 +268,7 @@ public class SaleService {
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(java.math.BigDecimal.valueOf(determinePrice(combo, saleItemRequest)));
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(java.math.BigDecimal.valueOf(saleItemRequest.getQuantity())));
-        saleItem.setItemType(SaleItem.ItemType.COMBO);
+        saleItem.setItemType(ItemType.COMBO);
         saleItem.setSale(null); 
         return saleItem;
     }
@@ -289,7 +280,7 @@ public class SaleService {
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(determinePrice(jar, saleItemRequest));
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(java.math.BigDecimal.valueOf(saleItemRequest.getQuantity())));
-        saleItem.setItemType(SaleItem.ItemType.JAR);
+        saleItem.setItemType(ItemType.JAR);
         saleItem.setSale(null); 
        return saleItem;
     }
@@ -301,7 +292,7 @@ public class SaleService {
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(determinePrice(cap, saleItemRequest));
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(java.math.BigDecimal.valueOf(saleItemRequest.getQuantity())));
-        saleItem.setItemType(SaleItem.ItemType.CAP);
+        saleItem.setItemType(ItemType.CAP);
         saleItem.setSale(null); 
 
         return saleItem;
@@ -315,7 +306,7 @@ public class SaleService {
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(quimico.getUnitPrice());
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(java.math.BigDecimal.valueOf(saleItemRequest.getQuantity())));
-        saleItem.setItemType(SaleItem.ItemType.QUIMICO);
+        saleItem.setItemType(ItemType.QUIMICO);
         saleItem.setSale(null); 
         return saleItem;
     }
@@ -328,7 +319,7 @@ public class SaleService {
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(determinePrice(extracto, saleItemRequest));
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(java.math.BigDecimal.valueOf(saleItemRequest.getQuantity())));
-        saleItem.setItemType(SaleItem.ItemType.EXTRACTO);
+        saleItem.setItemType(ItemType.EXTRACTO);
         saleItem.setSale(null); 
         return saleItem;
     }
@@ -461,7 +452,7 @@ public class SaleService {
     }
 
     private void modifyInventory(SaleItem saleItem, int userId) {
-        if(saleItem.getItemType() == SaleItem.ItemType.COMBO){
+        if(saleItem.getItemType() == ItemType.COMBO){
             Jar jar = saleItem.getJar();
             Cap cap = saleItem.getCap();
             jar.setQuantity(jar.getQuantity() - saleItem.getQuantity());
@@ -472,19 +463,19 @@ public class SaleService {
             capRepository.save(cap);
             inventoryService.newItem(jar.getId(), "jar", saleItem.getQuantity(), "sale", userId, "Se vendieron " + saleItem.getQuantity() + " del envase en combo: " + jar.getName());
             inventoryService.newItem(cap.getId(), "cap", saleItem.getQuantity(), "sale", userId, "Se vendieron " + saleItem.getQuantity() + " de tapa en combo: " + cap.getName());
-        } else if(saleItem.getItemType() == SaleItem.ItemType.JAR){
+        } else if(saleItem.getItemType() == ItemType.JAR){
             Jar jar = saleItem.getJar();
             jar.setQuantity(jar.getQuantity() - saleItem.getQuantity());
             jar.setUpdatedAt(LocalDateTime.now());
             jarRepository.save(jar);
             inventoryService.newItem(jar.getId(), "jar", saleItem.getQuantity(), "sale", userId, "Se vendieron " + saleItem.getQuantity() + " de tarro: " + jar.getName());
-        } else if(saleItem.getItemType() == SaleItem.ItemType.CAP){
+        } else if(saleItem.getItemType() == ItemType.CAP){
             Cap cap = saleItem.getCap();
             cap.setQuantity(cap.getQuantity() - saleItem.getQuantity());
             cap.setUpdatedAt(LocalDateTime.now());
             capRepository.save(cap);
             inventoryService.newItem(cap.getId(), "cap", saleItem.getQuantity(), "sale", userId, "Se vendieron " + saleItem.getQuantity() + " de tapa: " + cap.getName());
-        } else if (saleItem.getItemType() == SaleItem.ItemType.QUIMICO){
+        } else if (saleItem.getItemType() == ItemType.QUIMICO){
             Quimicos quimico = saleItem.getQuimico();
             quimico.setQuantity(quimico.getQuantity() - saleItem.getQuantity());
             quimicosRepository.save(quimico);
@@ -496,7 +487,7 @@ public class SaleService {
                 userId, 
                 "Se vendieron " + saleItem.getQuantity() + " de químico: " + quimico.getName()
             );
-        } else if (saleItem.getItemType() == SaleItem.ItemType.EXTRACTO){
+        } else if (saleItem.getItemType() == ItemType.EXTRACTO){
             Extractos extracto = saleItem.getExtracto();
             extracto.setQuantity(extracto.getQuantity() - saleItem.getQuantity());
             extractosRepository.save(extracto);
@@ -543,11 +534,11 @@ public class SaleService {
          List<SaleItem> saleItems = saleItemRepository.findBySale(sale.getId());
             List<SaleItemDTO> saleItemDTOs = new ArrayList<>();
             for(SaleItem saleItem : saleItems){
-                if(saleItem.getItemType() == SaleItem.ItemType.COMBO){
+                if(saleItem.getItemType() == ItemType.COMBO){
                     saleItemDTOs.add(new SaleItemDTO(comboRepository.findByJarAndCap(saleItem.getJar().getId(), saleItem.getCap().getId()).orElse(null).getName(), saleItem));
-                } else if(saleItem.getItemType() == SaleItem.ItemType.JAR){
+                } else if(saleItem.getItemType() == ItemType.JAR){
                     saleItemDTOs.add(new SaleItemDTO(jarRepository.findById(saleItem.getJar().getId()).orElse(null).getName(), saleItem));
-                } else if(saleItem.getItemType() == SaleItem.ItemType.CAP){
+                } else if(saleItem.getItemType() == ItemType.CAP){
                     saleItemDTOs.add(new SaleItemDTO(capRepository.findById(saleItem.getCap().getId()).orElse(null).getName(), saleItem));
                 }
             }

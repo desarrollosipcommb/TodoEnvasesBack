@@ -154,7 +154,7 @@ public class CapService {
 
         if(capRequest.getQuantity() != null) {
             cap.setQuantity(capRequest.getQuantity());
-            inventoryService.newItem(cap.getId(), "cap", cap.getQuantity().intValue(), "adjustment", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo la tapa: "+cap.getName());
+            inventoryService.newItem(cap.getId(), "cap", cap.getQuantity().intValue(), "adjustment", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo la tapa: "+cap.getName()+", su inventario ahora es: "+cap.getQuantity());
 
         }
 
@@ -228,16 +228,33 @@ public class CapService {
     }
 
 
-    public CapDTO changeInventory(Long id, String transactionType, int quantity, String description, String token) {
-        Optional<Cap> capOptional = capRepository.findById(id);
+    public CapDTO changeInventory(CapRequest capRequest, String token) {
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameterAndColor(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor());
         if(!capOptional.isPresent()) {
-            throw new RuntimeException("No existe una tapa con este ID.");
+            throw new RuntimeException("No existe una tapa con estas especificaciones.");
         }
         Cap cap = capOptional.get();
-        cap.setQuantity(cap.getQuantity() + quantity);
-        token = token.replace("Bearer ", "").trim();
-        inventoryService.newItem(cap.getId(), "cap", quantity, transactionType, jwtService.getUserIdFromToken(token).intValue(), description);
-        capRepository.save(cap);
+        
+        if(capRequest.getQuantity() == null) {
+            throw new IllegalArgumentException("La cantidad debe ser especificada.");
+        }
+
+        if(capRequest.getQuantity() < 0) {
+            cap.setQuantity(cap.getQuantity() + capRequest.getQuantity());
+            inventoryService.newItem(cap.getId(), "cap", capRequest.getQuantity().intValue(), "damage", jwtService.getUserIdFromToken(token).intValue(), "Se a reportado un daño en el inventario de la tapa: "+cap.getName()+", su inventario ahora es: "+cap.getQuantity());
+            return new CapDTO(capRepository.save(cap));
+        }
+
+        cap.setQuantity(cap.getQuantity() + capRequest.getQuantity());
+        inventoryService.newItem(
+            cap.getId(),
+            "cap",
+            capRequest.getQuantity().intValue(),
+            "restock",
+            jwtService.getUserIdFromToken(token).intValue(),
+            "Se actualizo el inventario de la tapa: "+cap.getName()+", su inventario ahora es: "+cap.getQuantity()
+        );
+
         return new CapDTO(cap);
     }
 

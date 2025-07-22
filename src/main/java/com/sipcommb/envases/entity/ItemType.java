@@ -1,5 +1,5 @@
 package com.sipcommb.envases.entity;
 
 public enum ItemType {
-    jar, cap, quimico, extracto // TODO cambiar la db para que sean mayusculas
+    JAR, CAP, QUIMICO, EXTRACTO, COMBO // TODO cambiar la db para que sean mayusculas
 }

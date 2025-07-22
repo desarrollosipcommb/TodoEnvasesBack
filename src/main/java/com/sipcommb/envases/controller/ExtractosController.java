@@ -44,7 +44,7 @@ public class ExtractosController {
         }
 
         try {
-            ExtractosDTO newExtracto = extractosService.addExtracto(extractosDTO);
+            ExtractosDTO newExtracto = extractosService.addExtracto(extractosDTO, authHeader);
             return ResponseEntity.ok(newExtracto);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

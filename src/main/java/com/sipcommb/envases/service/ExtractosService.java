@@ -24,7 +24,7 @@ public class ExtractosService {
     private JwtService jwtService;
     
     // Method to add a new extracto
-    public ExtractosDTO addExtracto(ExtractosDTO extractosDTO) {
+    public ExtractosDTO addExtracto(ExtractosDTO extractosDTO, String token) {
         System.out.println("Adding new extracto: " + extractosDTO.getName());
         
         if (extractosDTO.getName() == null || extractosDTO.getName().trim().isEmpty()) {
@@ -56,6 +56,8 @@ public class ExtractosService {
         newExtracto.setDescription(extractosDTO.getDescription() != null ? extractosDTO.getDescription() : "Sin descripción");
         newExtracto.setActive(true);
         newExtracto.setQuantity(extractosDTO.getQuantity());
+
+        inventoryService.newItem(newExtracto.getId() != null ? newExtracto.getId().longValue() : null, "extracto", newExtracto.getQuantity().intValue(), "add", jwtService.getUserIdFromToken(token).intValue(), "Se añadió " + newExtracto.getName() + " al inventario");
 
         extractosRepository.save(newExtracto);
 
@@ -137,7 +139,7 @@ public class ExtractosService {
                 extractosDTO.getQuantity().intValue(),
                 "adjustment",
                 jwtService.getUserIdFromToken(token).intValue(),
-                "Se actualizo el inventario del extracto " + extractoToUpdate.getName()
+                "Se actualizo el inventario del extracto " + extractoToUpdate.getName()+", su inventario ahora es: " + extractoToUpdate.getQuantity()
             );
         }
 
@@ -166,7 +168,7 @@ public class ExtractosService {
             extractosDTO.getQuantity().intValue(),
             "restock",
             jwtService.getUserIdFromToken(token).intValue(),
-            "Se reabasteció el inventario del extracto " + extractoToRestock.getName()
+            "hay " + extractosDTO.getQuantity() + " unidades nuevas de " + extractoToRestock.getName() + " en el inventario, en total hay " + extractoToRestock.getQuantity() + " unidades disponibles."
         );
 
         extractosRepository.save(extractoToRestock);

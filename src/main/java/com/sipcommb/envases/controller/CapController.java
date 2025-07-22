@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sipcommb.envases.dto.CapDTO;
 import com.sipcommb.envases.dto.CapRequest;
-import com.sipcommb.envases.dto.InventoryChangeRequest;
 import com.sipcommb.envases.service.CapService;
 import com.sipcommb.envases.service.PermissionService;
 
@@ -221,11 +220,11 @@ public class CapController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "400", description = "Error al actualizar el inventario de tapas")
     })
-    public ResponseEntity<?> updateCapInventory(@RequestBody InventoryChangeRequest inventoryChangeRequest, @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> updateCapInventory(@RequestBody CapRequest capRequest, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update"))
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar el inventario de tapas");
         try {
-            CapDTO capDTO = capService.changeInventory(inventoryChangeRequest.getId(), inventoryChangeRequest.getTransactionType(), inventoryChangeRequest.getQuantity(), inventoryChangeRequest.getDescription(), authHeader);
+            CapDTO capDTO = capService.changeInventory(capRequest, authHeader);
             return ResponseEntity.ok(capDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
