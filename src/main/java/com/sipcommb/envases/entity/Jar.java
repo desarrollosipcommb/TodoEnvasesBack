@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Table(name = "jars")
 public class Jar {
 
-    // TODO : añadir los cambios que se le hicieron a la tabla jar
+  
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,6 +1,7 @@
 package com.sipcommb.envases.service;
 
-import com.sipcommb.envases.dto.TransactionDTO;
+
+import com.sipcommb.envases.dto.TransactionResponseDTO;
 import com.sipcommb.envases.entity.ItemType;
 import com.sipcommb.envases.entity.Transaction;
 import com.sipcommb.envases.entity.TransactionType;
@@ -8,6 +9,7 @@ import com.sipcommb.envases.entity.User;
 import com.sipcommb.envases.repository.InventoryRepository;
 import com.sipcommb.envases.repository.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -66,30 +68,29 @@ public class InventoryService {
         inventoryRepository.save(tx);
     }
 
-    public List<TransactionDTO> getAll() {
+    public List<TransactionResponseDTO> getAll() {
         List<Transaction> transactions = inventoryRepository.findAll();
-        return transactions.stream()
-                .map(TransactionDTO::new)
-                .collect(Collectors.toList());
+        return getResponseDTOs(transactions);
     }
 
-    public List<TransactionDTO> getByItemType(String itemType) {
-        ItemType itemTypeEnum = ItemType.valueOf(itemType);
-        List<Transaction> transactions = inventoryRepository.findByItemType(itemTypeEnum);
-        return transactions.stream()
-                .map(TransactionDTO::new)
-                .collect(Collectors.toList());
+    public List<TransactionResponseDTO> getByItemType(String itemType) {
+        try{
+            ItemType itemTypeEnum = ItemType.valueOf(itemType.toUpperCase());
+            List<Transaction> transactions = inventoryRepository.findByItemType(itemTypeEnum);
+            return getResponseDTOs(transactions);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Tipo de item no válido: " + itemType);
+        }
+       
     }
 
-    public List<TransactionDTO> getByTransactionType(String transactionType) {
+    public List<TransactionResponseDTO> getByTransactionType(String transactionType) {
         TransactionType transactionTypeEnum = TransactionType.valueOf(transactionType);
         List<Transaction> transactions = inventoryRepository.findByTransactionType(transactionTypeEnum);
-        return transactions.stream()
-                .map(TransactionDTO::new)
-                .collect(Collectors.toList());
+        return getResponseDTOs(transactions);
     }
 
-    public List<TransactionDTO> getByUser(String email){
+    public List<TransactionResponseDTO> getByUser(String email){
         Optional<User> userOPT = userRepository.findByEmail(email);
         if (!userOPT.isPresent()) {
             throw new IllegalArgumentException("Usuario no encontrado: " + email);
@@ -97,8 +98,20 @@ public class InventoryService {
         int userId = userOPT.get().getId().intValue();
         List<Transaction> transactions = inventoryRepository.findByUser(userId);
         return transactions.stream()
-                .map(TransactionDTO::new)
+                .map(tx -> new TransactionResponseDTO(tx, userOPT.get().getFirstName() +" "+ userOPT.get().getLastName(), userOPT.get().getEmail()))
                 .collect(Collectors.toList());
+    }
+
+    private List<TransactionResponseDTO> getResponseDTOs(List<Transaction> transactions) {
+        List<TransactionResponseDTO> response = new ArrayList<>();
+        for (Transaction tx : transactions) {
+            Optional<User> userOPT = userRepository.findById(tx.getPerformedBy().longValue());
+            if (userOPT.isPresent()) {
+                User user = userOPT.get();
+                response.add(new TransactionResponseDTO(tx, user.getFirstName() + " " + user.getLastName(), user.getEmail()));
+            }
+        }
+        return response;
     }
 
 

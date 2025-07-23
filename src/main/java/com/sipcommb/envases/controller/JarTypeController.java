@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -85,6 +86,26 @@ public class JarTypeController {
             return ResponseEntity.ok(jarTypeService.getAll());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
+        }
+    }
+
+    //TODO probar
+    @PutMapping("/update")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Tipo de tapa actualizado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al actualizar el tipo de tapa")
+    })
+    public ResponseEntity<?> updateJarType(@RequestBody JarTypeDTO jarTypeDTO, @RequestHeader("Authorization") String authHeader) {
+        try {
+            if(!permissionService.hasPermission(authHeader, "update")) {
+                return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar tipos de tapas");
+            }
+            JarTypeDTO updatedJarType = jarTypeService.updateJarType(jarTypeDTO.getDiameter(), jarTypeDTO);
+            return ResponseEntity.ok(updatedJarType);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(e.getMessage());
         }
     }

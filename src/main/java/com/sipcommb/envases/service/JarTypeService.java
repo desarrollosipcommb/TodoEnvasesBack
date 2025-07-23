@@ -42,6 +42,26 @@ public class JarTypeService {
         return jarTypeDTO;
     }
 
+    public JarTypeDTO updateJarType(String diameter, JarTypeDTO jarTypeDTO) {
+        Optional<JarType> jarTypeOpt = jarTypeRepository.getTypeByDiameter(diameter);
+
+        if(!jarTypeOpt.isPresent()) {
+            throw new RuntimeException("No se encontro el tipo de tapa con diametro: " + diameter);
+        }
+
+        JarType jarType = jarTypeOpt.get();
+
+        if(jarTypeRepository.getTypeByName(jarTypeDTO.getName()).isPresent() && 
+           !jarType.getName().equals(jarTypeDTO.getName())) {
+            throw new RuntimeException("Ya existe un tipo de tapa con el nombre: " + jarTypeDTO.getName());
+        }
+
+        jarType.setName(jarTypeDTO.getName());
+        jarType.setDescription(jarTypeDTO.getDescription());
+        jarTypeRepository.save(jarType);
+        return jarTypeDTO;
+    }
+
     public JarTypeDTO getByDiameter(String diameter) {
         Optional<JarType> jarType = jarTypeRepository.getTypeByDiameter(diameter);
         if (jarType.isPresent()) {
