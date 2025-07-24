@@ -19,6 +19,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -140,32 +142,20 @@ public class JarService {
         
     }
 
-    
-    public List<JarDTO> getAllJars() {
-        List<Jar> jars = jarRepository.findAll();
-        List<JarDTO> jarDTOs = new ArrayList<>();
-        for (Jar jar : jars) {
-            jarDTOs.add(new JarDTO(jar));
-        }
-        return jarDTOs;
+
+    public Page<JarDTO> getAllJars(Pageable pageable) {
+        Page<Jar> jars = jarRepository.findAll(pageable);
+        return jars.map(JarDTO::new);
     }
 
-    public List<JarDTO> getAllActiveJars() {
-        List<Jar> jars = jarRepository.getAllActiveJars().get();
-        List<JarDTO> jarDTOs = new ArrayList<>();
-        for (Jar jar : jars) {
-            jarDTOs.add(new JarDTO(jar));
-        }
-        return jarDTOs;
+    public Page<JarDTO> getAllActiveJars(Pageable pageable) {
+        Page<Jar> jars = jarRepository.getAllActiveJars(pageable).get();
+        return jars.map(JarDTO::new);
     }
 
-    public List<JarDTO> getAllInactiveJars() {
-        List<Jar> jars = jarRepository.getAllInactiveJars().get();
-        List<JarDTO> jarDTOs = new ArrayList<>();
-        for (Jar jar : jars) {
-            jarDTOs.add(new JarDTO(jar));
-        }
-        return jarDTOs;
+    public Page<JarDTO> getAllInactiveJars(Pageable pageable) {
+        Page<Jar> jars = jarRepository.getAllInactiveJars(pageable).get();
+        return jars.map(JarDTO::new);
     }
 
   
@@ -304,6 +294,11 @@ public class JarService {
         inventoryService.newItem(jar.getId(), "jar", jar.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo "+jar.getName()+" su inventario ahora es: "+jar.getQuantity());
 
         return new JarDTO(jarRepository.save(jar));
+    }
+
+    public Page<JarDTO> getJarLikeName(String name, Pageable pageable) {
+        Page<Jar> jars = jarRepository.getFromNameLike(name, pageable).get();
+        return jars.map(JarDTO::new);
     }
 
     

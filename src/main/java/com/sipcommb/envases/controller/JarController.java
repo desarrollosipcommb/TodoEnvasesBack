@@ -1,8 +1,9 @@
 package com.sipcommb.envases.controller;
 
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -60,15 +62,18 @@ public class JarController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "400", description = "Error al obtener la lista de frascos")
     })
-    public ResponseEntity<?> getAllJars(@RequestHeader("Authorization") String authHeader) {
-
+    public ResponseEntity<?> getAllJars(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
         }
 
         try{
-            List<JarDTO> response = jarService.getAllJars();
-            return ResponseEntity.ok().body(response);
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok().body(jarService.getAllJars(pageable));
         }catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
@@ -81,13 +86,17 @@ public class JarController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "400", description = "Error al obtener la lista de frascos activos")
     })
-    public ResponseEntity<?> getAllActiveJars(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllActiveJars(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
         }
         try{
-            List<JarDTO> response = jarService.getAllActiveJars();
-            return ResponseEntity.ok().body(response);
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok().body(jarService.getAllActiveJars(pageable));
         }catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
@@ -99,13 +108,17 @@ public class JarController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "400", description = "Error al obtener la lista de frascos inactivos")
     })
-    public ResponseEntity<?> getAllInactiveJars(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllInactiveJars(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
         }
         try{
-            List<JarDTO> response = jarService.getAllInactiveJars();
-            return ResponseEntity.ok().body(response);
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok().body(jarService.getAllInactiveJars(pageable));
         }catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
@@ -190,7 +203,10 @@ public class JarController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "404", description = "Frasco no encontrado")
     })
-    public ResponseEntity<?> getJarByName(@RequestBody String name, @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getJarByName(
+        @RequestBody String name, 
+        @RequestHeader("Authorization") String authHeader
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer frascos");
         }
@@ -199,6 +215,47 @@ public class JarController {
             return ResponseEntity.ok(jarDTO);
         } catch (Exception e) {
             return ResponseEntity.status(404).body("Error: " + e.getMessage()); 
+        }
+    }
+
+    @GetMapping("/like-name")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Frascos obtenidos exitossamente por nombre", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "404", description = "Frascos no encontrados")
+    })
+    public ResponseEntity<?> getJarsByNameLike(
+        @RequestBody String name,
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer frascos");
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(jarService.getJarLikeName(name, pageable));
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body("Error: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/inventory")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Cantidad del frasco actualizada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al actualizar la cantidad del frasco")
+    })
+    public ResponseEntity<?> updateJarQuantity(@RequestBody JarRequestDTO jarRequestDTO, @RequestHeader("Authorization") String token) {
+        if(!permissionService.hasPermission(token, "update")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar frascos");
+        }
+        try {
+            JarDTO response = jarService.changeInventory(jarRequestDTO, token.replace("Bearer ", "").trim());
+            return ResponseEntity.ok().body(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());   
         }
     }
 

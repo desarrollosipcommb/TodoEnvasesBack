@@ -169,7 +169,7 @@ public class QuimicosController {
         description = "Permite añadir inventario a un quimico existente en la base de datos. Solo necesita el numero a añadir y el nombre del quimico. \\n\\n" + //
                         "Si el quimico no existe, lanzará un error.")
 
-    @PutMapping("/restock")
+    @PutMapping("/inventory")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Quimico reabastecido exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = QuimicosDTO.class))),
         @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
@@ -181,7 +181,7 @@ public class QuimicosController {
         }
 
         try{
-            QuimicosDTO restockedQuimico = quimicosService.restock(quimicoDTO, authHeader.trim().replace("Bearer ", ""));
+            QuimicosDTO restockedQuimico = quimicosService.changeInventory(quimicoDTO, authHeader.trim().replace("Bearer ", ""));
             return ResponseEntity.ok(restockedQuimico);
         }catch(Exception e){
             return ResponseEntity.badRequest().body("Error al reabastecer el quimico: " + e.getMessage());

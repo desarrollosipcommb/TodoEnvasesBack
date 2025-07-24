@@ -12,9 +12,12 @@ import com.sipcommb.envases.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,9 +34,9 @@ public class InventoryService {
 
     public void newItem(Long id, String itemType, int quantity, String transactionType, int userId, String notes) {
         // Convert strings to enums
-        ItemType itemTypeEnum = ItemType.valueOf(itemType);
-        TransactionType transactionTypeEnum = TransactionType.valueOf(transactionType);
-    
+        ItemType itemTypeEnum = ItemType.valueOf(itemType.toUpperCase().trim());
+        TransactionType transactionTypeEnum = TransactionType.valueOf(transactionType.toLowerCase().trim());
+
         // Create and populate Transaction entity
         Transaction tx = new Transaction();
         tx.setItemId(id.intValue());
@@ -50,8 +53,8 @@ public class InventoryService {
 
     public void newSaleItem(Long id, String itemType, int quantity, String transactionType, int userId, String notes, int saleId) {
         // Convert strings to enums
-        ItemType itemTypeEnum = ItemType.valueOf(itemType);
-        TransactionType transactionTypeEnum = TransactionType.valueOf(transactionType);
+        ItemType itemTypeEnum = ItemType.valueOf(itemType.toUpperCase().trim());
+        TransactionType transactionTypeEnum = TransactionType.valueOf(transactionType.toLowerCase().trim());
 
         // Create and populate Transaction entity
         Transaction tx = new Transaction();
@@ -68,38 +71,40 @@ public class InventoryService {
         inventoryRepository.save(tx);
     }
 
-    public List<TransactionResponseDTO> getAll() {
-        List<Transaction> transactions = inventoryRepository.findAll();
-        return getResponseDTOs(transactions);
+    public Page<TransactionResponseDTO> getAll(Pageable pageable) {
+        Page<Transaction> transactions = inventoryRepository.findAll(pageable);
+        List<TransactionResponseDTO> responseDTOs = getResponseDTOs(transactions.getContent());
+        return new PageImpl<>(responseDTOs, pageable, transactions.getTotalElements());
     }
 
-    public List<TransactionResponseDTO> getByItemType(String itemType) {
-        try{
+    public Page<TransactionResponseDTO> getByItemType(Pageable pageable, String itemType) {
+        try {
             ItemType itemTypeEnum = ItemType.valueOf(itemType.toUpperCase());
-            List<Transaction> transactions = inventoryRepository.findByItemType(itemTypeEnum);
-            return getResponseDTOs(transactions);
+            Page<Transaction> transactions = inventoryRepository.findByItemType(itemTypeEnum, pageable);
+            List<TransactionResponseDTO> responseDTOs = getResponseDTOs(transactions.getContent());
+            return new PageImpl<>(responseDTOs, pageable, transactions.getTotalElements());
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Tipo de item no válido: " + itemType);
         }
        
     }
 
-    public List<TransactionResponseDTO> getByTransactionType(String transactionType) {
+    public Page<TransactionResponseDTO> getByTransactionType(Pageable pageable, String transactionType) {
         TransactionType transactionTypeEnum = TransactionType.valueOf(transactionType);
-        List<Transaction> transactions = inventoryRepository.findByTransactionType(transactionTypeEnum);
-        return getResponseDTOs(transactions);
+        Page<Transaction> transactions = inventoryRepository.findByTransactionType(transactionTypeEnum, pageable);
+        return new PageImpl<>(getResponseDTOs(transactions.getContent()), pageable, transactions.getTotalElements());
     }
 
-    public List<TransactionResponseDTO> getByUser(String email){
+
+    //TODO posiblemente cambiar de email a username
+    public Page<TransactionResponseDTO> getByEmail(Pageable pageable, String email){
         Optional<User> userOPT = userRepository.findByEmail(email);
         if (!userOPT.isPresent()) {
             throw new IllegalArgumentException("Usuario no encontrado: " + email);
         }
         int userId = userOPT.get().getId().intValue();
-        List<Transaction> transactions = inventoryRepository.findByUser(userId);
-        return transactions.stream()
-                .map(tx -> new TransactionResponseDTO(tx, userOPT.get().getFirstName() +" "+ userOPT.get().getLastName(), userOPT.get().getEmail()))
-                .collect(Collectors.toList());
+        Page<Transaction> transactions = inventoryRepository.findByUser(userId, pageable);
+        return transactions.map(tx -> new TransactionResponseDTO(tx, userOPT.get().getFirstName() +" "+ userOPT.get().getLastName(), userOPT.get().getEmail()));
     }
 
     private List<TransactionResponseDTO> getResponseDTOs(List<Transaction> transactions) {
@@ -115,6 +120,15 @@ public class InventoryService {
     }
 
 
+    public Page<TransactionResponseDTO> getByUsername(Pageable pageable, String username) {
+        Optional<User> userOPT = userRepository.findByUsername(username);
+        if (!userOPT.isPresent()) {
+            throw new IllegalArgumentException("Usuario no encontrado: " + username);
+        }
+        int userId = userOPT.get().getId().intValue();
+        Page<Transaction> transactions = inventoryRepository.findByUser(userId, pageable);
+        return transactions.map(tx -> new TransactionResponseDTO(tx, userOPT.get().getFirstName() + " " + userOPT.get().getLastName(), userOPT.get().getEmail()));
+    }
 
 
 }

@@ -8,6 +8,8 @@ import com.sipcommb.envases.repository.CapRepository;
 import com.sipcommb.envases.repository.JarTypeRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -100,45 +102,43 @@ public class CapService {
         return capDTO;
     }
 
-    public List<CapDTO> getAllCaps() {
-        List<Cap> caps = capRepository.findAll();
-        return caps.stream().map(CapDTO::new).collect(Collectors.toList());
+    public Page<CapDTO> getAllCaps(Pageable pageable) {
+        Page<Cap> caps = capRepository.findAll(pageable);
+        return caps.map(CapDTO::new);
     }
 
-    public List<CapDTO> getAllActiveCaps(){
-        List<Cap> caps = capRepository.findAllByIsActive();
-
-        return caps.stream().map(CapDTO::new).collect(Collectors.toList());
+    public Page<CapDTO> getAllActiveCaps(Pageable pageable) {
+        Page<Cap> caps = capRepository.findAllByIsActiveTrue(pageable);
+        return caps.map(CapDTO::new);
     }
 
-    public List<CapDTO> getAllInactiveCaps(){
-        List<Cap> caps = capRepository.findAllByIsActiveFalse();
-
-        return caps.stream().map(CapDTO::new).collect(Collectors.toList());
+    public Page<CapDTO> getAllInactiveCaps(Pageable pageable) {
+        Page<Cap> caps = capRepository.findAllByIsActiveFalse(pageable);
+        return caps.map(CapDTO::new);
     }
 
-    public List<CapDTO> getCapsByDiameter(String diameter) {
-        if(capRepository.getFromCapDiameter(diameter).get().isEmpty()) {
+    public Page<CapDTO> getCapsByDiameter(String diameter, Pageable pageable) {
+        Page<Cap> caps = capRepository.getFromCapDiameter(diameter, pageable).get();
+        if(caps.isEmpty()) {
             throw new RuntimeException("No existen tapas con el diámetro especificado.");
         }
-        List<Cap> caps = capRepository.getFromCapDiameter(diameter).get();
-        return caps.stream().map(CapDTO::new).collect(Collectors.toList());
+        return caps.map(CapDTO::new);
     }
 
-    public List<CapDTO> getByName(String name) {
-        if(capRepository.getFromNameLike(name).get().isEmpty()) {
+    public Page<CapDTO> getByName(String name, Pageable pageable) {
+        Page<Cap> caps = capRepository.getFromNameLike(name, pageable).get();
+        if(caps.isEmpty()) {
             throw new RuntimeException("No existen tapas con el nombre especificado.");
         }
-        List<Cap> caps = capRepository.getFromNameLike(name).get();
-        return caps.stream().map(CapDTO::new).collect(Collectors.toList());
+        return caps.map(CapDTO::new);
     }
 
-    public List<CapDTO> getByColor(String color) {
-        if(capRepository.getFromColor(color).get().isEmpty()) {
+    public Page<CapDTO> getByColor(String color, Pageable pageable) {
+        Page<Cap> caps = capRepository.getFromColor(color, pageable).get();
+        if(caps.isEmpty()) {
             throw new RuntimeException("No existen tapas con el color especificado.");
         }
-        List<Cap> caps = capRepository.getFromColor(color).get();
-        return caps.stream().map(CapDTO::new).collect(Collectors.toList());
+        return caps.map(CapDTO::new);
     }
 
 

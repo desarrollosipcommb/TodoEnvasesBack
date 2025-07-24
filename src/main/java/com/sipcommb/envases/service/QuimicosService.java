@@ -108,7 +108,7 @@ public class QuimicosService {
         return new QuimicosDTO(quimico);
     }
 
-    public QuimicosDTO restock(QuimicosDTO quimicoDTO, String token) {
+    public QuimicosDTO changeInventory(QuimicosDTO quimicoDTO, String token) {
         if(quimicoDTO.getName() == null || quimicoDTO.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del quimico no puede estar vacío.");
         }
@@ -121,8 +121,21 @@ public class QuimicosService {
 
         Quimicos quimico = quimicoOpt.get();
 
-        if(quimicoDTO.getQuantity() == null || quimicoDTO.getQuantity() <= 0) {
-            throw new IllegalArgumentException("La cantidad a reabastecer debe ser mayor que cero.");
+        if(quimicoDTO.getQuantity() == null) {
+            throw new IllegalArgumentException("La cantidad a reabastecer debe ser especificada.");
+        }
+
+        if(quimicoDTO.getQuantity() < 0) {
+            quimico.setQuantity(quimico.getQuantity() + quimicoDTO.getQuantity());
+            inventoryService.newItem(
+                quimico.getId().longValue(),
+                "quimico",
+                quimicoDTO.getQuantity(),
+                "damage",
+                jwtService.getUserIdFromToken(token).intValue(),
+                "Se reportó un daño en el inventario del quimico " + quimico.getName() + ", su inventario ahora es: " + quimico.getQuantity()
+            );
+            return new QuimicosDTO(quimicosRepository.save(quimico));
         }
 
         quimico.setQuantity(quimico.getQuantity() + quimicoDTO.getQuantity());
@@ -135,10 +148,10 @@ public class QuimicosService {
             jwtService.getUserIdFromToken(token).intValue(),
             "Se reabasteció el inventario del quimico " + quimico.getName()
         );
-
-        quimicosRepository.save(quimico);
-        return new QuimicosDTO(quimico);
+        return new QuimicosDTO(quimicosRepository.save(quimico));
     }
+
+
 
     public QuimicosDTO activateQuimico(QuimicosDTO quimicoDTO) {
         if(quimicoDTO.getName() == null || quimicoDTO.getName().trim().isEmpty()) {

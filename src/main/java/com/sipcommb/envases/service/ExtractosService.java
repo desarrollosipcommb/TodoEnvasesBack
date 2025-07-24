@@ -147,7 +147,7 @@ public class ExtractosService {
         return new ExtractosDTO(extractoToUpdate);
     }
 
-    public ExtractosDTO restock(ExtractosDTO extractosDTO, String token) {
+    public ExtractosDTO changeInventory(ExtractosDTO extractosDTO, String token) {
         
         if (extractosDTO.getName() == null || extractosDTO.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del extracto no puede estar vacío.");
@@ -159,7 +159,28 @@ public class ExtractosService {
             throw new IllegalArgumentException("No existe un extracto con el nombre: " + extractosDTO.getName());
         }
 
-        Extractos extractoToRestock = existingExtracto.get();
+
+
+        if(extractosDTO.getQuantity() == null || extractosDTO.getQuantity() == 0) {
+            throw new IllegalArgumentException("La cantidad a reabastecer debe ser especificada.");
+        }
+
+         Extractos extractoToRestock = existingExtracto.get();
+
+        if(extractosDTO.getQuantity() < 0) {
+            extractoToRestock.setQuantity(extractoToRestock.getQuantity() + extractosDTO.getQuantity());
+            inventoryService.newItem(
+                extractoToRestock.getId().longValue(),
+                "extracto",
+                extractosDTO.getQuantity().intValue(),
+                "damage",
+                jwtService.getUserIdFromToken(token).intValue(),
+                "Se ha reportado un daño en el extracto " + extractoToRestock.getName() + ", su inventario ahora es: " + extractoToRestock.getQuantity()
+            );
+            return new ExtractosDTO(extractosRepository.save(extractoToRestock));
+        }
+
+       
         extractoToRestock.setQuantity(extractoToRestock.getQuantity() + extractosDTO.getQuantity());
 
         inventoryService.newItem(
@@ -171,8 +192,7 @@ public class ExtractosService {
             "hay " + extractosDTO.getQuantity() + " unidades nuevas de " + extractoToRestock.getName() + " en el inventario, en total hay " + extractoToRestock.getQuantity() + " unidades disponibles."
         );
 
-        extractosRepository.save(extractoToRestock);
-        return new ExtractosDTO(extractoToRestock);
+        return new ExtractosDTO(extractosRepository.save(extractoToRestock));
     }
     
     public ExtractosDTO deactivateExtracto(String name) {

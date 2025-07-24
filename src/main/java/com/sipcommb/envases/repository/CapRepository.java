@@ -2,6 +2,8 @@ package com.sipcommb.envases.repository;
 
 import com.sipcommb.envases.entity.Cap;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,18 +26,27 @@ public interface CapRepository extends JpaRepository<Cap, Long> {
     Optional<List<Cap>> getFromNameAndDiameter(String name, String diameter);
 
     @Query("SELECT c FROM Cap c WHERE c.jarType.diameter = :diameter")
+    Optional<Page<Cap>> getFromCapDiameter(@Param("diameter") String diameter, Pageable pageable);
+
+    @Query("SELECT c FROM Cap c WHERE c.jarType.diameter = :diameter")
     Optional<List<Cap>> getFromCapDiameter(@Param("diameter") String diameter);
 
     @Query("SELECT c FROM Cap c WHERE c.name LIKE %:name%")
-    Optional<List<Cap>> getFromNameLike(@Param("name") String name);
+    Optional<Page<Cap>> getFromNameLike(@Param("name") String name, Pageable pageable);
 
     @Query("SELECT c FROM Cap c WHERE c.color LIKE %:color%")
-    Optional<List<Cap>> getFromColor(@Param("color") String color);
+    Optional<Page<Cap>> getFromColor(@Param("color") String color, Pageable pageable);
 
     @Query("SELECT c FROM Cap c WHERE c.isActive = 1")
     List<Cap> findAllByIsActive();
 
     @Query("SELECT c FROM Cap c WHERE c.isActive = 0")
     List<Cap> findAllByIsActiveFalse();
-   
+
+    Page<Cap> findAll(Pageable pageable);
+
+    Page<Cap> findAllByIsActiveTrue(Pageable pageable);
+
+    Page<Cap> findAllByIsActiveFalse(Pageable pageable);
+
 }

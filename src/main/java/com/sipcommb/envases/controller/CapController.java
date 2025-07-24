@@ -1,9 +1,10 @@
 package com.sipcommb.envases.controller;
 
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sipcommb.envases.dto.CapDTO;
@@ -60,12 +61,17 @@ public class CapController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tapas")
     })
-    public ResponseEntity<?> getAllCaps(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllCaps(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver las tapas");
         }
         try {
-            return ResponseEntity.ok(capService.getAllCaps());
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(capService.getAllCaps(pageable));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
@@ -77,12 +83,17 @@ public class CapController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tapas activas")
     })
-    public ResponseEntity<?> getAllActiveCaps(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllActiveCaps(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver las tapas activas");
         }
         try {
-            return ResponseEntity.ok(capService.getAllActiveCaps());
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(capService.getAllActiveCaps(pageable));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
@@ -94,12 +105,17 @@ public class CapController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tapas inactivas")
     })
-    public ResponseEntity<?> getAllInactiveCaps(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllInactiveCaps(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver las tapas inactivas");
         }
         try {
-            return ResponseEntity.ok(capService.getAllInactiveCaps());
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(capService.getAllInactiveCaps(pageable));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
@@ -112,12 +128,18 @@ public class CapController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "404", description = "Tapa no encontrada")
     })
-    public ResponseEntity<?> getCapByDiameter(@RequestBody String diameter, @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getCapByDiameter(
+        @RequestBody String diameter, 
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las tapas");
         }
         try {
-            List<CapDTO> capDTO = capService.getCapsByDiameter(diameter);
+            Pageable pageable = PageRequest.of(page, size);
+            Page<CapDTO> capDTO = capService.getCapsByDiameter(diameter, pageable);
             return ResponseEntity.ok(capDTO);
         } catch (Exception e) {
             return ResponseEntity.status(404).body("Error: " + e.getMessage());
@@ -131,12 +153,18 @@ public class CapController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "404", description = "Tapa no encontrada")
     })
-    public ResponseEntity<?> getCapByName(@RequestBody String name, @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getCapByName(
+        @RequestBody String name, 
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las tapas");
         }
         try {
-            List<CapDTO> capDTO = capService.getByName(name);
+            Pageable pageable = PageRequest.of(page, size);
+            Page<CapDTO> capDTO = capService.getByName(name, pageable);
             return ResponseEntity.ok(capDTO);
         } catch (Exception e) {
             return ResponseEntity.status(404).body("Error: " + e.getMessage());
@@ -150,11 +178,17 @@ public class CapController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "404", description = "Tapa no encontrada")
     })
-    public ResponseEntity<?> getCapByColor(@RequestBody String color, @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getCapByColor(
+        @RequestBody String color, 
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read"))
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las tapas");
         try {
-            List<CapDTO> capDTO = capService.getByColor(color);
+            Pageable pageable = PageRequest.of(page, size);
+            Page<CapDTO> capDTO = capService.getByColor(color, pageable);
             return ResponseEntity.ok(capDTO);
         } catch (Exception e) {
             return ResponseEntity.status(404).body("Error: " + e.getMessage());
@@ -224,7 +258,7 @@ public class CapController {
         if(!permissionService.hasPermission(authHeader, "update"))
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar el inventario de tapas");
         try {
-            CapDTO capDTO = capService.changeInventory(capRequest, authHeader);
+            CapDTO capDTO = capService.changeInventory(capRequest, authHeader.replace("Bearer ", "").trim());
             return ResponseEntity.ok(capDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());

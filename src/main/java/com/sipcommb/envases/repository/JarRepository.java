@@ -1,6 +1,9 @@
 package com.sipcommb.envases.repository;
 
 import com.sipcommb.envases.entity.Jar;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,7 +18,7 @@ public interface JarRepository extends JpaRepository<Jar, Long> {
     Optional<Jar> getByName(String name);
 
     @Query("SELECT j FROM Jar j WHERE j.name LIKE %:name%")
-    Optional<List<Jar>> getFromNameLike(String name);
+    Optional<Page<Jar>> getFromNameLike(String name, Pageable pageable);
 
     @Query("SELECT j FROM Jar j WHERE j.jarType.diameter = :diameter")
     Optional<List<Jar>> getFromDiameter(@Param("diameter") String diameter);
@@ -23,6 +26,12 @@ public interface JarRepository extends JpaRepository<Jar, Long> {
     @Query("SELECT j FROM Jar j WHERE j.isActive = 1")
     Optional<List<Jar>> getAllActiveJars();
 
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 1")
+    Optional<Page<Jar>> getAllActiveJars(Pageable pageable);
+
     @Query("SELECT j FROM Jar j WHERE j.isActive = 0")
     Optional<List<Jar>> getAllInactiveJars();
+
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 0")
+    Optional<Page<Jar>> getAllInactiveJars(Pageable pageable);
 }

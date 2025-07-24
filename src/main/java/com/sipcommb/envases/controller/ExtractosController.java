@@ -156,9 +156,9 @@ public class ExtractosController {
         }
     }
 
-    @PutMapping("/restock")
+    @PutMapping("/inventory")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Extracto reabastecido exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
+        @ApiResponse(responseCode = "200", description = "Extracto actualizado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
         @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
         @ApiResponse(responseCode = "403", description = "Permiso denegado")
     })
@@ -167,7 +167,7 @@ public class ExtractosController {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para reabastecer extractos");
         }
         try {
-            ExtractosDTO restockedExtracto = extractosService.restock(extractosDTO, authHeader.trim().replace("Bearer ", ""));
+            ExtractosDTO restockedExtracto = extractosService.changeInventory(extractosDTO, authHeader.trim().replace("Bearer ", ""));
             return ResponseEntity.ok(restockedExtracto);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al reabastecer el extracto: " + e.getMessage());
