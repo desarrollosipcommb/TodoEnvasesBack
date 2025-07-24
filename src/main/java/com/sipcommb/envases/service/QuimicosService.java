@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.sipcommb.envases.dto.QuimicosDTO;
@@ -58,19 +60,19 @@ public class QuimicosService {
         return quimicoDTO;
     }
 
-    public List<QuimicosDTO> getAllQuimicos() {
-        List<Quimicos> quimicosList = quimicosRepository.findAll();
-        return quimicosList.stream().map(QuimicosDTO::new).collect(Collectors.toList());
+    public Page<QuimicosDTO> getAllQuimicos(Pageable pageable) {
+        Page<Quimicos> quimicosPage = quimicosRepository.findAll(pageable);
+        return quimicosPage.map(QuimicosDTO::new);
     }
 
-    public List<QuimicosDTO> getActiveQuimicos() {
-        List<Quimicos> quimicosList = quimicosRepository.findByActiveTrue();
-        return quimicosList.stream().map(QuimicosDTO::new).collect(Collectors.toList());
+    public Page<QuimicosDTO> getActiveQuimicos(Pageable pageable) {
+        Page<Quimicos> quimicosPage = quimicosRepository.findByActiveTrue(pageable);
+        return quimicosPage.map(QuimicosDTO::new);
     }
 
-    public List<QuimicosDTO> getInactiveQuimicos() {
-        List<Quimicos> quimicosList = quimicosRepository.findByActiveFalse();
-        return quimicosList.stream().map(QuimicosDTO::new).collect(Collectors.toList());
+    public Page<QuimicosDTO> getInactiveQuimicos(Pageable pageable) {
+        Page<Quimicos> quimicosPage = quimicosRepository.findByActiveFalse(pageable);
+        return quimicosPage.map(QuimicosDTO::new);
     }
 
     public QuimicosDTO updateQuimico(QuimicosDTO quimicoDTO, String token) {

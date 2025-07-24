@@ -1,10 +1,10 @@
 package com.sipcommb.envases.service;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.sipcommb.envases.dto.JarTypeDTO;
@@ -75,17 +75,9 @@ public class JarTypeService {
         }
     }
 
-    public List<JarTypeDTO> getAll(){
-        List<JarType> jarTypes = jarTypeRepository.findAll();
-        List<JarTypeDTO> jarTypeDTOs = new ArrayList<>();
-        for (JarType jarType : jarTypes) {
-            JarTypeDTO jarTypeDTO = new JarTypeDTO();
-            jarTypeDTO.setName(jarType.getName());
-            jarTypeDTO.setDescription(jarType.getDescription());
-            jarTypeDTO.setDiameter(jarType.getDiameter());
-            jarTypeDTOs.add(jarTypeDTO);
-        }
-        return jarTypeDTOs;
+    public Page<JarTypeDTO> getAll(Pageable pageable) {
+        Page<JarType> jarTypes = jarTypeRepository.findAll(pageable);
+        return jarTypes.map(JarTypeDTO::new);
     }
 
 }

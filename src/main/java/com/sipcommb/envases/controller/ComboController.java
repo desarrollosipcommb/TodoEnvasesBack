@@ -1,5 +1,8 @@
 package com.sipcommb.envases.controller;
 
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -9,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sipcommb.envases.dto.ComboRequest;
@@ -55,12 +59,17 @@ public class ComboController {
         @ApiResponse(responseCode = "200", description = "Lista de combos obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ComboResponse.class))),
         @ApiResponse(responseCode = "403", description = "Permiso denegado")
     })
-    public ResponseEntity<?> getAllCombos(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllCombos(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver los combos");
         }
         try {
-            return ResponseEntity.ok(comboService.getAllCombos());
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(comboService.getAllCombos(pageable));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
@@ -72,7 +81,10 @@ public class ComboController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "404", description = "Combo no encontrado")
     })
-    public ResponseEntity<?> getComboByName(@RequestHeader("Authorization") String authHeader, @RequestBody String comboName) {
+    public ResponseEntity<?> getComboByName(
+        @RequestHeader("Authorization") String authHeader, 
+        @RequestBody String comboName
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver los combos");
         }
@@ -83,6 +95,30 @@ public class ComboController {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
+
+    @GetMapping("/like-name")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Combo obtenido exitosamente por nombre", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ComboResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "404", description = "Combo no encontrado")
+    })
+    public ResponseEntity<?> getComboLikeName(
+        @RequestHeader("Authorization") String authHeader, 
+        @RequestBody String comboName,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver los combos");
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(comboService.getLikeName(comboName, pageable));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+    
     
     @PutMapping("/update")
     @ApiResponses({
@@ -143,12 +179,17 @@ public class ComboController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "400", description = "Error al obtener la lista de combos activos")
     })
-    public ResponseEntity<?> getAllActiveCombos(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllActiveCombos(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver los combos activos");
         }
         try {
-            return ResponseEntity.ok(comboService.getAllActiveCombos());
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(comboService.getAllActiveCombos(pageable));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
@@ -161,12 +202,17 @@ public class ComboController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "400", description = "Error al obtener la lista de combos inactivos")
     })
-    public ResponseEntity<?> getAllInactiveCombos(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllInactiveCombos(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver los combos inactivos");
         }
         try {
-            return ResponseEntity.ok(comboService.getAllInactiveCombos());
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(comboService.getAllInactiveCombos(pageable));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }

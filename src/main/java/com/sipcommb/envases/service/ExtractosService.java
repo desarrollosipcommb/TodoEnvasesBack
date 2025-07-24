@@ -1,12 +1,10 @@
 package com.sipcommb.envases.service;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
 import com.sipcommb.envases.dto.ExtractosDTO;
 import com.sipcommb.envases.entity.Extractos;
 import com.sipcommb.envases.repository.ExtractosRepository;
@@ -65,22 +63,23 @@ public class ExtractosService {
     }
     
 
-    public List<ExtractosDTO> getAllExtractos() {
-        return extractosRepository.findAll().stream()
-                .map(ExtractosDTO::new)
-                .collect(Collectors.toList());
+    public Page<ExtractosDTO> getAllExtractos(Pageable pageable) {
+        return extractosRepository.findAll(pageable).map(ExtractosDTO::new);
     }
 
-    public List<ExtractosDTO> getActiveExtractos() {
-        return extractosRepository.findAllByActiveTrue().stream()
-                .map(ExtractosDTO::new)
-                .collect(Collectors.toList());
+    public Page<ExtractosDTO> getActiveExtractos(Pageable pageable) {
+        return extractosRepository.findAllByActiveTrue(pageable).map(ExtractosDTO::new);
     }
 
-    public List<ExtractosDTO> getInactiveExtractos() {
-        return extractosRepository.findAllByActiveFalse().stream()
-                .map(ExtractosDTO::new)
-                .collect(Collectors.toList());
+    public Page<ExtractosDTO> getInactiveExtractos(Pageable pageable) {
+        return extractosRepository.findAllByActiveFalse(pageable).map(ExtractosDTO::new);
+    }
+
+    public Page<ExtractosDTO> getExtractosLikeName(String name, Pageable pageable) {
+        if (name == null || name.trim().isEmpty()) {
+            return extractosRepository.findAll(pageable).map(ExtractosDTO::new);
+        }
+        return extractosRepository.findLikeName(name.trim(), pageable).map(ExtractosDTO::new);
     }
 
     public ExtractosDTO updateExtracto(ExtractosDTO extractosDTO, String token) {

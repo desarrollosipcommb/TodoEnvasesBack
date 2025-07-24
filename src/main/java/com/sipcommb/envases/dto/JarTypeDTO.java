@@ -1,5 +1,8 @@
 package com.sipcommb.envases.dto;
 
+
+import com.sipcommb.envases.entity.JarType;
+
 public class JarTypeDTO {
 
     private String name;
@@ -13,6 +16,12 @@ public class JarTypeDTO {
         this.name = name;
         this.description = description;
         this.diameter = diameter;
+    }
+
+    public JarTypeDTO(JarType jarType) {
+        this.name = jarType.getName();
+        this.description = jarType.getDescription();
+        this.diameter = jarType.getDiameter();
     }
 
     public String getName() {

@@ -1,8 +1,9 @@
 package com.sipcommb.envases.controller;
 
-import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.sipcommb.envases.dto.ExtractosDTO;
@@ -56,13 +58,17 @@ public class ExtractosController {
         @ApiResponse(responseCode = "200", description = "Lista de extractos obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
         @ApiResponse(responseCode = "403", description = "Permiso denegado")
     })
-    public ResponseEntity<?> getAllExtractos(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllExtractos(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver extractos");
         }
         try {
-            List<ExtractosDTO> extractosList = extractosService.getAllExtractos();
-            return ResponseEntity.ok(extractosList);
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(extractosService.getAllExtractos(pageable));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al obtener los extractos: " + e.getMessage());
         }
@@ -73,13 +79,17 @@ public class ExtractosController {
         @ApiResponse(responseCode = "200", description = "Extractos activos obtenidos exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
         @ApiResponse(responseCode = "403", description = "Permiso denegado")
     })
-    public ResponseEntity<?> getAllActiveExtractos(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllActiveExtractos(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver extractos activos");
         }
         try {
-            List<ExtractosDTO> activeExtractosList = extractosService.getActiveExtractos();
-            return ResponseEntity.ok(activeExtractosList);
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(extractosService.getActiveExtractos(pageable));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al obtener los extractos activos: " + e.getMessage());
         }   
@@ -90,15 +100,42 @@ public class ExtractosController {
         @ApiResponse(responseCode = "200", description = "Extractos inactivos obtenidos exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
         @ApiResponse(responseCode = "403", description = "Permiso denegado")
     })
-    public ResponseEntity<?> getAllInactiveExtractos(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllInactiveExtractos(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver extractos inactivos");
         }
         try {
-            List<ExtractosDTO> inactiveExtractosList = extractosService.getInactiveExtractos();
-            return ResponseEntity.ok(inactiveExtractosList);
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(extractosService.getInactiveExtractos(pageable));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al obtener los extractos inactivos: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/like-name")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Extractos obtenidos exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener los extractos")
+    })
+    public ResponseEntity<?> getExtractosLikeName(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam String name,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver extractos");
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(extractosService.getExtractosLikeName(name, pageable));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al obtener los extractos: " + e.getMessage());
         }
     }
 

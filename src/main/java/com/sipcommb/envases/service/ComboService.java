@@ -1,13 +1,14 @@
 package com.sipcommb.envases.service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.sipcommb.envases.dto.ComboRequest;
@@ -95,10 +96,10 @@ public class ComboService {
         
         return new ComboResponse(combo);
     }
-    
-    public List<ComboResponse> getAllCombos() {
-        List<Combo> combos = comboRepository.findAll();
-        return combos.stream().map(ComboResponse::new).collect(Collectors.toList());
+
+    public Page<ComboResponse> getAllCombos(Pageable pageable) {
+        Page<Combo> combos = comboRepository.findAll(pageable);
+        return combos.map(ComboResponse::new);
     }
 
     public ComboResponse getByName(String comboName) {
@@ -107,6 +108,11 @@ public class ComboService {
             throw new IllegalArgumentException("No existe un combo con el nombre: " + comboName + ".");
         }
         return new ComboResponse(combo.get());
+    }
+
+    public Page<ComboResponse> getLikeName(String comboName, Pageable pageable) {
+        Page<Combo> combos = comboRepository.findByNameContaining(comboName, pageable);
+        return combos.map(ComboResponse::new);
     }
 
     public ComboResponse updateCombo(ComboRequest comboRequest) {
@@ -176,14 +182,14 @@ public class ComboService {
         return new ComboResponse(existingCombo);
     }
 
-    public List<ComboResponse> getAllActiveCombos() {
-        List<Combo> activeCombos = comboRepository.findAllActiveCombos();
-        return activeCombos.stream().map(ComboResponse::new).collect(Collectors.toList());
+    public Page<ComboResponse> getAllActiveCombos(Pageable pageable) {
+        Page<Combo> activeCombos = comboRepository.findAllActiveCombos(pageable);
+        return activeCombos.map(ComboResponse::new);
     }
 
-    public List<ComboResponse> getAllInactiveCombos() {
-        List<Combo> inactiveCombos = comboRepository.findAllInactiveCombos();
-        return inactiveCombos.stream().map(ComboResponse::new).collect(Collectors.toList());
+    public Page<ComboResponse> getAllInactiveCombos(Pageable pageable) {
+        Page<Combo> inactiveCombos = comboRepository.findAllInactiveCombos(pageable);
+        return inactiveCombos.map(ComboResponse::new);
     }
 
 }

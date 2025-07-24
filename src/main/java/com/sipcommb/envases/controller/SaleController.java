@@ -1,12 +1,15 @@
 package com.sipcommb.envases.controller;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -95,29 +98,63 @@ public class SaleController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas")
     })
-    public ResponseEntity<?> getAllSales(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllSales(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "sales")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las ventas");
         }
         try {
-            return ResponseEntity.ok(saleService.getAllSales());
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(saleService.getAllSales(pageable));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error al obtener las ventas: " + e.getMessage());
         }
     }
 
-    @GetMapping("/byUser")
+    @GetMapping("/by-email")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Lista de ventas del usuario obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas del usuario")
     })
-    public ResponseEntity<?> getSalesByUser(@RequestHeader("Authorization") String authHeader, @RequestBody String email) {
+    public ResponseEntity<?> getSalesByUser(
+        @RequestHeader("Authorization") String authHeader, 
+        @RequestBody String email,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "sales")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las ventas");
         }
         try {
-            return ResponseEntity.ok(saleService.getSalesByUser(email));
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(saleService.getSalesByEmail(email, pageable));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/by-username")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de ventas del usuario obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas del usuario")
+    })
+    public ResponseEntity<?> getSalesByUsername(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestBody String username,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        if(!permissionService.hasPermission(authHeader, "sales")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las ventas");
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(saleService.getSalesByUsername(username, pageable));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }

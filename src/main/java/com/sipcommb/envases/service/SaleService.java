@@ -32,6 +32,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -503,19 +506,19 @@ public class SaleService {
             throw new IllegalArgumentException("Tipo de item de venta no reconocido: " + saleItem.getItemType());
         }
     }
-       
-    public List<SaleDTO> getAllSales() {
 
-        List<Sale> sales = saleRepository.findAll();
+    public Page<SaleDTO> getAllSales(Pageable pageable) {
+
+        Page<Sale> sales = saleRepository.findAll(pageable);
         List<SaleDTO> saleDTOs = new ArrayList<>();
         for(Sale sale : sales){
             SaleDTO saleDTO = toSaleDTO(sale);
             saleDTOs.add(saleDTO);
         }
-        return saleDTOs;
+        return new PageImpl<>(saleDTOs, pageable, sales.getTotalElements());
     }
 
-    public List<SaleDTO> getSalesByUser(String email) {
+    public Page<SaleDTO> getSalesByEmail(String email, Pageable pageable) {
         Optional<User> userOpt = userRepository.findByEmail(email.trim());
         if(!userOpt.isPresent()){
             throw new IllegalArgumentException("Usuario no encontrado: " + email);
@@ -527,7 +530,22 @@ public class SaleService {
             SaleDTO saleDTO = toSaleDTO(sale);
             saleDTOs.add(saleDTO);
         }
-        return saleDTOs;
+        return new PageImpl<>(saleDTOs, pageable, sales.size());
+    }
+
+    public Page<SaleDTO> getSalesByUsername(String username, Pageable pageable) {
+        Optional<User> userOpt = userRepository.findByUsername(username.trim());
+        if(!userOpt.isPresent()){
+            throw new IllegalArgumentException("Usuario no encontrado: " + username);
+        }
+
+        List<Sale> sales = saleRepository.findBySeller(userOpt.get().getId());
+        List<SaleDTO> saleDTOs = new ArrayList<>();
+        for(Sale sale : sales){
+            SaleDTO saleDTO = toSaleDTO(sale);
+            saleDTOs.add(saleDTO);
+        }
+        return new PageImpl<>(saleDTOs, pageable, sales.size());
     }
 
     private SaleDTO toSaleDTO(Sale sale){

@@ -17,24 +17,24 @@ public interface CapRepository extends JpaRepository<Cap, Long> {
 
     boolean existsByName(String name);
     
-    @Query("SELECT c FROM Cap c WHERE c.name = :name and c.jarType.diameter = :diameter and c.color = :color")
+    @Query("SELECT c FROM Cap c WHERE c.name = :name and c.jarType.diameter = :diameter and c.color = :color AND c.isActive = 1")
     Optional<Cap> findByNameAndDiameterAndColor(@Param("name") String name,
                                                 @Param("diameter") String diameter,
                                                 @Param("color") String color);
 
-    @Query("SELECT c FROM Cap c WHERE c.name LIKE %:name% AND c.jarType.diameter = :diameter")
+    @Query("SELECT c FROM Cap c WHERE c.name LIKE %:name% AND c.jarType.diameter = :diameter AND c.isActive = 1")
     Optional<List<Cap>> getFromNameAndDiameter(String name, String diameter);
 
-    @Query("SELECT c FROM Cap c WHERE c.jarType.diameter = :diameter")
+    @Query("SELECT c FROM Cap c WHERE c.jarType.diameter = :diameter AND c.isActive = 1")
     Optional<Page<Cap>> getFromCapDiameter(@Param("diameter") String diameter, Pageable pageable);
 
-    @Query("SELECT c FROM Cap c WHERE c.jarType.diameter = :diameter")
+    @Query("SELECT c FROM Cap c WHERE c.jarType.diameter = :diameter AND c.isActive = 1")
     Optional<List<Cap>> getFromCapDiameter(@Param("diameter") String diameter);
 
-    @Query("SELECT c FROM Cap c WHERE c.name LIKE %:name%")
+    @Query("SELECT c FROM Cap c WHERE c.name LIKE %:name% AND c.isActive = 1")
     Optional<Page<Cap>> getFromNameLike(@Param("name") String name, Pageable pageable);
 
-    @Query("SELECT c FROM Cap c WHERE c.color LIKE %:color%")
+    @Query("SELECT c FROM Cap c WHERE c.color LIKE %:color% AND c.isActive = 1")
     Optional<Page<Cap>> getFromColor(@Param("color") String color, Pageable pageable);
 
     @Query("SELECT c FROM Cap c WHERE c.isActive = 1")

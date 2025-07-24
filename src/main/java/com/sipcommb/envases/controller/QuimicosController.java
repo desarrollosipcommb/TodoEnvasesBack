@@ -1,8 +1,9 @@
 package com.sipcommb.envases.controller;
 
-import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -58,14 +60,18 @@ public class QuimicosController {
         @ApiResponse(responseCode = "200", description = "Lista de quimicos obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = QuimicosDTO.class))),
         @ApiResponse(responseCode = "403", description = "Permiso denegado")
     })
-    public ResponseEntity<?> getAllQuimicos(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllQuimicos(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
         }
 
         try{
-            List<QuimicosDTO> quimicos = quimicosService.getAllQuimicos();
-            return ResponseEntity.ok(quimicos);
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(quimicosService.getAllQuimicos(pageable));
         }catch(Exception e){
             return ResponseEntity.badRequest().body("Error al obtener los quimicos: " + e.getMessage());
         }
@@ -76,14 +82,18 @@ public class QuimicosController {
         @ApiResponse(responseCode = "200", description = "Quimicos activos obtenidos exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = QuimicosDTO.class))),
         @ApiResponse(responseCode = "403", description = "Permiso denegado")
     })
-    public ResponseEntity<?> getAllActiveQuimicos(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllActiveQuimicos(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
         }
 
         try{
-            List<QuimicosDTO> quimicos = quimicosService.getActiveQuimicos();
-            return ResponseEntity.ok(quimicos);
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(quimicosService.getActiveQuimicos(pageable));
         }catch(Exception e){
             return ResponseEntity.badRequest().body("Error al obtener los quimicos activos: " + e.getMessage());
         }
@@ -94,14 +104,18 @@ public class QuimicosController {
         @ApiResponse(responseCode = "200", description = "Quimicos inactivos obtenidos exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = QuimicosDTO.class))),
         @ApiResponse(responseCode = "403", description = "Permiso denegado")
     })
-    public ResponseEntity<?> getAllInactiveQuimicos(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllInactiveQuimicos(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
         }
 
         try{
-            List<QuimicosDTO> quimicos = quimicosService.getInactiveQuimicos();
-            return ResponseEntity.ok(quimicos);
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok( quimicosService.getInactiveQuimicos(pageable));
         }catch(Exception e){
             return ResponseEntity.badRequest().body("Error al obtener los quimicos inactivos: " + e.getMessage());
         }
