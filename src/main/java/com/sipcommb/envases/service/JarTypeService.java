@@ -33,6 +33,10 @@ public class JarTypeService {
             throw new RuntimeException("Ya existe este diametro: " + diameter);
         }
 
+        if (jarTypeRepository.getTypeByName(jarTypeDTO.getName()).isPresent()) {
+            throw new RuntimeException("Ya existe un tipo de tapa con el nombre: " + jarTypeDTO.getName());
+        }
+
         jarType.setName(jarTypeDTO.getName());
         jarType.setDescription(jarTypeDTO.getDescription());
         jarType.setDiameter(diameter);

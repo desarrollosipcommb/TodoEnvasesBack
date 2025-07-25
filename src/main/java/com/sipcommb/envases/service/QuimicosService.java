@@ -28,7 +28,7 @@ public class QuimicosService {
     @Autowired
     private PriceService priceService;
 
-    public QuimicosDTO addQuimico(QuimicosDTO quimicoDTO) {
+    public QuimicosDTO addQuimico(QuimicosDTO quimicoDTO, String token) {
 
         if(quimicoDTO.getName() == null || quimicoDTO.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del quimico no puede estar vacío.");
@@ -56,8 +56,8 @@ public class QuimicosService {
         quimico.setQuantity(quimicoDTO.getQuantity());
         quimico.setUnitPrice(BigDecimal.valueOf(quimicoDTO.getUnitPrice()));
 
-
         quimicosRepository.save(quimico);
+        inventoryService.newItem(quimico.getId().longValue(), "quimico", quimico.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(token).intValue(), "Se creo el quimico " + quimico.getName());
 
         return quimicoDTO;
     }

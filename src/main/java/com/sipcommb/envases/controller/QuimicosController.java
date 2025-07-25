@@ -48,7 +48,7 @@ public class QuimicosController {
         }
 
         try{
-            QuimicosDTO newQuimico = quimicosService.addQuimico(quimicoDTO);
+            QuimicosDTO newQuimico = quimicosService.addQuimico(quimicoDTO, authHeader.trim().replace("Bearer ", ""));
             return ResponseEntity.ok(newQuimico);
         }catch(Exception e){
             return ResponseEntity.badRequest().body("Error al agregar el quimico: " + e.getMessage());

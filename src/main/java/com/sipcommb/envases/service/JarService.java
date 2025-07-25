@@ -92,7 +92,6 @@ public class JarService {
 
     //Re visa que si tenga un tipo de frasco asociado, dado que algunos vienen con tapa propia asi que el diametro no es obligatorio
     private void manageCompatibility(String[] compatibleCaps, String[] unCompatibleCaps, Jar jar) {
-
         if(jar.getJarType() != null) {
            if(compatibleCaps != null && compatibleCaps.length > 0) {
 
@@ -101,15 +100,17 @@ public class JarService {
                 List<Cap> compatible = getCaps(compatibleCaps, jar);
                 List<Cap> inCompatible = capRepository.getFromCapDiameter(jar.getJarType().getDiameter()).get();
                 inCompatible.removeAll(compatible);
-
                 addToCompatible(compatible, jar, true);
                 addToCompatible(inCompatible, jar, false);
-                
-            }else if(compatibleCaps != null && compatibleCaps.length > 0) {
-                List<Cap> unCompatible = getCaps(unCompatibleCaps, jar);
-                List<Cap> compatible = capRepository.getFromCapDiameter(jar.getJarType().getDiameter()).get();
-                compatible.removeAll(unCompatible);
 
+
+            }else if(unCompatibleCaps != null && unCompatibleCaps.length > 0) {
+              
+                List<Cap> unCompatible = getCaps(unCompatibleCaps, jar);
+     
+                List<Cap> compatible = capRepository.getFromCapDiameter(jar.getJarType().getDiameter()).get();
+                
+                compatible.removeAll(unCompatible);
                 addToCompatible(compatible, jar, true);
                 addToCompatible(unCompatible, jar, false);
             }
@@ -119,6 +120,7 @@ public class JarService {
     //Trae todas las tapas que coincidan con los nombres y el diametro del frasco
     private List<Cap> getCaps(String[] caps, Jar jar) {
         Set<Cap> capList = new HashSet<>();
+      
         if(caps != null && caps.length > 0) {
             for (String capName : caps) {
                 Optional<List<Cap>> capOptional = capRepository.getFromNameAndDiameter(capName, jar.getJarType().getDiameter());
@@ -127,6 +129,7 @@ public class JarService {
                 }
             }
         }
+
         return new ArrayList<Cap>(capList);
 
     }

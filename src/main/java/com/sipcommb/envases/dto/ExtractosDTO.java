@@ -37,6 +37,18 @@ public class ExtractosDTO {
         this.price1000ml = extracto.getPrice1000ml().doubleValue();
     }
 
+    public ExtractosDTO(String name, String description, Integer quantity, Double price22ml, Double price60ml, Double price125ml, Double price250ml, Double price500ml, Double price1000ml) {
+        this.name = name;
+        this.description = description;
+        this.quantity = quantity;
+        this.price22ml = price22ml;
+        this.price60ml = price60ml;
+        this.price125ml = price125ml;
+        this.price250ml = price250ml;
+        this.price500ml = price500ml;
+        this.price1000ml = price1000ml;
+    }
+
     public String getName() {
         return name;
     }

@@ -31,6 +31,20 @@ public class JarRequestDTO {
         // Default constructor
     }
 
+    public JarRequestDTO(String name, String description, String diameter, Integer quantity, Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, Integer unitsInPaca, String[] compatibleCaps, String[] unCompatibleCaps) {
+        this.name = name;
+        this.description = description;
+        this.diameter = diameter;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.docenaPrice = docenaPrice;
+        this.cienPrice = cienPrice;
+        this.pacaPrice = pacaPrice;
+        this.unitsInPaca = unitsInPaca;
+        this.compatibleCaps = compatibleCaps;
+        this.unCompatibleCaps = unCompatibleCaps;
+    }
+
     public String getName() {
         return name;
     }

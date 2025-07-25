@@ -66,6 +66,10 @@ public class ComboService {
             combo.setCap(capOpt.get());
         }
 
+        if(comboRepository.findByJarAndCap(combo.getJar().getId(), combo.getCap().getId()).isPresent()) {
+            throw new IllegalArgumentException("Ya existe un combo con el tarro y la tapa seleccionados.");
+        }
+
         Optional<JarCapCompatibility> compatibilityOpt = jarCapCompatibilityRepository.findByJarAndCap(jarOpt.get().getId(), capOpt.get().getId());
 
         if(!compatibilityOpt.isPresent()) {
