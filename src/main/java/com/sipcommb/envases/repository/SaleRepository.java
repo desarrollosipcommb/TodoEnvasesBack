@@ -2,8 +2,11 @@ package com.sipcommb.envases.repository;
 
 import com.sipcommb.envases.entity.Sale;
 
+import java.math.BigDecimal;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,4 +17,10 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
 
     @Query("SELECT s FROM Sale s WHERE s.seller.id = :sellerId")
     List<Sale> findBySeller(@Param("sellerId") Long sellerId);
+
+    @Query("SELECT s FROM Sale s WHERE s.totalAmount = :exactPrice")
+    Page<Sale> findByExactPrice(@Param("exactPrice") BigDecimal exactPrice, Pageable pageable);
+
+    @Query("SELECT s FROM Sale s WHERE s.totalAmount BETWEEN :minPrice AND :maxPrice")
+    Page<Sale> findByPriceBetween(@Param("minPrice") BigDecimal minPrice, @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
 }

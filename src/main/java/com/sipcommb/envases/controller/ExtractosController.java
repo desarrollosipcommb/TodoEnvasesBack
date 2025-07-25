@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.sipcommb.envases.dto.ExtractosDTO;
+import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.service.ExtractosService;
 import com.sipcommb.envases.service.PermissionService;
 
@@ -208,6 +209,29 @@ public class ExtractosController {
             return ResponseEntity.ok(restockedExtracto);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al reabastecer el extracto: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/priceRange")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Extractos por rango de precio obtenidos exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado")
+    })
+    public ResponseEntity<?> getPriceRange(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestBody PriceSearchRequest priceSearchRequest,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver extractos");
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(extractosService.getPriceRange(priceSearchRequest, pageable));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al obtener los extractos por rango de precio: " + e.getMessage());
         }
     }
 }

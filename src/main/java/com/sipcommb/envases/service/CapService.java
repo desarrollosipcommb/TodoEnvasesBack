@@ -2,6 +2,7 @@ package com.sipcommb.envases.service;
 
 import com.sipcommb.envases.dto.CapDTO;
 import com.sipcommb.envases.dto.CapRequest;
+import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.entity.Cap;
 import com.sipcommb.envases.entity.JarType;
 import com.sipcommb.envases.repository.CapRepository;
@@ -33,6 +34,9 @@ public class CapService {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private PriceService priceService;
 
     public CapDTO addCaps(CapRequest capRequest, String token) {
 
@@ -254,5 +258,50 @@ public class CapService {
 
         return new CapDTO(cap);
     }
+
+    public Page<CapDTO> getPriceRange(PriceSearchRequest priceSearchRequest, Pageable pageable) {
+
+        boolean exactSearch = priceService.verifyPriceSearchRequest(priceSearchRequest);
+
+        switch (priceSearchRequest.getPriceDeal()) {
+            case CIEN:
+
+                if(exactSearch) {
+                    return capRepository.findByCienPrice(priceSearchRequest.getExactPrice(), pageable).map(CapDTO::new);
+                }
+                
+                return capRepository.findByCienPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(CapDTO::new);
+    
+            case DOCENA:
+
+                if(exactSearch) {
+                    return capRepository.findByDocenaPrice(priceSearchRequest.getExactPrice(), pageable).map(CapDTO::new);
+                }
+                
+                return capRepository.findByDocenaPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(CapDTO::new);
+    
+            case UNIDAD:
+                if(exactSearch) {
+                    return capRepository.findByUnidadPrice(priceSearchRequest.getExactPrice(), pageable).map(CapDTO::new);
+                }
+                
+                return capRepository.findByUnidadPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(CapDTO::new);
+      
+            case PACA:
+                if(exactSearch) {
+                    return capRepository.findByPacaPrice(priceSearchRequest.getExactPrice(), pageable).map(CapDTO::new);
+                }
+                return capRepository.findByPacaPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(CapDTO::new);
+
+        
+
+            default:
+                throw new IllegalArgumentException("Tipo de trato de precio no soportado.");
+    
+        }
+
+    }
+
+
 
 }

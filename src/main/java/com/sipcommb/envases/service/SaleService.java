@@ -2,6 +2,7 @@ package com.sipcommb.envases.service;
 
 
 
+import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.dto.SaleDTO;
 import com.sipcommb.envases.dto.SaleItemDTO;
 import com.sipcommb.envases.dto.SaleItemRequest;
@@ -73,6 +74,9 @@ public class SaleService {
 
     @Autowired
     private ExtractosRepository extractosRepository;
+
+    @Autowired
+    private PriceService priceService;
 
 
 
@@ -563,5 +567,16 @@ public class SaleService {
             SaleDTO saleDTO = new SaleDTO(sale, saleItemDTOs);
             return saleDTO;
     }
+
+    public Page<SaleDTO> getPriceRange(PriceSearchRequest priceRangeRequest, Pageable pageable) {
+        boolean exactSearch = priceService.verifyPriceSearchRequest(priceRangeRequest);
+
+        if(exactSearch){
+            return saleRepository.findByExactPrice(priceRangeRequest.getExactPrice(), pageable).map(sale -> toSaleDTO(sale));
+        } else {
+            return saleRepository.findByPriceBetween(priceRangeRequest.getMinPrice(), priceRangeRequest.getMaxPrice(), pageable).map(sale -> toSaleDTO(sale));
+        }
+    }
+
 
 }

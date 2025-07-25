@@ -80,4 +80,9 @@ public class JarTypeService {
         return jarTypes.map(JarTypeDTO::new);
     }
 
+    public Page<JarTypeDTO> getLikeName(Pageable pageable, String name) {
+        Page<JarType> jarTypes = jarTypeRepository.findLikeName(name, pageable);
+        return jarTypes.map(JarTypeDTO::new);
+    }
+
 }

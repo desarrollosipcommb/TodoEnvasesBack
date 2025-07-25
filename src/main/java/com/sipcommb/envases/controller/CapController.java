@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sipcommb.envases.dto.CapDTO;
 import com.sipcommb.envases.dto.CapRequest;
+import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.service.CapService;
 import com.sipcommb.envases.service.PermissionService;
 
@@ -262,6 +263,27 @@ public class CapController {
             return ResponseEntity.ok(capDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/priceRange")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Tapa encontrada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "404", description = "Tapa no encontrada")
+    })
+    public ResponseEntity<?> searchCap(@RequestHeader ("Authorization") String authHeader,
+                                       @RequestBody PriceSearchRequest priceSearchRequest,
+                                       @RequestParam(defaultValue = "0") int page,
+                                       @RequestParam(defaultValue = "10") int size) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para buscar tapas");
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(capService.getPriceRange(priceSearchRequest, pageable));
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body("Error: " + e.getMessage());
         }
     }
 

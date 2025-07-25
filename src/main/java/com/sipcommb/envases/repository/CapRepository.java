@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,4 +50,35 @@ public interface CapRepository extends JpaRepository<Cap, Long> {
 
     Page<Cap> findAllByIsActiveFalse(Pageable pageable);
 
+    @Query("SELECT c FROM Cap c WHERE c.isActive = 1 AND c.cienPrice = :exactPrice")
+    Page<Cap> findByCienPrice(@Param("exactPrice") BigDecimal exactPrice, Pageable pageable);
+
+    @Query("SELECT c FROM Cap c WHERE c.isActive = 1 AND c.cienPrice BETWEEN :minPrice AND :maxPrice")
+    Page<Cap> findByCienPriceBetween(@Param("minPrice") BigDecimal minPrice,
+                                     @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
+
+    @Query("SELECT c FROM Cap c WHERE c.isActive = 1 AND c.docenaPrice = :exactPrice")
+    Page<Cap> findByDocenaPrice(@Param("exactPrice") BigDecimal exactPrice, Pageable pageable);
+
+    @Query("SELECT c FROM Cap c WHERE c.isActive = 1 AND c.docenaPrice BETWEEN :minPrice AND :maxPrice")
+    Page<Cap> findByDocenaPriceBetween(@Param("minPrice") BigDecimal minPrice,
+                                       @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
+
+    @Query("SELECT c FROM Cap c WHERE c.isActive = 1 AND c.unitPrice = :exactPrice")
+    Page<Cap> findByUnidadPrice(@Param("exactPrice") BigDecimal exactPrice,
+                                Pageable pageable);
+
+    @Query("SELECT c FROM Cap c WHERE c.isActive = 1 AND c.unitPrice BETWEEN :minPrice AND :maxPrice")
+    Page<Cap> findByUnidadPriceBetween(@Param("minPrice") BigDecimal minPrice,
+                                       @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
+
+    @Query("SELECT c FROM Cap c WHERE c.isActive = 1 AND c.pacaPrice = :exactPrice")
+    Page<Cap> findByPacaPrice(@Param("exactPrice") BigDecimal exactPrice,
+                              Pageable pageable);
+
+    @Query("SELECT c FROM Cap c WHERE c.isActive = 1 AND c.pacaPrice BETWEEN :minPrice AND :maxPrice")
+    Page<Cap> findByPacaPriceBetween(@Param("minPrice") BigDecimal minPrice,
+                                     @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
+    
 }
+

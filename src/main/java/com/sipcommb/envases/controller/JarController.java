@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import com.sipcommb.envases.dto.JarDTO;
 import com.sipcommb.envases.dto.JarRequestDTO;
+import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.dto.UpdateCompatibleCapsRequest;
 import com.sipcommb.envases.service.JarService;
 import com.sipcommb.envases.service.PermissionService;
@@ -256,6 +257,29 @@ public class JarController {
             return ResponseEntity.ok().body(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());   
+        }
+    }
+
+    @GetMapping("/priceRange")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Frascos obtenidos exitosamente por rango de precios", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener los frascos por rango de precios")
+    })
+    public ResponseEntity<?> getJarsByPriceRange(
+        @RequestHeader ("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestBody PriceSearchRequest priceSearchRequest
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer frascos");
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(jarService.getPriceRange(priceSearchRequest, pageable));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 

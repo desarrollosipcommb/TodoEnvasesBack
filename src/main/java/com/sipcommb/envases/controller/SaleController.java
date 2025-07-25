@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.dto.SaleDTO;
 import com.sipcommb.envases.dto.SaleRequest;
 import com.sipcommb.envases.service.PermissionService;
@@ -157,6 +158,33 @@ public class SaleController {
             return ResponseEntity.ok(saleService.getSalesByUsername(username, pageable));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/priceRange")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de ventas por rango de precio obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas por rango de precio")
+    })
+    public ResponseEntity<?> getPriceRange(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestBody PriceSearchRequest priceRangeRequest,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        if(!permissionService.hasPermission(authHeader, "sales")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las ventas");
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(saleService.getPriceRange(priceRangeRequest, pageable));
+        } catch (Exception e) {
+            Throwable cause = e;
+            while (cause.getCause() != null) {
+                cause = cause.getCause();
+            }
+            return ResponseEntity.status(500).body("Error al obtener las ventas por rango de precio: " + cause.getMessage());
         }
     }
 }

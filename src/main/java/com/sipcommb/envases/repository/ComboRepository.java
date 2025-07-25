@@ -1,5 +1,6 @@
 package com.sipcommb.envases.repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.sipcommb.envases.entity.Combo;
+import com.sipcommb.envases.entity.Jar;
 
 public interface ComboRepository extends JpaRepository<Combo, Long> {
 
@@ -35,4 +37,28 @@ public interface ComboRepository extends JpaRepository<Combo, Long> {
     Page<Combo> findByNameContaining(@Param("name") String name, Pageable pageable);
 
     Page<Combo> findAll(Pageable pageable);
+
+    @Query("SELECT c FROM Combo c WHERE c.active = 1 AND c.cienPrice = :exactPrice")
+    Page<Combo> findByCienPrice(@Param("exactPrice") Double exactPrice, Pageable pageable);
+
+    @Query("SELECT c FROM Combo c WHERE c.active = 1 AND c.cienPrice BETWEEN :minPrice AND :maxPrice")
+    Page<Combo> findByCienPriceBetween(@Param("minPrice") Double minPrice,
+                                       @Param("maxPrice") Double maxPrice, Pageable pageable);
+
+    @Query("SELECT c FROM Combo c WHERE c.active = 1 AND c.docenaPrice = :exactPrice")
+    Page<Combo> findByDocenaPrice(@Param("exactPrice") Double exactPrice, Pageable pageable);
+
+    @Query("SELECT c FROM Combo c WHERE c.active = 1 AND c.docenaPrice BETWEEN :minPrice AND :maxPrice")
+    Page<Combo> findByDocenaPriceBetween(@Param("minPrice") Double minPrice,
+                                       @Param("maxPrice") Double maxPrice, Pageable pageable);
+
+    @Query("SELECT c FROM Combo c WHERE c.active = 1 AND c.unitPrice = :exactPrice")
+    Page<Combo> findByUnidadPrice(@Param("exactPrice") Double exactPrice,
+                                   Pageable pageable);
+
+    @Query("SELECT c FROM Combo c WHERE c.active = 1 AND c.unitPrice BETWEEN :minPrice AND :maxPrice")
+    Page<Combo> findByUnidadPriceBetween(@Param("minPrice") Double minPrice,
+                                       @Param("maxPrice") Double maxPrice, Pageable pageable);
+
+
 }

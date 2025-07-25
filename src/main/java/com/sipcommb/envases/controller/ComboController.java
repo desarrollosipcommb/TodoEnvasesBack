@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sipcommb.envases.dto.ComboRequest;
 import com.sipcommb.envases.dto.ComboResponse;
+import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.service.ComboService;
 import com.sipcommb.envases.service.PermissionService;
 
@@ -213,6 +214,29 @@ public class ComboController {
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(comboService.getAllInactiveCombos(pageable));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/priceRange")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Combos obtenidos exitosamente por rango de precios", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ComboResponse.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener los combos por rango de precios")
+    })
+    public ResponseEntity<?> getCombosByPriceRange(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestBody PriceSearchRequest priceSearchRequest
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer combos");
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(comboService.getCombosByPriceRange(priceSearchRequest, pageable));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }

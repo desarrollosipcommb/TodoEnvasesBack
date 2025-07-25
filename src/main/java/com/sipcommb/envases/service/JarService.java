@@ -2,6 +2,7 @@ package com.sipcommb.envases.service;
 
 import com.sipcommb.envases.dto.JarDTO;
 import com.sipcommb.envases.dto.JarRequestDTO;
+import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.entity.Cap;
 import com.sipcommb.envases.entity.Jar;
 import com.sipcommb.envases.entity.JarCapCompatibility;
@@ -47,6 +48,9 @@ public class JarService {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private PriceService priceService;
 
     public JarDTO addJar(JarRequestDTO jarRequest, String token) {
 
@@ -299,6 +303,41 @@ public class JarService {
     public Page<JarDTO> getJarLikeName(String name, Pageable pageable) {
         Page<Jar> jars = jarRepository.getFromNameLike(name, pageable).get();
         return jars.map(JarDTO::new);
+    }
+
+    public Page<JarDTO> getPriceRange(PriceSearchRequest priceSearchRequest, Pageable pageable) {
+        
+        boolean exactSearch = priceService.verifyPriceSearchRequest(priceSearchRequest);
+
+        switch (priceSearchRequest.getPriceDeal()) {
+            case CIEN:
+                if(exactSearch) {
+                    return jarRepository.findByCienPrice(priceSearchRequest.getExactPrice(), pageable).map(JarDTO::new);
+                } else {
+                    return jarRepository.findByCienPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(JarDTO::new);
+                }
+            case DOCENA:
+                if(exactSearch) {
+                    return jarRepository.findByDocenaPrice(priceSearchRequest.getExactPrice(), pageable).map(JarDTO::new);
+                } else {
+                    return jarRepository.findByDocenaPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(JarDTO::new);
+                }
+            case UNIDAD:
+                if(exactSearch) {
+                    return jarRepository.findByUnidadPrice(priceSearchRequest.getExactPrice(), pageable).map(JarDTO::new);
+                } else {
+                    return jarRepository.findByUnidadPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(JarDTO::new);
+                }
+            case PACA:
+                if(exactSearch) {
+                    return jarRepository.findByPacaPrice(priceSearchRequest.getExactPrice(), pageable).map(JarDTO::new);
+                } else {
+                    return jarRepository.findByPacaPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(JarDTO::new);
+                }
+            default:
+                throw new IllegalArgumentException("Tipo de trato de precio no soportado.");
+        }
+        
     }
 
     

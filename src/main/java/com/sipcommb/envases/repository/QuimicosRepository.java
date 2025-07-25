@@ -1,5 +1,6 @@
 package com.sipcommb.envases.repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,5 +25,12 @@ public interface QuimicosRepository extends JpaRepository<Quimicos, Integer> {
     List<Quimicos> findByActiveFalse();
 
     Page<Quimicos> findByActiveFalse(Pageable pageable);
+
+    @Query("SELECT q FROM Quimicos q WHERE q.active = 1 AND q.unitPrice = :exactPrice")
+    Page<Quimicos> findByExactPrice(@Param("exactPrice") BigDecimal exactPrice, Pageable pageable);
+
+    @Query("SELECT q FROM Quimicos q WHERE q.active = 1 AND q.unitPrice BETWEEN :minPrice AND :maxPrice")
+    Page<Quimicos> findByPriceBetween(@Param("minPrice") BigDecimal minPrice,
+                                       @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
 
 }

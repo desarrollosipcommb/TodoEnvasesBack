@@ -2,6 +2,7 @@ package com.sipcommb.envases.service;
 
 import com.sipcommb.envases.dto.LoginResponse;
 import com.sipcommb.envases.dto.UserDTO;
+import com.sipcommb.envases.dto.UserRequestDTO;
 import com.sipcommb.envases.entity.Role;
 import com.sipcommb.envases.entity.User;
 import com.sipcommb.envases.repository.RoleRepository;
@@ -60,38 +61,6 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-    /**
-     * Create new user
-     */
-    public User createUser(String username, String email, String password, String firstName, String lastName, String roleName) {
-        // Check if username already exists
-        if (userRepository.existsByUsername(username)) {
-            throw new RuntimeException("Username already exists");
-        }
-
-        // Check if email already exists
-        if (userRepository.existsByEmail(email)) {
-            throw new RuntimeException("Email already exists");
-        }
-
-        // Find role
-        Optional<Role> roleOptional = roleRepository.findByName(roleName);
-        if (!roleOptional.isPresent()) {
-            throw new RuntimeException("Role not found: " + roleName);
-        }
-
-        // Create user
-        User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
-        user.setRole(roleOptional.get());
-        user.setIsActive(true);
-
-        return userRepository.save(user);
-    }
 
     /**
      * Update user information
@@ -208,29 +177,34 @@ public class UserService {
     /**
      * Register new user
      */
-    public UserDTO register(String username, String email, String password, String firstName, String lastName, String phoneNumber, String roleName) {
+    public UserDTO register(UserRequestDTO userRequestDTO) {
         // Check if username already exists
-        if (userFound(username)) {
-            throw new RuntimeException("Ya existe el usuario");  
+        if (userFound(userRequestDTO.getUsername())) {
+            throw new RuntimeException("Ya existe el usuario");
         }
         // Check if email already exists
-        if (userRepository.existsByEmail(email)) {
+        if (userRepository.existsByEmail(userRequestDTO.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
 
         // Find role
-        Optional<Role> roleOptional = roleRepository.findByName(roleName);
+        Optional<Role> roleOptional = roleRepository.findByName(userRequestDTO.getRoleName());
         if (!roleOptional.isPresent()) {
-            throw new RuntimeException("Role not found: " + roleName);
+            throw new RuntimeException("Role not found: " + userRequestDTO.getRoleName());
         }
+
+        if(roleOptional.get().getName().toLowerCase().equals("admin")) {
+            throw new RuntimeException("Solo un administrador puede crear usuarios con el rol de administrador");
+        }   
+
         // Create user
         User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
-        user.setPhoneNumber(phoneNumber);
+        user.setUsername(userRequestDTO.getUsername());
+        user.setEmail(userRequestDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
+        user.setFirstName(userRequestDTO.getFirstName());
+        user.setLastName(userRequestDTO.getLastName());
+        user.setPhoneNumber(userRequestDTO.getPhoneNumber());
         user.setRole(roleOptional.get());
         user.setIsActive(true);
         // Save user
@@ -241,5 +215,42 @@ public class UserService {
 
     private boolean userFound(String userName) {
         return userRepository.existsByUsername(userName);
+    }
+
+    public UserDTO registerAdmin(UserRequestDTO userRequestDTO, String authHeader) {
+        if (!jwtService.getRoleFromToken(authHeader).equals("admin")) {
+            throw new RuntimeException("Este usuario no tiene permiso para crear administradores");
+        }
+
+        // Check if username already exists
+        if (userFound(userRequestDTO.getUsername())) {
+            throw new RuntimeException("Ya existe el usuario");
+        }
+        // Check if email already exists
+        if (userRepository.existsByEmail(userRequestDTO.getEmail())) {
+            throw new RuntimeException("ya existe un usuario con este email");
+        }
+
+        // Find role
+        Optional<Role> roleOptional = roleRepository.findByName(userRequestDTO.getRoleName());
+        if (!roleOptional.isPresent()) {
+            throw new RuntimeException("Role not found: " + userRequestDTO.getRoleName());
+        }
+
+        // Create user
+        User user = new User();
+        user.setUsername(userRequestDTO.getUsername());
+        user.setEmail(userRequestDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
+        user.setFirstName(userRequestDTO.getFirstName());
+        user.setLastName(userRequestDTO.getLastName());
+        user.setPhoneNumber(userRequestDTO.getPhoneNumber());
+        user.setRole(roleOptional.get());
+        user.setIsActive(true);
+        
+        // Save user
+        user = userRepository.save(user);
+        
+        return new UserDTO(user);
     }
 }

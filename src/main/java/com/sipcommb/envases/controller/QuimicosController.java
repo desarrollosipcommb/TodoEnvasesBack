@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.dto.QuimicosDTO;
 import com.sipcommb.envases.service.PermissionService;
 import com.sipcommb.envases.service.QuimicosService;
@@ -199,6 +200,29 @@ public class QuimicosController {
             return ResponseEntity.ok(restockedQuimico);
         }catch(Exception e){
             return ResponseEntity.badRequest().body("Error al reabastecer el quimico: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/priceRange")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Rango de precios obtenido exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = QuimicosDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error en la solicitud")
+    })
+    public ResponseEntity<?> getPriceRange(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestBody PriceSearchRequest priceSearchRequest,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(quimicosService.getPriceRange(priceSearchRequest, pageable));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al obtener el rango de precios: " + e.getMessage());
         }
     }
 }

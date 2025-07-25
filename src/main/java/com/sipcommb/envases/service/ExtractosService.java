@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import com.sipcommb.envases.dto.ExtractosDTO;
+import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.entity.Extractos;
 import com.sipcommb.envases.repository.ExtractosRepository;
 
@@ -20,6 +21,9 @@ public class ExtractosService {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private PriceService priceService;
     
     // Method to add a new extracto
     public ExtractosDTO addExtracto(ExtractosDTO extractosDTO, String token) {
@@ -221,6 +225,45 @@ public class ExtractosService {
         extractosRepository.save(extractoToActivate);
 
         return new ExtractosDTO(extractoToActivate);
+    }
+
+    public Page<ExtractosDTO> getPriceRange(PriceSearchRequest priceSearchRequest, Pageable pageable) {
+        boolean exactSearch = priceService.verifyPriceSearchRequest(priceSearchRequest);
+
+        switch (priceSearchRequest.getPriceDeal()) {
+            case ML_22:
+                if(exactSearch) {
+                    return extractosRepository.findByPrice22ml(priceSearchRequest.getExactPrice(), pageable).map(ExtractosDTO::new);
+                } else {
+                    return extractosRepository.findByPrice22mlBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(ExtractosDTO::new);
+                }
+            case ML_60:
+                if(exactSearch) {
+                    return extractosRepository.findByPrice60ml(priceSearchRequest.getExactPrice(), pageable).map(ExtractosDTO::new);
+                } else {
+                    return extractosRepository.findByPrice60mlBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(ExtractosDTO::new);
+                }
+            case ML_125:
+                if(exactSearch) {
+                    return extractosRepository.findByPrice125ml(priceSearchRequest.getExactPrice(), pageable).map(ExtractosDTO::new);
+                } else {
+                    return extractosRepository.findByPrice125mlBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(ExtractosDTO::new);
+                }
+            case ML_500:
+                if(exactSearch) {
+                    return extractosRepository.findByPrice500ml(priceSearchRequest.getExactPrice(), pageable).map(ExtractosDTO::new);
+                } else {
+                    return extractosRepository.findByPrice500mlBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(ExtractosDTO::new);
+                }
+            case ML_1000:
+                if(exactSearch) {
+                    return extractosRepository.findByPrice1000ml(priceSearchRequest.getExactPrice(), pageable).map(ExtractosDTO::new);
+                } else {
+                    return extractosRepository.findByPrice1000mlBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(ExtractosDTO::new);
+                }
+            default:
+                throw new IllegalArgumentException("Tipo de trato de precio no soportado: " + priceSearchRequest.getPriceDeal());
+        }
     }
 
 }

@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import com.sipcommb.envases.dto.ComboRequest;
 import com.sipcommb.envases.dto.ComboResponse;
+import com.sipcommb.envases.dto.PriceDeals;
+import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.entity.Cap;
 import com.sipcommb.envases.entity.Combo;
 import com.sipcommb.envases.entity.Jar;
@@ -37,6 +39,9 @@ public class ComboService {
 
     @Autowired
     private JarCapCompatibilityRepository jarCapCompatibilityRepository;
+
+    @Autowired
+    private PriceService priceService;
 
     public ComboResponse addCombo(ComboRequest comboRequest) {
 
@@ -190,6 +195,38 @@ public class ComboService {
     public Page<ComboResponse> getAllInactiveCombos(Pageable pageable) {
         Page<Combo> inactiveCombos = comboRepository.findAllInactiveCombos(pageable);
         return inactiveCombos.map(ComboResponse::new);
+    }
+
+    public Page<ComboResponse> getCombosByPriceRange(PriceSearchRequest priceSearchRequest, Pageable pageable) {
+        boolean exactSearch = priceService.verifyPriceSearchRequest(priceSearchRequest);
+
+        if(priceSearchRequest.getPriceDeal() == PriceDeals.PACA){
+            throw new IllegalArgumentException("El trato de precio 'PACA' no está implementado para combos.");
+        }
+
+        switch (priceSearchRequest.getPriceDeal()) {
+            case CIEN:
+                
+                if (exactSearch) {
+                    return comboRepository.findByCienPrice(priceSearchRequest.getExactPrice().doubleValue(), pageable).map(ComboResponse::new);
+                } else {
+                    return comboRepository.findByCienPriceBetween(priceSearchRequest.getMinPrice().doubleValue(), priceSearchRequest.getMaxPrice().doubleValue(), pageable).map(ComboResponse::new);
+                }
+            case DOCENA:
+                if (exactSearch) {
+                    return comboRepository.findByDocenaPrice(priceSearchRequest.getExactPrice().doubleValue(), pageable).map(ComboResponse::new);
+                } else {
+                    return comboRepository.findByDocenaPriceBetween(priceSearchRequest.getMinPrice().doubleValue(), priceSearchRequest.getMaxPrice().doubleValue(), pageable).map(ComboResponse::new);
+                }
+            case UNIDAD:
+                if (exactSearch) {
+                    return comboRepository.findByUnidadPrice(priceSearchRequest.getExactPrice().doubleValue(), pageable).map(ComboResponse::new);
+                } else {
+                    return comboRepository.findByUnidadPriceBetween(priceSearchRequest.getMinPrice().doubleValue(), priceSearchRequest.getMaxPrice().doubleValue(), pageable).map(ComboResponse::new);
+                }
+            default:
+                throw new IllegalArgumentException("Tipo de trato de precio no válido: " + priceSearchRequest.getPriceDeal() + ".");
+        }
     }
 
 }

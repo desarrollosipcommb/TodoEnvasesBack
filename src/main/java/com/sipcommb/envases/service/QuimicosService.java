@@ -1,15 +1,14 @@
 package com.sipcommb.envases.service;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.dto.QuimicosDTO;
 import com.sipcommb.envases.entity.Quimicos;
 import com.sipcommb.envases.repository.QuimicosRepository;
@@ -25,6 +24,9 @@ public class QuimicosService {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private PriceService priceService;
 
     public QuimicosDTO addQuimico(QuimicosDTO quimicoDTO) {
 
@@ -187,6 +189,18 @@ public class QuimicosService {
         quimico.setActive(false); // Desactivar el quimico
         quimicosRepository.save(quimico);
         return new QuimicosDTO(quimico);
+    }
+
+    public Page<QuimicosDTO> getPriceRange(PriceSearchRequest priceSearchRequest, Pageable pageable) {
+       boolean exactSearch =priceService.verifyPriceSearchRequest(priceSearchRequest);
+
+       if(exactSearch) {
+            return quimicosRepository.findByExactPrice(priceSearchRequest.getExactPrice(), pageable).map(QuimicosDTO::new);
+        } else {
+            return quimicosRepository.findByPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(QuimicosDTO::new);
+        }
+    
+
     }
 
 
