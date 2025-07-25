@@ -27,7 +27,6 @@ public class ExtractosService {
     
     // Method to add a new extracto
     public ExtractosDTO addExtracto(ExtractosDTO extractosDTO, String token) {
-        System.out.println("Adding new extracto: " + extractosDTO.getName());
         
         if (extractosDTO.getName() == null || extractosDTO.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del extracto no puede estar vacío.");
@@ -59,9 +58,9 @@ public class ExtractosService {
         newExtracto.setActive(true);
         newExtracto.setQuantity(extractosDTO.getQuantity());
 
-        inventoryService.newItem(newExtracto.getId() != null ? newExtracto.getId().longValue() : null, "extracto", newExtracto.getQuantity().intValue(), "add", jwtService.getUserIdFromToken(token).intValue(), "Se añadió " + newExtracto.getName() + " al inventario");
-
+        
         extractosRepository.save(newExtracto);
+        inventoryService.newItem(newExtracto.getId() != null ? newExtracto.getId().longValue() : null, "extracto", newExtracto.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(token).intValue(), "Se añadió " + newExtracto.getName() + " al inventario");
 
         return extractosDTO; // Replace with actual saved entity conversion
     }

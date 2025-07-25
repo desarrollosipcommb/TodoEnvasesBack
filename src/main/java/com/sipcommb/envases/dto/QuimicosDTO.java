@@ -22,6 +22,13 @@ public class QuimicosDTO {
         this.unitPrice = qumico.getUnitPrice().doubleValue();
     }
 
+    public QuimicosDTO(String name, String description, Integer quantity, Double unitPrice) {
+        this.name = name;
+        this.description = description;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+    }
+
 
     public String getName() {
         return name;

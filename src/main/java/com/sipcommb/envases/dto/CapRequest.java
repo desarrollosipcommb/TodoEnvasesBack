@@ -32,6 +32,22 @@ public class CapRequest {
 
     private Integer unitsInPaca;
 
+    public CapRequest() {
+    }
+
+    public CapRequest(String name, String description, String color, String diameter, Integer quantity, Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, Integer unitsInPaca) {
+        this.name = name;
+        this.description = description;
+        this.color = color;
+        this.diameter = diameter;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.docenaPrice = docenaPrice;
+        this.cienPrice = cienPrice;
+        this.pacaPrice = pacaPrice;
+        this.unitsInPaca = unitsInPaca;
+    }
+
     // Getters and Setters
 
     public String getDiameter() {

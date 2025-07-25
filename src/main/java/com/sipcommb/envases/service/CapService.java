@@ -76,6 +76,10 @@ public class CapService {
             throw new RuntimeException("Ya existe una tapa con el mismo nombre, diametro y color");
         }
 
+        if(capRequest.getColor() == null || capRequest.getColor().isEmpty() || capRequest.getColor().equals("")) {
+            throw new IllegalArgumentException("El color es obligatorio.");
+        }
+
         Cap cap = new Cap();
 
         if(!capRequest.getDiameter().equals("") && !jarTypeRepository.getTypeByDiameter(capRequest.getDiameter()).isPresent()){

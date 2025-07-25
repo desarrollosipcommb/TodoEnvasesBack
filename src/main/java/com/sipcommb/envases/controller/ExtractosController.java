@@ -224,10 +224,12 @@ public class ExtractosController {
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size
     ) {
-        if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver extractos");
-        }
+        
         try {
+            if(!permissionService.hasPermission(authHeader, "read")) {
+                return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver extractos");
+            }   
+
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(extractosService.getPriceRange(priceSearchRequest, pageable));
         } catch (Exception e) {
