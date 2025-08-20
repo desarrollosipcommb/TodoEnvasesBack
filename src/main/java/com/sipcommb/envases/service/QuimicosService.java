@@ -67,6 +67,11 @@ public class QuimicosService {
         return quimicosPage.map(QuimicosDTO::new);
     }
 
+    public Page<QuimicosDTO> getAllQuimicosByName(String searchName,Pageable pageable) {
+      Page<Quimicos> quimicosPage = quimicosRepository.findByNameContainingIgnoreCase(searchName,pageable);
+      return quimicosPage.map(QuimicosDTO::new);
+    }
+
     public Page<QuimicosDTO> getActiveQuimicos(Pageable pageable) {
         Page<Quimicos> quimicosPage = quimicosRepository.findByActiveTrue(pageable);
         return quimicosPage.map(QuimicosDTO::new);
@@ -89,7 +94,7 @@ public class QuimicosService {
         }
 
         Quimicos quimico = quimicoOpt.get();
-       
+
         if(quimicoDTO.getDescription() != null) {
             quimico.setDescription(quimicoDTO.getDescription());
         }
@@ -199,7 +204,7 @@ public class QuimicosService {
         } else {
             return quimicosRepository.findByPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(QuimicosDTO::new);
         }
-    
+
 
     }
 

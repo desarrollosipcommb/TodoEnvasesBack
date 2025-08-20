@@ -5,6 +5,7 @@ import com.sipcommb.envases.dto.CustomApiResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -226,4 +227,27 @@ public class QuimicosController {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error al obtener el rango de precios: " + e.getMessage()));
         }
     }
+
+  @GetMapping("/byName")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Lista paginada de quimicos", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = QuimicosDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+      @ApiResponse(responseCode = "400", description = "Error en la solicitud")
+  })
+  public ResponseEntity<?> getByName(
+      @RequestHeader("Authorization") String authHeader,
+      @RequestParam(name = "searchName",required = false,defaultValue = "") String searchName,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    if(!permissionService.hasPermission(authHeader, "read")) {
+      return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver frascos"));
+    }
+    try {
+      Pageable pageable = PageRequest.of(page, size,  Sort.by(Sort.Direction.ASC,"name"));
+      return ResponseEntity.ok(quimicosService.getAllQuimicosByName(searchName,pageable));
+    } catch (Exception e) {
+      return ResponseEntity.badRequest().body(new CustomApiResponse("Error al obtener el rango de precios: " + e.getMessage()));
+    }
+  }
 }
