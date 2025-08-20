@@ -1,5 +1,6 @@
 package com.sipcommb.envases.controller;
 
+import com.sipcommb.envases.dto.CustomApiResponse;
 import com.sipcommb.envases.dto.UserDTO;
 import com.sipcommb.envases.dto.UserRequestDTO;
 import com.sipcommb.envases.service.PermissionService;
@@ -37,7 +38,8 @@ public class UserController {
             UserDTO userDTO = userService.register(userRequestDTO);
             return ResponseEntity.ok(userDTO);
         } catch (RuntimeException ex) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", ex.getMessage())); // Handle errors gracefully
+            return ResponseEntity.badRequest().body(new CustomApiResponse(
+                Collections.singletonMap("error", ex.getMessage()).toString())); // Handle errors gracefully
         }
     }
 
@@ -53,14 +55,15 @@ public class UserController {
         @RequestHeader("Authorization") String authHeader
     ) {
         if (!permissionService.hasPermission(authHeader, "create")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para crear administradores");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear administradores"));
         }
 
         try {
             UserDTO userDTO = userService.registerAdmin(userRequestDTO, authHeader.trim().replace("Bearer ", ""));
             return ResponseEntity.ok(userDTO);
         } catch (RuntimeException ex) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", ex.getMessage())); // Handle errors gracefully
+            return ResponseEntity.badRequest().body(new CustomApiResponse(
+                Collections.singletonMap("error", ex.getMessage()).toString())); // Handle errors gracefully
         }
     }
 }

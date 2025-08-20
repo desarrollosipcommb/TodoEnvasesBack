@@ -1,6 +1,7 @@
 package com.sipcommb.envases.controller;
 
 
+import com.sipcommb.envases.dto.CustomApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
@@ -45,14 +46,14 @@ public class CapController {
     public ResponseEntity<?> addCap(@RequestBody CapRequest capRequest, @RequestHeader("Authorization") String authHeader) {
 
         if(!permissionService.hasPermission(authHeader, "create")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para crear tapas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear tapas"));
         }
         try{
             authHeader = authHeader.replace("Bearer ", "").trim();
             CapDTO capDTO = capService.addCaps(capRequest, authHeader);
             return ResponseEntity.ok(capDTO);
         }catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -68,13 +69,13 @@ public class CapController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver las tapas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver las tapas"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(capService.getAllCaps(pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -90,13 +91,13 @@ public class CapController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver las tapas activas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver las tapas activas"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(capService.getAllActiveCaps(pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -112,13 +113,13 @@ public class CapController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver las tapas inactivas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver las tapas inactivas"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(capService.getAllInactiveCaps(pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -136,14 +137,14 @@ public class CapController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las tapas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las tapas"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             Page<CapDTO> capDTO = capService.getCapsByDiameter(diameter, pageable);
             return ResponseEntity.ok(capDTO);
         } catch (Exception e) {
-            return ResponseEntity.status(404).body("Error: " + e.getMessage());
+            return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
         }
     }
 
@@ -161,14 +162,14 @@ public class CapController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las tapas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las tapas"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             Page<CapDTO> capDTO = capService.getByName(name, pageable);
             return ResponseEntity.ok(capDTO);
         } catch (Exception e) {
-            return ResponseEntity.status(404).body("Error: " + e.getMessage());
+            return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
         }
     }
 
@@ -186,13 +187,13 @@ public class CapController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read"))
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las tapas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las tapas"));
         try {
             Pageable pageable = PageRequest.of(page, size);
             Page<CapDTO> capDTO = capService.getByColor(color, pageable);
             return ResponseEntity.ok(capDTO);
         } catch (Exception e) {
-            return ResponseEntity.status(404).body("Error: " + e.getMessage());
+            return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
         }
     }
     
@@ -204,14 +205,14 @@ public class CapController {
     })
     public ResponseEntity<?> updateCap(@RequestBody CapRequest capRequest, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update")){
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar tapas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar tapas"));
         }
         try {
             authHeader = authHeader.replace("Bearer ", "").trim();
             CapDTO capDTO = capService.updateCap(capRequest, authHeader);
             return ResponseEntity.ok(capDTO);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -223,12 +224,12 @@ public class CapController {
     })
     public ResponseEntity<?> deleteCap(@RequestBody CapRequest capRequest, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "delete"))
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para eliminar tapas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para eliminar tapas"));
         try {
             CapDTO capDTO = capService.deleteCap(capRequest);
             return ResponseEntity.ok(capDTO);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -240,12 +241,12 @@ public class CapController {
     })
     public ResponseEntity<?> activateCap(@RequestBody CapRequest capRequest, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update"))
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para activar tapas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para activar tapas"));
         try {
             CapDTO capDTO = capService.activateCap(capRequest);
             return ResponseEntity.ok(capDTO);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -257,12 +258,12 @@ public class CapController {
     })
     public ResponseEntity<?> updateCapInventory(@RequestBody CapRequest capRequest, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update"))
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar el inventario de tapas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar el inventario de tapas"));
         try {
             CapDTO capDTO = capService.changeInventory(capRequest, authHeader.replace("Bearer ", "").trim());
             return ResponseEntity.ok(capDTO);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -277,13 +278,13 @@ public class CapController {
                                        @RequestParam(defaultValue = "0") int page,
                                        @RequestParam(defaultValue = "10") int size) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para buscar tapas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para buscar tapas"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(capService.getPriceRange(priceSearchRequest, pageable));
         } catch (Exception e) {
-            return ResponseEntity.status(404).body("Error: " + e.getMessage());
+            return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
         }
     }
 

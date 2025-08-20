@@ -1,5 +1,6 @@
 package com.sipcommb.envases.controller;
 
+import com.sipcommb.envases.dto.CustomApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -45,14 +46,14 @@ public class JarTypeController {
         try {
 
             if(!permissionService.hasPermission(authHeader, "create")) {
-                return ResponseEntity.status(403).body("Este usuario no tiene permiso para crear tapas");
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear tapas"));
             }
 
             JarTypeDTO response = jarTypeService.addJarTypes(jarTypeDTO);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body("Algo salio mal: " + e.getMessage());
+                    .body(new CustomApiResponse("Algo salio mal: " + e.getMessage()));
         }
     }
 
@@ -68,7 +69,7 @@ public class JarTypeController {
     ) {
         try {
             if(!permissionService.hasPermission(authHeader, "read")) {
-                return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer los tipos de tapas");
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer los tipos de tapas"));
             }
             JarTypeDTO jarTypeDTO = jarTypeService.getByDiameter(diameter);
             return ResponseEntity.ok(jarTypeDTO);
@@ -91,7 +92,7 @@ public class JarTypeController {
     ) {
         try {
             if(!permissionService.hasPermission(authHeader, "read")) {
-                return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer los tipos de tapas");
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer los tipos de tapas"));
             }
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(jarTypeService.getAll(pageable));
@@ -111,7 +112,7 @@ public class JarTypeController {
     public ResponseEntity<?> updateJarType(@RequestBody JarTypeDTO jarTypeDTO, @RequestHeader("Authorization") String authHeader) {
         try {
             if(!permissionService.hasPermission(authHeader, "update")) {
-                return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar tipos de tapas");
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar tipos de tapas"));
             }
             JarTypeDTO updatedJarType = jarTypeService.updateJarType(jarTypeDTO.getDiameter(), jarTypeDTO);
             return ResponseEntity.ok(updatedJarType);
@@ -136,13 +137,13 @@ public class JarTypeController {
     ) {
         try {
             if(!permissionService.hasPermission(authHeader, "read")) {
-                return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer los tipos de tapas");
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer los tipos de tapas"));
             }
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(jarTypeService.getLikeName(pageable, name));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al obtener los tipos de tapa: " + e.getMessage());
+                    .body(new CustomApiResponse("Error al obtener los tipos de tapa: " + e.getMessage()));
         }
     }
 }

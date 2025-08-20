@@ -12,6 +12,8 @@ public class QuimicosDTO {
 
     private Double unitPrice;
 
+    private boolean estado;
+
     public QuimicosDTO() {
     }
 
@@ -20,6 +22,7 @@ public class QuimicosDTO {
         this.description = qumico.getDescription();
         this.quantity = qumico.getQuantity();
         this.unitPrice = qumico.getUnitPrice().doubleValue();
+        this.estado = qumico.isActive();
     }
 
     public QuimicosDTO(String name, String description, Integer quantity, Double unitPrice) {
@@ -62,6 +65,11 @@ public class QuimicosDTO {
         this.unitPrice = unitPrice;
     }
 
+  public boolean isEstado() {
+    return estado;
+  }
 
-    
+  public void setEstado(boolean estado) {
+    this.estado = estado;
+  }
 }

@@ -1,6 +1,7 @@
 package com.sipcommb.envases.controller;
 
 
+import com.sipcommb.envases.dto.CustomApiResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -43,14 +44,14 @@ public class ExtractosController {
     })
     public ResponseEntity<?> addExtracto(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractosDTO extractosDTO) {
         if(!permissionService.hasPermission(authHeader, "create")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para crear extractos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear extractos"));
         }
 
         try {
             ExtractosDTO newExtracto = extractosService.addExtracto(extractosDTO, authHeader);
             return ResponseEntity.ok(newExtracto);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse(e.getMessage()));
         }
     }
 
@@ -65,13 +66,13 @@ public class ExtractosController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver extractos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver extractos"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(extractosService.getAllExtractos(pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al obtener los extractos: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al obtener los extractos: " + e.getMessage()));
         }
     }
 
@@ -86,13 +87,13 @@ public class ExtractosController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver extractos activos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver extractos activos"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(extractosService.getActiveExtractos(pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al obtener los extractos activos: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al obtener los extractos activos: " + e.getMessage()));
         }   
     }
 
@@ -107,13 +108,13 @@ public class ExtractosController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver extractos inactivos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver extractos inactivos"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(extractosService.getInactiveExtractos(pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al obtener los extractos inactivos: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al obtener los extractos inactivos: " + e.getMessage()));
         }
     }
 
@@ -130,13 +131,13 @@ public class ExtractosController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver extractos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver extractos"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(extractosService.getExtractosLikeName(name, pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al obtener los extractos: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al obtener los extractos: " + e.getMessage()));
         }
     }
 
@@ -148,13 +149,13 @@ public class ExtractosController {
     })
     public ResponseEntity<?> updateExtracto(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractosDTO extractosDTO) {
         if(!permissionService.hasPermission(authHeader, "update")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar extractos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar extractos"));
         }
         try {
             ExtractosDTO updatedExtracto = extractosService.updateExtracto(extractosDTO, authHeader);
             return ResponseEntity.ok(updatedExtracto);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al actualizar el extracto: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al actualizar el extracto: " + e.getMessage()));
         }
     }
 
@@ -166,13 +167,13 @@ public class ExtractosController {
     })
     public ResponseEntity<?> deleteExtracto(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractosDTO extractosDTO) {
         if(!permissionService.hasPermission(authHeader, "delete")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para eliminar extractos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para eliminar extractos"));
         }
         try {
             ExtractosDTO response = extractosService.deactivateExtracto(extractosDTO.getName().trim().toLowerCase());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al eliminar el extracto: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al eliminar el extracto: " + e.getMessage()));
         }
     }
 
@@ -184,13 +185,13 @@ public class ExtractosController {
     })
     public ResponseEntity<?> activateExtracto(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractosDTO extractosDTO) {
         if(!permissionService.hasPermission(authHeader, "update")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para activar extractos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para activar extractos"));
         }
         try {
             ExtractosDTO response = extractosService.activateExtracto(extractosDTO.getName().trim().toLowerCase());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al activar el extracto: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al activar el extracto: " + e.getMessage()));
         }
     }
 
@@ -202,13 +203,13 @@ public class ExtractosController {
     })
     public ResponseEntity<?> restockExtracto(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractosDTO extractosDTO) {
         if(!permissionService.hasPermission(authHeader, "update")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para reabastecer extractos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para reabastecer extractos"));
         }
         try {
             ExtractosDTO restockedExtracto = extractosService.changeInventory(extractosDTO, authHeader.trim().replace("Bearer ", ""));
             return ResponseEntity.ok(restockedExtracto);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al reabastecer el extracto: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al reabastecer el extracto: " + e.getMessage()));
         }
     }
 
@@ -227,13 +228,13 @@ public class ExtractosController {
         
         try {
             if(!permissionService.hasPermission(authHeader, "read")) {
-                return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver extractos");
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver extractos"));
             }   
 
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(extractosService.getPriceRange(priceSearchRequest, pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al obtener los extractos por rango de precio: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al obtener los extractos por rango de precio: " + e.getMessage()));
         }
     }
 }

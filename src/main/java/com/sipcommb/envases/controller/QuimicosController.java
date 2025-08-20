@@ -1,6 +1,7 @@
 package com.sipcommb.envases.controller;
 
 
+import com.sipcommb.envases.dto.CustomApiResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -44,14 +45,14 @@ public class QuimicosController {
     })
     public ResponseEntity<?> addQuimico(@RequestHeader("Authorization") String authHeader, @RequestBody QuimicosDTO quimicoDTO) {
          if(!permissionService.hasPermission(authHeader, "create")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para crear frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear frascos"));
         }
 
         try{
             QuimicosDTO newQuimico = quimicosService.addQuimico(quimicoDTO, authHeader.trim().replace("Bearer ", ""));
             return ResponseEntity.ok(newQuimico);
         }catch(Exception e){
-            return ResponseEntity.badRequest().body("Error al agregar el quimico: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al agregar el quimico: " + e.getMessage()));
         }
         
     }
@@ -67,14 +68,14 @@ public class QuimicosController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver frascos"));
         }
 
         try{
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(quimicosService.getAllQuimicos(pageable));
         }catch(Exception e){
-            return ResponseEntity.badRequest().body("Error al obtener los quimicos: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al obtener los quimicos: " + e.getMessage()));
         }
     }
 
@@ -89,14 +90,14 @@ public class QuimicosController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver frascos"));
         }
 
         try{
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(quimicosService.getActiveQuimicos(pageable));
         }catch(Exception e){
-            return ResponseEntity.badRequest().body("Error al obtener los quimicos activos: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al obtener los quimicos activos: " + e.getMessage()));
         }
     }
 
@@ -111,14 +112,14 @@ public class QuimicosController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver frascos"));
         }
 
         try{
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok( quimicosService.getInactiveQuimicos(pageable));
         }catch(Exception e){
-            return ResponseEntity.badRequest().body("Error al obtener los quimicos inactivos: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al obtener los quimicos inactivos: " + e.getMessage()));
         }
     }
 
@@ -130,14 +131,14 @@ public class QuimicosController {
     })
     public ResponseEntity<?> updateQuimico(@RequestHeader("Authorization") String authHeader, @RequestBody QuimicosDTO quimicoDTO) {
         if(!permissionService.hasPermission(authHeader, "update")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar frascos"));
         }   
 
         try{
             QuimicosDTO updatedQuimico = quimicosService.updateQuimico(quimicoDTO, authHeader.trim().replace("Bearer ", ""));
             return ResponseEntity.ok(updatedQuimico);
         }catch(Exception e){
-            return ResponseEntity.badRequest().body("Error al actualizar el quimico: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al actualizar el quimico: " + e.getMessage()));
         }
     }
 
@@ -149,14 +150,14 @@ public class QuimicosController {
     })
     public ResponseEntity<?> deleteQuimico(@RequestHeader("Authorization") String authHeader, @RequestBody QuimicosDTO quimicoDTO) {
         if(!permissionService.hasPermission(authHeader, "delete")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para eliminar frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para eliminar frascos"));
         }
 
         try{
             QuimicosDTO deactivatedQuimico = quimicosService.deactivateQuimico(quimicoDTO);
             return ResponseEntity.ok(deactivatedQuimico);
         }catch(Exception e){
-            return ResponseEntity.badRequest().body("Error al eliminar el quimico: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al eliminar el quimico: " + e.getMessage()));
         }
     }
 
@@ -168,14 +169,14 @@ public class QuimicosController {
     })
     public ResponseEntity<?> activateQuimico(@RequestHeader("Authorization") String authHeader, @RequestBody QuimicosDTO quimicoDTO) {
         if(!permissionService.hasPermission(authHeader, "update")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para activar frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para activar frascos"));
         }
 
         try{
             QuimicosDTO activatedQuimico = quimicosService.activateQuimico(quimicoDTO);
             return ResponseEntity.ok(activatedQuimico);
         }catch(Exception e){
-            return ResponseEntity.badRequest().body("Error al activar el quimico: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al activar el quimico: " + e.getMessage()));
         }    
     }
 
@@ -192,14 +193,14 @@ public class QuimicosController {
     })
     public ResponseEntity<?> restockQuimico(@RequestHeader("Authorization") String authHeader, @RequestBody QuimicosDTO quimicoDTO) {
         if(!permissionService.hasPermission(authHeader, "update")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para reabastecer frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para reabastecer frascos"));
         }
 
         try{
             QuimicosDTO restockedQuimico = quimicosService.changeInventory(quimicoDTO, authHeader.trim().replace("Bearer ", ""));
             return ResponseEntity.ok(restockedQuimico);
         }catch(Exception e){
-            return ResponseEntity.badRequest().body("Error al reabastecer el quimico: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al reabastecer el quimico: " + e.getMessage()));
         }
     }
 
@@ -216,13 +217,13 @@ public class QuimicosController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver frascos"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(quimicosService.getPriceRange(priceSearchRequest, pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al obtener el rango de precios: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al obtener el rango de precios: " + e.getMessage()));
         }
     }
 }

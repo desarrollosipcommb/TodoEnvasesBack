@@ -1,6 +1,7 @@
 package com.sipcommb.envases.controller;
 
 
+import com.sipcommb.envases.dto.CustomApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,14 +46,14 @@ public class JarController {
     public ResponseEntity<?> addJar(@RequestBody JarRequestDTO jarRequest, @RequestHeader("Authorization") String authHeader) {
 
         if(!permissionService.hasPermission(authHeader, "create")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para crear frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear frascos"));
         }
 
         try{
             JarDTO response = jarService.addJar(jarRequest, authHeader.replace("Bearer ", "").trim());
             return ResponseEntity.ok().body(response);
         }catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
 
     }
@@ -69,14 +70,14 @@ public class JarController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver frascos"));
         }
 
         try{
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok().body(jarService.getAllJars(pageable));
         }catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -93,13 +94,13 @@ public class JarController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver frascos"));
         }
         try{
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok().body(jarService.getAllActiveJars(pageable));
         }catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -115,13 +116,13 @@ public class JarController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver frascos"));
         }
         try{
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok().body(jarService.getAllInactiveJars(pageable));
         }catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -133,13 +134,13 @@ public class JarController {
     })
     public ResponseEntity<?> updateJar(@RequestBody JarRequestDTO jarRequest, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar frascos"));
         }
         try{
             JarDTO response = jarService.updateJar(jarRequest, authHeader.replace("Bearer ", "").trim());
             return ResponseEntity.ok().body(response);
         }catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -151,13 +152,13 @@ public class JarController {
     })
     public ResponseEntity<?> updateJarCompatibleCaps(@RequestBody UpdateCompatibleCapsRequest request, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar frascos"));
         }
         try {
             JarDTO response = jarService.updateCompatible(request.getCaps(), request.getName(),  request.isActive());
             return ResponseEntity.ok().body(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -169,13 +170,13 @@ public class JarController {
     })
     public ResponseEntity<?> deleteJar(@RequestBody String jarName, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "delete")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para eliminar frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para eliminar frascos"));
         }
         try {
             JarDTO response = jarService.deleteJar(jarName);
             return ResponseEntity.ok().body(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -187,13 +188,13 @@ public class JarController {
     })
     public ResponseEntity<?> activateJar(@RequestBody String jarName, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para activar frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para activar frascos"));
         }
         try {
             JarDTO response = jarService.activateJar(jarName);
             return ResponseEntity.ok().body(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
 
         }
     }
@@ -209,13 +210,13 @@ public class JarController {
         @RequestHeader("Authorization") String authHeader
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer frascos"));
         }
         try {
             JarDTO jarDTO = jarService.getJarByName(name);
             return ResponseEntity.ok(jarDTO);
         } catch (Exception e) {
-            return ResponseEntity.status(404).body("Error: " + e.getMessage()); 
+            return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
         }
     }
 
@@ -232,13 +233,13 @@ public class JarController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer frascos"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(jarService.getJarLikeName(name, pageable));
         } catch (Exception e) {
-            return ResponseEntity.status(404).body("Error: " + e.getMessage());
+            return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
         }
     }
 
@@ -250,13 +251,13 @@ public class JarController {
     })
     public ResponseEntity<?> updateJarQuantity(@RequestBody JarRequestDTO jarRequestDTO, @RequestHeader("Authorization") String token) {
         if(!permissionService.hasPermission(token, "update")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar frascos"));
         }
         try {
             JarDTO response = jarService.changeInventory(jarRequestDTO, token.replace("Bearer ", "").trim());
             return ResponseEntity.ok().body(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());   
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));   
         }
     }
 
@@ -273,13 +274,13 @@ public class JarController {
         @RequestBody PriceSearchRequest priceSearchRequest
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer frascos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer frascos"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(jarService.getPriceRange(priceSearchRequest, pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
