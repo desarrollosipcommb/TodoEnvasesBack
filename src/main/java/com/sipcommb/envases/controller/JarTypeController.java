@@ -118,7 +118,7 @@ public class JarTypeController {
             return ResponseEntity.ok(updatedJarType);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
+                    .body(new CustomApiResponse(e.getMessage()));
         }
     }
     
@@ -130,7 +130,7 @@ public class JarTypeController {
         @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tipos de tapa")
     })
     public ResponseEntity<?> getJarTypesLikeName(
-        @RequestBody String name,
+        @RequestParam String name,
         @RequestHeader("Authorization") String authHeader,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size
