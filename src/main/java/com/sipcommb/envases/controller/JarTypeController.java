@@ -146,4 +146,26 @@ public class JarTypeController {
                     .body(new CustomApiResponse("Error al obtener los tipos de tapa: " + e.getMessage()));
         }
     }
+
+  @GetMapping("/listar")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Lista de tipos de tapa obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+      @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tipos de tapa")
+  })
+  public ResponseEntity<?> getJarTypesLikeName(
+      @RequestHeader("Authorization") String authHeader
+  ) {
+    try {
+      if(!permissionService.hasPermission(authHeader, "read")) {
+        return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer los tipos de tapas"));
+      }
+      return ResponseEntity.ok(jarTypeService.getAll());
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(new CustomApiResponse("Error al obtener los tipos de tapa: " + e.getMessage()));
+    }
+  }
+
+
 }

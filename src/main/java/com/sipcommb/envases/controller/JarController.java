@@ -227,7 +227,7 @@ public class JarController {
         @ApiResponse(responseCode = "404", description = "Frascos no encontrados")
     })
     public ResponseEntity<?> getJarsByNameLike(
-        @RequestBody String name,
+        @RequestParam String name,
         @RequestHeader("Authorization") String authHeader,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size

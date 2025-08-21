@@ -1,7 +1,10 @@
 package com.sipcommb.envases.service;
 
+import java.util.List;
 import java.util.Optional;
 
+import java.util.stream.Collectors;
+import javax.swing.ListSelectionModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -87,6 +90,13 @@ public class JarTypeService {
     public Page<JarTypeDTO> getLikeName(Pageable pageable, String name) {
         Page<JarType> jarTypes = jarTypeRepository.findLikeName(name, pageable);
         return jarTypes.map(JarTypeDTO::new);
+    }
+
+    public List<JarTypeDTO> getAll() {
+      List<JarType> jarTypes = jarTypeRepository.findAll();
+      return jarTypes.stream()
+          .map(JarTypeDTO::new)
+          .collect(Collectors.toList());
     }
 
 }
