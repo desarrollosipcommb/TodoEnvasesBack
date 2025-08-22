@@ -208,7 +208,7 @@ public class CapService {
 
     public CapDTO deleteCap(CapRequest capRequest) {
 
-        Optional<Cap> capOptional = capRepository.findByNameAndDiameterAndColor(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor());
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameterAndColor2(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor());
         if(!capOptional.isPresent()) {
             throw new RuntimeException("No existe una tapa con estas especificaciones.");
         }
@@ -221,7 +221,7 @@ public class CapService {
 
     public CapDTO activateCap(CapRequest capRequest) {
 
-        Optional<Cap> capOptional = capRepository.findByNameAndDiameterAndColor(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor());
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameterAndColor2(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor());
         if(!capOptional.isPresent()) {
             throw new RuntimeException("No existe una tapa con estas especificaciones.");
         }
