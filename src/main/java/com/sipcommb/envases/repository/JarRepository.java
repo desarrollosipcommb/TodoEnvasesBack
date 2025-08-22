@@ -67,6 +67,13 @@ public interface JarRepository extends JpaRepository<Jar, Long> {
     Page<Jar> findByPacaPriceBetween(@Param("minPrice") BigDecimal minPrice,
                                      @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
 
+  @Query("SELECT j FROM Jar j " +
+      "JOIN j.jarType jt "+
+      "WHERE (:name IS NULL OR j.name LIKE %:name%) " +
+      "AND (:diameter IS NULL OR jt.diameter LIKE %:diameter%) " )
+  Page<Jar> getFromNameLikeAndDiameter(@Param("name") String name,
+                                               @Param("diameter") String diameter, Pageable pageable);
+
 
 
 }

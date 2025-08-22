@@ -1,8 +1,10 @@
 package com.sipcommb.envases.controller;
 
 
+import com.sipcommb.envases.dto.CapDTO;
 import com.sipcommb.envases.dto.CustomApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -283,5 +285,29 @@ public class JarController {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
+
+  @GetMapping("/by-name-diameter")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Envases obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+      @ApiResponse(responseCode = "404", description = "Tapa no encontrada")
+  })
+  public ResponseEntity<?> getCapByName(
+      @RequestParam(required = false) String name,
+      @RequestParam(required = false) String diameter,
+      @RequestHeader("Authorization") String authHeader,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    if(!permissionService.hasPermission(authHeader, "read")) {
+      return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las tapas"));
+    }
+    try {
+      Pageable pageable = PageRequest.of(page, size);
+      return ResponseEntity.ok(jarService.getFromNameLikeAndNameDiameter(name,diameter, pageable));
+    } catch (Exception e) {
+      return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
+    }
+  }
 
 }

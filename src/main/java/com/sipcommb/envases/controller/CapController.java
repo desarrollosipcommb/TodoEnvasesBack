@@ -290,7 +290,7 @@ public class CapController {
 
   @GetMapping("/by-name-diameter-color")
   @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Tapa obtenida exitosamente por nombre", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+      @ApiResponse(responseCode = "200", description = "Tapa obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
       @ApiResponse(responseCode = "403", description = "Permiso denegado"),
       @ApiResponse(responseCode = "404", description = "Tapa no encontrada")
   })
