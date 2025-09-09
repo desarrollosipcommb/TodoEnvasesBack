@@ -3,11 +3,14 @@ package com.sipcommb.envases.service;
 import com.sipcommb.envases.dto.LoginResponse;
 import com.sipcommb.envases.dto.UserDTO;
 import com.sipcommb.envases.dto.UserRequestDTO;
+import com.sipcommb.envases.dto.UserResponseDTO;
 import com.sipcommb.envases.entity.Role;
 import com.sipcommb.envases.entity.User;
 import com.sipcommb.envases.repository.RoleRepository;
 import com.sipcommb.envases.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -253,4 +256,20 @@ public class UserService {
         
         return new UserDTO(user);
     }
+
+    public Page<UserResponseDTO> getAllUsers(Pageable pageable) {
+        Page<User> users = userRepository.findAll(pageable);
+        return users.map(UserResponseDTO::new);
+    }
+
+    public Page<UserResponseDTO> getUsersByRole(Pageable pageable, String roleName) {
+        Page<User> users = userRepository.findByRoleName(roleName, pageable);
+        return users.map(UserResponseDTO::new);
+    }
+
+    public Page<UserResponseDTO> getByName(Pageable pageable, String name) {
+        Page<User> users = userRepository.findByName(name, pageable);
+        return users.map(UserResponseDTO::new);
+    }
+
 }

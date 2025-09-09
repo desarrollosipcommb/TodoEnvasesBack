@@ -1,6 +1,5 @@
 package com.sipcommb.envases.service;
 
-import com.sipcommb.envases.dto.CapDTO;
 import com.sipcommb.envases.dto.JarDTO;
 import com.sipcommb.envases.dto.JarRequestDTO;
 import com.sipcommb.envases.dto.PriceSearchRequest;

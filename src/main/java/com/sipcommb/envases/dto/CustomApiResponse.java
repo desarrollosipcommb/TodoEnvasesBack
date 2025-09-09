@@ -1,7 +1,6 @@
 package com.sipcommb.envases.dto;
 
 import java.util.Date;
-import java.util.Map;
 
 public class CustomApiResponse {
   private final Date tiempo = new Date();

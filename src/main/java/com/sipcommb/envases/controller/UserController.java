@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
@@ -43,8 +45,6 @@ public class UserController {
         }
     }
 
-
-    //TODO: test
     @PostMapping("/register-admin")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Administrador registrado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = UserDTO.class))),
@@ -66,4 +66,61 @@ public class UserController {
                 Collections.singletonMap("error", ex.getMessage()).toString())); // Handle errors gracefully
         }
     }
+
+    @GetMapping("/all")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = UserDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Error al obtener la lista de usuarios")
+    })
+    public ResponseEntity<?> getAllUsers(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(userService.getAllUsers(pageable));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse(
+                Collections.singletonMap("error", ex.getMessage()).toString())); // Handle errors gracefully
+        }
+    }
+
+    @GetMapping("/by-role")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lista de usuarios por rol obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = UserDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Error al obtener la lista de usuarios por rol")
+    })
+    public ResponseEntity<?> getUsersByRole(
+        @RequestParam String roleName,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(userService.getUsersByRole(pageable, roleName));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse(
+                Collections.singletonMap("error", ex.getMessage()).toString())); // Handle errors gracefully
+        }
+    }
+
+    @GetMapping("/by-name")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lista de usuarios por nombre obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = UserDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Error al obtener la lista de usuarios por nombre")
+    })
+    public ResponseEntity<?> getUsersByName(
+        @RequestParam String name,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(userService.getByName(pageable, name));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse(
+                Collections.singletonMap("error", ex.getMessage()).toString())); // Handle errors gracefully    
+        }
+    }
+
 }

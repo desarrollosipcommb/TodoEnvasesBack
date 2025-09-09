@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import java.util.stream.Collectors;
-import javax.swing.ListSelectionModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
