@@ -9,6 +9,7 @@ public class UserResponseDTO {
     private String fullName;
     private String phone;
     private String roleName;
+    private Boolean isActive;
 
     public UserResponseDTO() {
     }
@@ -19,6 +20,7 @@ public class UserResponseDTO {
         this.fullName = user.getFirstName() + " " + user.getLastName();
         this.phone = user.getPhoneNumber();
         this.roleName = user.getRole() != null ? user.getRole().getName() : null;
+        this.isActive = user.getIsActive();
     }
 
     public String getUsername() {
@@ -59,6 +61,14 @@ public class UserResponseDTO {
 
     public void setRoleName(String roleName) {
         this.roleName = roleName;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 
     

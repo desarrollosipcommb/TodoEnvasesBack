@@ -74,9 +74,14 @@ public class UserController {
     })
     public ResponseEntity<?> getAllUsers(
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+        @RequestParam(defaultValue = "10") int size,
+        @RequestHeader("Authorization") String authHeader
     ) {
         try {
+            if(!permissionService.hasPermission(authHeader, "read")) {
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver las tapas"));
+            }
+
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(userService.getAllUsers(pageable));
         } catch (RuntimeException ex) {
@@ -93,9 +98,15 @@ public class UserController {
     public ResponseEntity<?> getUsersByRole(
         @RequestParam String roleName,
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+        @RequestParam(defaultValue = "10") int size,
+        @RequestHeader("Authorization") String authHeader
     ) {
         try {
+
+            if(!permissionService.hasPermission(authHeader, "read")) {
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver las tapas"));
+            }
+
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(userService.getUsersByRole(pageable, roleName));
         } catch (RuntimeException ex) {
@@ -112,9 +123,13 @@ public class UserController {
     public ResponseEntity<?> getUsersByName(
         @RequestParam String name,
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+        @RequestParam(defaultValue = "10") int size,
+        @RequestHeader("Authorization") String authHeader
     ) {
         try {
+            if(!permissionService.hasPermission(authHeader, "read")) {
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver las tapas"));
+            }
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(userService.getByName(pageable, name));
         } catch (RuntimeException ex) {
@@ -123,4 +138,63 @@ public class UserController {
         }
     }
 
+    @PutMapping("/delete")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Usuario eliminado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = UserDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Error al eliminar el usuario")
+    })
+    public ResponseEntity<?> deleteUser(
+        @RequestParam String username,
+        @RequestHeader("Authorization") String authHeader
+    ) {
+        try {
+            if(!permissionService.hasPermission(authHeader, "delete")) {
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para desactivar usuarios"));
+            }
+            return ResponseEntity.ok(userService.deActivateUser(username));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse(
+                Collections.singletonMap("error", ex.getMessage()).toString())); // Handle errors gracefully    
+        }
+    }
+
+    @PutMapping("/activate")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Usuario activado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = UserDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Error al activar el usuario")
+    })
+    public ResponseEntity<?> activateUser(
+        @RequestParam String username,
+        @RequestHeader("Authorization") String authHeader
+    ) {
+        try {
+            if(!permissionService.hasPermission(authHeader, "update")) {
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para activar usuarios"));
+            }
+            return ResponseEntity.ok(userService.activateUser(username));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse(
+                Collections.singletonMap("error", ex.getMessage()).toString())); // Handle errors gracefully
+        }
+    }
+
+    @PutMapping("/update")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Usuario actualizado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = UserDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Error al actualizar el usuario")
+    })
+    public ResponseEntity<?> updateUser(
+        @RequestBody UserRequestDTO userRequestDTO,
+        @RequestHeader("Authorization") String authHeader
+    ) {
+        try {
+            if(!permissionService.hasPermission(authHeader, "update")) {
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar usuarios"));
+            }
+            return ResponseEntity.ok(userService.updateUser(userRequestDTO));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse(
+                Collections.singletonMap("error", ex.getMessage()).toString())); // Handle errors gracefully
+        }
+    }
 }
