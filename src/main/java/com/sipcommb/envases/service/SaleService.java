@@ -1,7 +1,6 @@
 package com.sipcommb.envases.service;
 
 
-
 import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.dto.SaleDTO;
 import com.sipcommb.envases.dto.SaleItemDTO;
@@ -24,14 +23,12 @@ import com.sipcommb.envases.repository.QuimicosRepository;
 import com.sipcommb.envases.repository.SaleItemRepository;
 import com.sipcommb.envases.repository.SaleRepository;
 import com.sipcommb.envases.repository.UserRepository;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -204,8 +201,8 @@ public class SaleService {
         }
 
        
-        sale.setCreatedAt(java.time.LocalDateTime.now());
-        sale.setUpdatedAt(java.time.LocalDateTime.now());
+        sale.setCreatedAt(LocalDateTime.now());
+        sale.setUpdatedAt(LocalDateTime.now());
         saleRepository.save(sale);
         saleItemRepository.saveAll(saleItemList);
 
@@ -273,8 +270,8 @@ public class SaleService {
         saleItem.setJar(combo.getJar());
         saleItem.setCap(combo.getCap());
         saleItem.setQuantity(saleItemRequest.getQuantity());
-        saleItem.setUnitPrice(java.math.BigDecimal.valueOf(determinePrice(combo, saleItemRequest)));
-        saleItem.setSubtotal(saleItem.getUnitPrice().multiply(java.math.BigDecimal.valueOf(saleItemRequest.getQuantity())));
+        saleItem.setUnitPrice(BigDecimal.valueOf(determinePrice(combo, saleItemRequest)));
+        saleItem.setSubtotal(saleItem.getUnitPrice().multiply(BigDecimal.valueOf(saleItemRequest.getQuantity())));
         saleItem.setItemType(ItemType.COMBO);
         saleItem.setSale(null); 
         return saleItem;
@@ -286,7 +283,7 @@ public class SaleService {
         saleItem.setCap(null);
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(determinePrice(jar, saleItemRequest));
-        saleItem.setSubtotal(saleItem.getUnitPrice().multiply(java.math.BigDecimal.valueOf(saleItemRequest.getQuantity())));
+        saleItem.setSubtotal(saleItem.getUnitPrice().multiply(BigDecimal.valueOf(saleItemRequest.getQuantity())));
         saleItem.setItemType(ItemType.JAR);
         saleItem.setSale(null); 
        return saleItem;
@@ -298,7 +295,7 @@ public class SaleService {
         saleItem.setCap(cap);
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(determinePrice(cap, saleItemRequest));
-        saleItem.setSubtotal(saleItem.getUnitPrice().multiply(java.math.BigDecimal.valueOf(saleItemRequest.getQuantity())));
+        saleItem.setSubtotal(saleItem.getUnitPrice().multiply(BigDecimal.valueOf(saleItemRequest.getQuantity())));
         saleItem.setItemType(ItemType.CAP);
         saleItem.setSale(null); 
 
@@ -312,7 +309,7 @@ public class SaleService {
         saleItem.setQuimico(quimico);
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(quimico.getUnitPrice());
-        saleItem.setSubtotal(saleItem.getUnitPrice().multiply(java.math.BigDecimal.valueOf(saleItemRequest.getQuantity())));
+        saleItem.setSubtotal(saleItem.getUnitPrice().multiply(BigDecimal.valueOf(saleItemRequest.getQuantity())));
         saleItem.setItemType(ItemType.QUIMICO);
         saleItem.setSale(null); 
         return saleItem;
@@ -325,7 +322,7 @@ public class SaleService {
         saleItem.setExtracto(extracto);
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(determinePrice(extracto, saleItemRequest));
-        saleItem.setSubtotal(saleItem.getUnitPrice().multiply(java.math.BigDecimal.valueOf(saleItemRequest.getQuantity())));
+        saleItem.setSubtotal(saleItem.getUnitPrice().multiply(BigDecimal.valueOf(saleItemRequest.getQuantity())));
         saleItem.setItemType(ItemType.EXTRACTO);
         saleItem.setSale(null); 
         return saleItem;
@@ -390,15 +387,16 @@ public class SaleService {
     }
 
     private BigDecimal determinePrice(Jar jar, SaleItemRequest saleItemRequest) {
-        if(saleItemRequest.getQuantity() == jar.getUnitsInPaca() && (jar.getPacaPrice() != null && jar.getPacaPrice().compareTo(java.math.BigDecimal.ZERO) > 0)){
+        if(saleItemRequest.getQuantity() == jar.getUnitsInPaca() && (jar.getPacaPrice() != null && jar.getPacaPrice().compareTo(
+            BigDecimal.ZERO) > 0)){
             return jar.getPacaPrice();
         }
 
-        if(jar.getCienPrice() != null && jar.getCienPrice().compareTo(java.math.BigDecimal.ZERO) > 0 && saleItemRequest.getQuantity() >= 100){
+        if(jar.getCienPrice() != null && jar.getCienPrice().compareTo(BigDecimal.ZERO) > 0 && saleItemRequest.getQuantity() >= 100){
             return jar.getCienPrice();
         }
 
-        if((jar.getDocenaPrice() != null && jar.getDocenaPrice().compareTo(java.math.BigDecimal.ZERO) > 0) && (saleItemRequest.getQuantity() >= 12 || saleItemRequest.getQuantity() % 12 == 0)){
+        if((jar.getDocenaPrice() != null && jar.getDocenaPrice().compareTo(BigDecimal.ZERO) > 0) && (saleItemRequest.getQuantity() >= 12 || saleItemRequest.getQuantity() % 12 == 0)){
             return jar.getDocenaPrice();
         }
 
@@ -411,11 +409,11 @@ public class SaleService {
             return cap.getPacaPrice();
         }
 
-        if(cap.getCienPrice() != null && cap.getCienPrice().compareTo(java.math.BigDecimal.ZERO) > 0 && saleItemRequest.getQuantity() >= 100){
+        if(cap.getCienPrice() != null && cap.getCienPrice().compareTo(BigDecimal.ZERO) > 0 && saleItemRequest.getQuantity() >= 100){
             return cap.getCienPrice();
         }
 
-        if((cap.getDocenaPrice() != null && cap.getDocenaPrice().compareTo(java.math.BigDecimal.ZERO) > 0) && (saleItemRequest.getQuantity() >= 12 || saleItemRequest.getQuantity() % 12 == 0)){
+        if((cap.getDocenaPrice() != null && cap.getDocenaPrice().compareTo(BigDecimal.ZERO) > 0) && (saleItemRequest.getQuantity() >= 12 || saleItemRequest.getQuantity() % 12 == 0)){
             return cap.getDocenaPrice();
         }
 

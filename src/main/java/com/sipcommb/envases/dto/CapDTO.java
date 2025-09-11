@@ -1,8 +1,7 @@
 package com.sipcommb.envases.dto;
 
-import java.math.BigDecimal;
-
 import com.sipcommb.envases.entity.Cap;
+import java.math.BigDecimal;
 
 public class CapDTO {
 

@@ -1,9 +1,8 @@
 package com.sipcommb.envases.dto;
 
+import com.sipcommb.envases.entity.Sale;
 import java.math.BigDecimal;
 import java.util.List;
-
-import com.sipcommb.envases.entity.Sale;
 
 public class SaleDTO {
 

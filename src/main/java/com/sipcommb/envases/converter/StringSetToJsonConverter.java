@@ -2,11 +2,10 @@ package com.sipcommb.envases.converter;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
 
 @Converter
 public class StringSetToJsonConverter implements AttributeConverter<Set<String>, String> {
