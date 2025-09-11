@@ -1,6 +1,5 @@
 package com.sipcommb.envases.repository;
 
-import com.sipcommb.envases.entity.Cap;
 import com.sipcommb.envases.entity.Jar;
 
 import org.springframework.data.domain.Page;
