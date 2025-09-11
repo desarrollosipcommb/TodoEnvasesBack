@@ -79,7 +79,7 @@ public class FileService {
                     getCellAsString(diameterCell)
                 ));
 
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Tipo de tapa agregado correctamente"));
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Tipo de envase agregado correctamente"));
 
             }catch (Exception e) {
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
