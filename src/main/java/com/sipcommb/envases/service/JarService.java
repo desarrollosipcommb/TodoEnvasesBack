@@ -55,12 +55,12 @@ public class JarService {
     public JarDTO addJar(JarRequestDTO jarRequest, String token) {
 
         if(jarRepository.getByName(jarRequest.getName().trim()).isPresent()) {
-            throw new IllegalArgumentException("Ya existe un frasco con ese nombre.");
+            throw new IllegalArgumentException("Ya existe un envase con ese nombre.");
         }
-        
-        // hay que validar que el frasco si tenga un diametro asociado, dado que algunos vienen con tapa propia asi que el diametro no es obligatorio
+
+        // hay que validar que el envase si tenga un diametro asociado, dado que algunos vienen con tapa propia asi que el diametro no es obligatorio
         if(!jarRequest.getDiameter().isEmpty() && !jarTypeRepository.getTypeByDiameter(jarRequest.getDiameter()).isPresent()) {
-            throw new IllegalArgumentException("No existe un tipo de frasco con ese diámetro.");
+            throw new IllegalArgumentException("No existe un tipo de envase con ese diámetro.");
         }
 
         if(jarRequest.getUnitPrice() == null || jarRequest.getUnitPrice() <= 0) {

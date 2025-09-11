@@ -44,8 +44,8 @@ public class CapService {
             throw new IllegalArgumentException("El nombre de la tapa no puede estar vacío.");
         }
 
-        if(capRequest.getQuantity() == null || capRequest.getQuantity() <= 0) {
-            throw new IllegalArgumentException("La cantidad de tapas debe ser mayor a cero.");
+        if(capRequest.getQuantity() == null) {
+            throw new IllegalArgumentException("La cantidad de tapas no puede estar vacía.");
         }
 
         if(capRequest.getDiameter().isEmpty()) {
