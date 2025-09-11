@@ -1,5 +1,6 @@
 package com.sipcommb.envases.controller;
 
+import com.sipcommb.envases.dto.CustomApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -31,7 +32,7 @@ public class FileController {
     ) {
         
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body("No se ha subido ningun archivo");
+            return ResponseEntity.badRequest().body(new CustomApiResponse("No se ha subido ningun archivo"));
         }
         
         
@@ -39,12 +40,12 @@ public class FileController {
         try {
 
             if(!permissionService.hasPermission(authHeader, "create")) {
-                return ResponseEntity.status(403).body("Este usuario no tiene permiso para crear tapas");
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear tapas"));
             }
 
             return ResponseEntity.ok(fileService.readFile(file, authHeader));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error al subir el archivo: " + e.getMessage());
+            return ResponseEntity.status(500).body(new CustomApiResponse("Error al subir el archivo: " + e.getMessage()));
         }
     }
 }

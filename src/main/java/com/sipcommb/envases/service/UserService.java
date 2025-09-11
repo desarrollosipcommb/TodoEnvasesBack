@@ -3,11 +3,14 @@ package com.sipcommb.envases.service;
 import com.sipcommb.envases.dto.LoginResponse;
 import com.sipcommb.envases.dto.UserDTO;
 import com.sipcommb.envases.dto.UserRequestDTO;
+import com.sipcommb.envases.dto.UserResponseDTO;
 import com.sipcommb.envases.entity.Role;
 import com.sipcommb.envases.entity.User;
 import com.sipcommb.envases.repository.RoleRepository;
 import com.sipcommb.envases.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -61,30 +64,6 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-
-    /**
-     * Update user information
-     */
-    public User updateUser(Long userId, String firstName, String lastName, String email) {
-        Optional<User> userOptional = userRepository.findById(userId);
-        if (!userOptional.isPresent()) {
-            throw new RuntimeException("no se encontró el");
-        }
-
-        User user = userOptional.get();
-        
-        // Check if new email is already taken by another user
-        if (!user.getEmail().equals(email) && userRepository.existsByEmail(email)) {
-            throw new RuntimeException("Ya existe un usuario con este email");
-        }
-
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
-        user.setEmail(email);
-
-        return userRepository.save(user);
-    }
-
     /**
      * Change user password
      */
@@ -103,34 +82,6 @@ public class UserService {
 
         // Update password
         user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
-    }
-
-    /**
-     * Deactivate user (soft delete)
-     */
-    public void deactivateUser(Long userId) {
-        Optional<User> userOptional = userRepository.findById(userId);
-        if (!userOptional.isPresent()) {
-            throw new RuntimeException("no se encontró el usuario");
-        }
-
-        User user = userOptional.get();
-        user.setIsActive(false);
-        userRepository.save(user);
-    }
-
-    /**
-     * Activate user
-     */
-    public void activateUser(Long userId) {
-        Optional<User> userOptional = userRepository.findById(userId);
-        if (!userOptional.isPresent()) {
-            throw new RuntimeException("no se encontró el usuario");
-        }
-
-        User user = userOptional.get();
-        user.setIsActive(true);
         userRepository.save(user);
     }
 
@@ -162,6 +113,10 @@ public class UserService {
         User user = userOptional.get();
         if(!passwordEncoder.matches(password, user.getPassword())) {
             throw new BadCredentialsException("Contraseña incorrecta");
+        }
+
+        if(!user.getIsActive()) {
+            throw new BadCredentialsException("El usuario está desactivado");
         }
 
         user.setLastLogin(LocalDateTime.now());
@@ -253,4 +208,80 @@ public class UserService {
         
         return new UserDTO(user);
     }
+
+    public UserDTO updateUser(UserRequestDTO userRequestDTO){
+        Optional<User> userOptional = userRepository.findByUsername(userRequestDTO.getUsername());
+        if (!userOptional.isPresent()) {
+            throw new RuntimeException("no se encontró el usuario");
+        }
+
+        User user = userOptional.get();
+
+        // Check if email is being updated and if it already exists
+        if (!user.getEmail().equals(userRequestDTO.getEmail()) && userRepository.existsByEmail(userRequestDTO.getEmail())) {
+            throw new RuntimeException("ya existe un usuario con este email");
+        }
+
+        // Find role
+        Optional<Role> roleOptional = roleRepository.findByName(userRequestDTO.getRoleName());
+        if (!roleOptional.isPresent()) {
+            throw new RuntimeException("No se encontro el rol: " + userRequestDTO.getRoleName());
+        }
+
+        // Update user details
+        user.setEmail(userRequestDTO.getEmail());
+        if (userRequestDTO.getPassword() != null && !userRequestDTO.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
+        }
+        user.setFirstName(userRequestDTO.getFirstName());
+        user.setLastName(userRequestDTO.getLastName());
+        user.setPhoneNumber(userRequestDTO.getPhoneNumber());
+        user.setRole(roleOptional.get());
+
+        // Save updated user
+        user = userRepository.save(user);
+        return new UserDTO(user);
+    }
+
+
+    public Page<UserResponseDTO> getAllUsers(Pageable pageable) {
+        Page<User> users = userRepository.findAll(pageable);
+        return users.map(UserResponseDTO::new);
+    }
+
+    public Page<UserResponseDTO> getUsersByRole(Pageable pageable, String roleName) {
+        Page<User> users = userRepository.findByRoleName(roleName, pageable);
+        return users.map(UserResponseDTO::new);
+    }
+
+    public Page<UserResponseDTO> getByName(Pageable pageable, String name) {
+        Page<User> users = userRepository.findByName(name, pageable);
+        return users.map(UserResponseDTO::new);
+    }
+
+    public UserResponseDTO deActivateUser(String username){
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (!userOptional.isPresent()) {
+            throw new RuntimeException("no se encontró el usuario");
+        }
+
+        User user = userOptional.get();
+        user.setIsActive(false);
+        userRepository.save(user);
+        return new UserResponseDTO(user);
+    }
+
+    public UserResponseDTO activateUser(String username){
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (!userOptional.isPresent()) {
+            throw new RuntimeException("no se encontró el usuario");
+        }
+
+        User user = userOptional.get();
+        user.setIsActive(true);
+        userRepository.save(user);
+        return new UserResponseDTO(user);
+    }
+
+
 }

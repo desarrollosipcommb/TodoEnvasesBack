@@ -33,4 +33,6 @@ public interface QuimicosRepository extends JpaRepository<Quimicos, Integer> {
     Page<Quimicos> findByPriceBetween(@Param("minPrice") BigDecimal minPrice,
                                        @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
 
+    Page<Quimicos> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
 }

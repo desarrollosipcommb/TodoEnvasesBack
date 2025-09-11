@@ -146,6 +146,11 @@ public class CapService {
         return caps.map(CapDTO::new);
     }
 
+    public Page<CapDTO> getFromNameLikeAndColorAndNameDiameter(String name,String color,String diameter , Pageable pageable) {
+      Page<Cap> caps = capRepository.getFromNameLikeAndColorAndDiameter(name,color,diameter, pageable);
+      return caps.map(CapDTO::new);
+    }
+
 
     public CapDTO updateCap(CapRequest capRequest, String token) {
 
@@ -208,7 +213,7 @@ public class CapService {
 
     public CapDTO deleteCap(CapRequest capRequest) {
 
-        Optional<Cap> capOptional = capRepository.findByNameAndDiameterAndColor(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor());
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameterAndColor2(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor());
         if(!capOptional.isPresent()) {
             throw new RuntimeException("No existe una tapa con estas especificaciones.");
         }
@@ -221,7 +226,7 @@ public class CapService {
 
     public CapDTO activateCap(CapRequest capRequest) {
 
-        Optional<Cap> capOptional = capRepository.findByNameAndDiameterAndColor(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor());
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameterAndColor2(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor());
         if(!capOptional.isPresent()) {
             throw new RuntimeException("No existe una tapa con estas especificaciones.");
         }

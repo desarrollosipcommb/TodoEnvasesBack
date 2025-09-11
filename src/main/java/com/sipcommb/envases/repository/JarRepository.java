@@ -1,6 +1,5 @@
 package com.sipcommb.envases.repository;
 
-import com.sipcommb.envases.entity.Cap;
 import com.sipcommb.envases.entity.Jar;
 
 import org.springframework.data.domain.Page;
@@ -66,6 +65,13 @@ public interface JarRepository extends JpaRepository<Jar, Long> {
     @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.pacaPrice BETWEEN :minPrice AND :maxPrice")
     Page<Jar> findByPacaPriceBetween(@Param("minPrice") BigDecimal minPrice,
                                      @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
+
+  @Query("SELECT j FROM Jar j " +
+      "JOIN j.jarType jt "+
+      "WHERE (:name IS NULL OR j.name LIKE %:name%) " +
+      "AND (:diameter IS NULL OR jt.diameter LIKE %:diameter%) " )
+  Page<Jar> getFromNameLikeAndDiameter(@Param("name") String name,
+                                               @Param("diameter") String diameter, Pageable pageable);
 
 
 

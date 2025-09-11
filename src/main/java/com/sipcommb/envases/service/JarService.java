@@ -165,8 +165,14 @@ public class JarService {
         return jars.map(JarDTO::new);
     }
 
-  
-    public JarDTO updateJar(JarRequestDTO jarRequestDTO, String token) {
+  public Page<JarDTO>  getFromNameLikeAndNameDiameter(String name, String diameter , Pageable pageable) {
+    Page<Jar> jars = jarRepository.getFromNameLikeAndDiameter(name,diameter, pageable);
+    return jars.map(JarDTO::new);
+  }
+
+
+
+  public JarDTO updateJar(JarRequestDTO jarRequestDTO, String token) {
         Optional<Jar> jarOptional = jarRepository.getByName(jarRequestDTO.getName().trim().toLowerCase());
         
         if(!jarOptional.isPresent()) {

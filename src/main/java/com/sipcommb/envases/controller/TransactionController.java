@@ -1,5 +1,6 @@
 package com.sipcommb.envases.controller;
 
+import com.sipcommb.envases.dto.CustomApiResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -46,13 +47,13 @@ public class TransactionController {
         ) {
         try {
             if (!permissionService.hasPermission(authHeader, "read")) {
-                return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver transacciones");
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver transacciones"));
             }
             Pageable pageable = PageRequest.of(page, size);
             Page<TransactionResponseDTO> transactions = inventoryService.getAll(pageable);
             return ResponseEntity.ok(transactions);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Algo salió mal: " + e.getMessage());  
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Algo salió mal: " + e.getMessage()));  
         }
     }
 
@@ -70,14 +71,14 @@ public class TransactionController {
         ) {
         try {
             if (!permissionService.hasPermission(authHeader, "read")) {
-                return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver transacciones");
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver transacciones"));
             }
             Pageable pageable = PageRequest.of(page, size);
 
             Page<TransactionResponseDTO> transactions = inventoryService.getByItemType(pageable, itemType);
             return ResponseEntity.ok(transactions);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Algo salió mal: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Algo salió mal: " + e.getMessage()));
         }
     }
 
@@ -95,13 +96,13 @@ public class TransactionController {
     ) {
         try {
             if (!permissionService.hasPermission(authHeader, "read")) {
-                return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver transacciones");
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver transacciones"));
             }
             Pageable pageable = PageRequest.of(page, size);
             Page<TransactionResponseDTO> transactions = inventoryService.getByTransactionType(pageable, transactionType);
             return ResponseEntity.ok(transactions);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Algo salió mal: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Algo salió mal: " + e.getMessage()));
         }
     }
 
@@ -119,13 +120,13 @@ public class TransactionController {
         ) {
         try {
             if (!permissionService.hasPermission(authHeader, "read")) {
-                return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver transacciones");
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver transacciones"));
             }
             Pageable pageable = PageRequest.of(page, size);
             Page<TransactionResponseDTO> transactions = inventoryService.getByEmail(pageable, email);
             return ResponseEntity.ok(transactions);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Algo salió mal: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Algo salió mal: " + e.getMessage()));
         }
     }
 
@@ -143,13 +144,13 @@ public class TransactionController {
         ) {
         try {
             if (!permissionService.hasPermission(authHeader, "read")) {
-                return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver transacciones");
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver transacciones"));
             }
             Pageable pageable = PageRequest.of(page, size);
             Page<TransactionResponseDTO> transactions = inventoryService.getByUsername(pageable, username);
             return ResponseEntity.ok(transactions);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Algo salió mal: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Algo salió mal: " + e.getMessage()));
         }
     }
 }

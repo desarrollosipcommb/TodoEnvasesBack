@@ -1,6 +1,7 @@
 package com.sipcommb.envases.controller;
 
 
+import com.sipcommb.envases.dto.CustomApiResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,13 +45,13 @@ public class ComboController {
     public ResponseEntity<?> addCombo(@RequestBody ComboRequest comboRequest, @RequestHeader("Authorization") String authHeader) {
 
         if(!permissionService.hasPermission(authHeader, "create")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para crear tapas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear tapas"));
         }
         try{
             ComboResponse comboResponse = comboService.addCombo(comboRequest);
             return ResponseEntity.ok(comboResponse);
         }catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
         
     }
@@ -66,13 +67,13 @@ public class ComboController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver los combos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver los combos"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(comboService.getAllCombos(pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -87,13 +88,13 @@ public class ComboController {
         @RequestBody String comboName
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver los combos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver los combos"));
         }
         try {
             ComboResponse comboResponse = comboService.getByName(comboName);
             return ResponseEntity.ok(comboResponse);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -110,13 +111,13 @@ public class ComboController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver los combos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver los combos"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(comboService.getLikeName(comboName, pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
     
@@ -129,13 +130,13 @@ public class ComboController {
     })    
     public ResponseEntity<?> updateCombo(@RequestBody ComboRequest comboRequest, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar combos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar combos"));
         }
         try {
             ComboResponse comboResponse = comboService.updateCombo(comboRequest);
             return ResponseEntity.ok(comboResponse);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -147,13 +148,13 @@ public class ComboController {
     })
     public ResponseEntity<?> toggleComboActive(@RequestBody String comboName, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar combos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar combos"));
         }
         try {
             ComboResponse comboResponse = comboService.activeCombo(comboName);
             return ResponseEntity.ok(comboResponse);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -165,12 +166,12 @@ public class ComboController {
     })
     public ResponseEntity<?> toggleComboInactive(@RequestBody String comboName, @RequestHeader("Authorization") String authHeader) {
         if(!permissionService.hasPermission(authHeader, "update"))
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para actualizar combos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar combos"));
         try {
             ComboResponse comboResponse = comboService.deactivateCombo(comboName);
             return ResponseEntity.ok(comboResponse);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -186,13 +187,13 @@ public class ComboController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver los combos activos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver los combos activos"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(comboService.getAllActiveCombos(pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
 
     }
@@ -209,13 +210,13 @@ public class ComboController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para ver los combos inactivos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver los combos inactivos"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(comboService.getAllInactiveCombos(pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 
@@ -232,13 +233,13 @@ public class ComboController {
         @RequestBody PriceSearchRequest priceSearchRequest
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer combos");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer combos"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(comboService.getCombosByPriceRange(priceSearchRequest, pageable));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
 }

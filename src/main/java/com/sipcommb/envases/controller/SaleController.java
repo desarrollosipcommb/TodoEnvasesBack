@@ -1,5 +1,6 @@
 package com.sipcommb.envases.controller;
 
+import com.sipcommb.envases.dto.CustomApiResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -50,7 +51,7 @@ public class SaleController {
     })
     public ResponseEntity<?> addSale(@RequestHeader("Authorization") String authHeader, @RequestBody SaleRequest sale) {
         if(!permissionService.hasPermission(authHeader, "sales")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para crear ventas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear ventas"));
         }
 
     try{
@@ -58,7 +59,7 @@ public class SaleController {
         return ResponseEntity.ok(saleDTO);
     }catch (Exception e) {
         
-        return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
     }
 }
 
@@ -76,7 +77,7 @@ public class SaleController {
     })
     public ResponseEntity<?> planSale(@RequestHeader("Authorization") String authHeader, @RequestBody SaleRequest sale) {
         if(!permissionService.hasPermission(authHeader, "sales")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para crear ventas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear ventas"));
         }
 
         try{
@@ -88,7 +89,7 @@ public class SaleController {
                 cause = cause.getCause();
             }
             cause.printStackTrace();
-            return ResponseEntity.badRequest().body("Error: " + cause.getMessage());
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + cause.getMessage()));
         }
              
     }
@@ -105,13 +106,13 @@ public class SaleController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "sales")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las ventas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(saleService.getAllSales(pageable));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error al obtener las ventas: " + e.getMessage());
+            return ResponseEntity.status(500).body(new CustomApiResponse("Error al obtener las ventas: " + e.getMessage()));
         }
     }
 
@@ -128,7 +129,7 @@ public class SaleController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "sales")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las ventas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
@@ -151,7 +152,7 @@ public class SaleController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "sales")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las ventas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
@@ -174,7 +175,7 @@ public class SaleController {
         @RequestParam(defaultValue = "10") int size
     ) {
         if(!permissionService.hasPermission(authHeader, "sales")) {
-            return ResponseEntity.status(403).body("Este usuario no tiene permiso para leer las ventas");
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
         }
         try {
             Pageable pageable = PageRequest.of(page, size);
@@ -184,7 +185,7 @@ public class SaleController {
             while (cause.getCause() != null) {
                 cause = cause.getCause();
             }
-            return ResponseEntity.status(500).body("Error al obtener las ventas por rango de precio: " + cause.getMessage());
+            return ResponseEntity.status(500).body(new CustomApiResponse("Error al obtener las ventas por rango de precio: " + cause.getMessage()));
         }
     }
 }

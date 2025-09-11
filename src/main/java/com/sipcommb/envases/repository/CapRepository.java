@@ -22,6 +22,10 @@ public interface CapRepository extends JpaRepository<Cap, Long> {
     Optional<Cap> findByNameAndDiameterAndColor(@Param("name") String name,
                                                 @Param("diameter") String diameter,
                                                 @Param("color") String color);
+  @Query("SELECT c FROM Cap c WHERE c.name = :name and c.jarType.diameter = :diameter and c.color = :color")
+  Optional<Cap> findByNameAndDiameterAndColor2(@Param("name") String name,
+                                              @Param("diameter") String diameter,
+                                              @Param("color") String color);
 
     @Query("SELECT c FROM Cap c WHERE c.name LIKE %:name% AND c.jarType.diameter = :diameter AND c.isActive = 1")
     Optional<List<Cap>> getFromNameAndDiameter(String name, String diameter);
@@ -79,6 +83,14 @@ public interface CapRepository extends JpaRepository<Cap, Long> {
     @Query("SELECT c FROM Cap c WHERE c.isActive = 1 AND c.pacaPrice BETWEEN :minPrice AND :maxPrice")
     Page<Cap> findByPacaPriceBetween(@Param("minPrice") BigDecimal minPrice,
                                      @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
+
+  @Query("SELECT c FROM Cap c " +
+      "JOIN c.jarType jt "+
+      "WHERE (:name IS NULL OR c.name LIKE %:name%) " +
+      "AND (:color IS NULL OR c.color LIKE %:color%) " +
+      "AND (:diameter IS NULL OR jt.diameter LIKE %:diameter%) " )
+  Page<Cap> getFromNameLikeAndColorAndDiameter(@Param("name") String name,@Param("color") String color,
+                                                   @Param("diameter") String diameter, Pageable pageable);
     
 }
 

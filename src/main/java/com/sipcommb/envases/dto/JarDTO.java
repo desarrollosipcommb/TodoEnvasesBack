@@ -20,6 +20,8 @@ public class JarDTO {
 
     private int unitsInPaca;
 
+   private Boolean isActive;
+
     // Default constructor
 
     public JarDTO() {
@@ -36,6 +38,7 @@ public class JarDTO {
         this.cienPrice = String.valueOf(jar.getCienPrice());
         this.pacaPrice = String.valueOf(jar.getPacaPrice());
         this.unitsInPaca = jar.getUnitsInPaca();
+        this.isActive= jar.getIsActive();
     }
 
     //getter and setter methods
@@ -104,6 +107,11 @@ public class JarDTO {
         this.unitsInPaca = unitsInPaca;
     }
 
+  public Boolean getActive() {
+    return isActive;
+  }
 
-    
+  public void setActive(Boolean active) {
+    isActive = active;
+  }
 }

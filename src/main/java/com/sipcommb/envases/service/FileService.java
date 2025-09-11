@@ -110,6 +110,19 @@ public class FileService {
             Cell quantityCell = row.getCell(9);
 
             try{
+
+                if(quantityCell == null && (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
+                    throw new RuntimeException("la cantidad de la tapa y nombre es obligatorio");
+                }
+
+                if(quantityCell == null) {
+                    throw new RuntimeException("la cantidad de la tapa es obligatoria");
+                }
+
+                if(nameCell == null || nameCell.getStringCellValue().isEmpty()) {
+                    throw new RuntimeException("el nombre de la tapa es obligatorio");
+                }
+
                 capService.addCaps(new CapRequest(
                     nameCell.getStringCellValue(),
                     getCellAsNullableString(descriptionCell),
@@ -158,6 +171,19 @@ public class FileService {
 
 
             try {
+
+                if(quantityCell == null && (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
+                    throw new RuntimeException("la cantidad del frasco y nombre es obligatorio");
+                }
+
+                if(quantityCell == null) {
+                    throw new RuntimeException("la cantidad del frasco es obligatoria");
+                }
+
+                if(nameCell == null || nameCell.getStringCellValue().isEmpty()) {
+                    throw new RuntimeException("el nombre del frasco es obligatorio");
+                }
+
                 jarService.addJar(new JarRequestDTO(
                     nameCell.getStringCellValue(), 
                     getCellAsNullableString(descriptionCell), 
@@ -195,6 +221,19 @@ public class FileService {
             Cell quantityCell = row.getCell(3);
 
             try {
+
+                if(quantityCell == null && (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
+                    throw new RuntimeException("la cantidad del químico y nombre es obligatorio");
+                }
+
+                if(quantityCell == null) {
+                    throw new RuntimeException("la cantidad del químico es obligatoria");
+                }
+
+                if(nameCell == null || nameCell.getStringCellValue().isEmpty()) {
+                    throw new RuntimeException("el nombre del químico es obligatorio");
+                }
+
                 quimicosService.addQuimico(new QuimicosDTO(
                     nameCell.getStringCellValue(),
                     getCellAsNullableString(descriptionCell),
@@ -229,6 +268,19 @@ public class FileService {
             Cell quantityCell = row.getCell(8);
 
             try {
+
+                if(quantityCell == null && (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
+                    throw new RuntimeException("la cantidad del extracto y nombre es obligatorio");
+                }
+
+                if(quantityCell == null) {
+                    throw new RuntimeException("la cantidad del extracto es obligatoria");
+                }
+
+                if(nameCell == null || nameCell.getStringCellValue().isEmpty()) {
+                    throw new RuntimeException("el nombre del extracto es obligatorio");
+                }
+
                 extractosService.addExtracto(new ExtractosDTO(
                     nameCell.getStringCellValue(),
                     getCellAsNullableString(descriptionCell),
