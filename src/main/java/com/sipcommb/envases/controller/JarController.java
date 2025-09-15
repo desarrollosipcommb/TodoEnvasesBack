@@ -307,4 +307,50 @@ public class JarController {
     }
   }
 
+  @GetMapping("/compatible-caps")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Tapas compatibles obtenidas exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+      @ApiResponse(responseCode = "404", description = "Frasco no encontrado")
+  })
+  public ResponseEntity<?> getCompatibleCapsByJarName(
+      @RequestParam String jarName,
+      @RequestHeader("Authorization") String authHeader,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    if(!permissionService.hasPermission(authHeader, "read")) {
+      return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer frascos"));
+    }
+    try {
+      Pageable pageable = PageRequest.of(page, size);
+      return ResponseEntity.ok(jarService.getCompatibleCaps(jarName, pageable));
+    } catch (Exception e) {
+      return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
+    }
+  }
+
+  @GetMapping("/incompatible-caps")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Tapas incompatibles obtenidas exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "404", description = "Frasco no encontrado")
+    })
+    public ResponseEntity<?> getIncompatibleCapsByJarName(
+        @RequestParam String jarName,
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer frascos"));
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(jarService.getIncompatibleCaps(jarName, pageable));
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
+        }
+    }
+
 }

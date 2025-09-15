@@ -1,5 +1,6 @@
 package com.sipcommb.envases.service;
 
+import com.sipcommb.envases.dto.CapDTO;
 import com.sipcommb.envases.dto.JarDTO;
 import com.sipcommb.envases.dto.JarRequestDTO;
 import com.sipcommb.envases.dto.PriceSearchRequest;
@@ -345,6 +346,28 @@ public class JarService {
                 throw new IllegalArgumentException("Tipo de trato de precio no soportado.");
         }
         
+    }
+
+    public Page<CapDTO> getCompatibleCaps(String jarName, Pageable pageable) {
+        Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
+        
+        if(!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        Jar jar = jarOptional.get();
+        Page<Cap> compatibilities = jarCapCompatibilityRepository.findByJarIdAndIsCompatible(jar.getId(), true, pageable).get();
+        return compatibilities.map(cap -> new CapDTO(cap));
+    }
+
+     public Page<CapDTO> getIncompatibleCaps(String jarName, Pageable pageable) {
+        Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
+        
+        if(!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        Jar jar = jarOptional.get();
+        Page<Cap> compatibilities = jarCapCompatibilityRepository.findByJarIdAndIsCompatible(jar.getId(), false, pageable).get();
+        return compatibilities.map(cap -> new CapDTO(cap));
     }
 
     

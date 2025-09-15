@@ -22,6 +22,8 @@ public class ExtractosDTO {
 
     private Double price1000ml; // Price for 1000ml
 
+    private boolean active; // Indicates if the extracto is active
+
     public ExtractosDTO() {
     }
 
@@ -35,6 +37,7 @@ public class ExtractosDTO {
         this.price250ml = extracto.getPrice250ml().doubleValue();
         this.price500ml = extracto.getPrice500ml().doubleValue();
         this.price1000ml = extracto.getPrice1000ml().doubleValue();
+        this.active = extracto.isActive();
     }
 
     public ExtractosDTO(String name, String description, Integer quantity, Double price22ml, Double price60ml, Double price125ml, Double price250ml, Double price500ml, Double price1000ml) {
@@ -47,6 +50,7 @@ public class ExtractosDTO {
         this.price250ml = price250ml;
         this.price500ml = price500ml;
         this.price1000ml = price1000ml;
+        this.active = true; // Por defecto, el extracto está activo al crearse
     }
 
     public String getName() {
@@ -119,6 +123,14 @@ public class ExtractosDTO {
 
     public void setPrice1000ml(Double price1000ml) {
         this.price1000ml = price1000ml;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     
