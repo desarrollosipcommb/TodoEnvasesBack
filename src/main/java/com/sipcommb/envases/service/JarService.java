@@ -18,6 +18,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -348,26 +350,42 @@ public class JarService {
         
     }
 
-    public Page<CapDTO> getCompatibleCaps(String jarName, Pageable pageable) {
+    public List<CapDTO> getCompatibleCaps(String jarName, Pageable pageable) {
         Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
         
         if(!jarOptional.isPresent()) {
             throw new IllegalArgumentException("No existe un frasco con ese nombre.");
         }
         Jar jar = jarOptional.get();
-        Page<Cap> compatibilities = jarCapCompatibilityRepository.findByJarIdAndIsCompatible(jar.getId(), true, pageable).get();
-        return compatibilities.map(cap -> new CapDTO(cap));
+        List<Cap> compatibilities = jarCapCompatibilityRepository.findByJarIdAndIsCompatibleList(jar.getId(), true).get();
+        return compatibilities.stream().map(cap -> new CapDTO(cap)).collect(Collectors.toList());
     }
 
-     public Page<CapDTO> getIncompatibleCaps(String jarName, Pageable pageable) {
+     public List<CapDTO> getIncompatibleCaps(String jarName, Pageable pageable) {
         Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
         
         if(!jarOptional.isPresent()) {
             throw new IllegalArgumentException("No existe un frasco con ese nombre.");
         }
+
         Jar jar = jarOptional.get();
-        Page<Cap> compatibilities = jarCapCompatibilityRepository.findByJarIdAndIsCompatible(jar.getId(), false, pageable).get();
-        return compatibilities.map(cap -> new CapDTO(cap));
+
+        Optional<List<Cap>> diameterCaps = capRepository.getFromCapDiameter(jar.getJarType().getDiameter());
+
+        if(!diameterCaps.isPresent() || diameterCaps.get().isEmpty()) {
+            throw new IllegalArgumentException("No existen tapas con el diámetro del frasco.");
+        }
+
+        List<Cap> allCaps = diameterCaps.get();
+
+        List<Cap> compatibilities = jarCapCompatibilityRepository.findByJarIdAndIsCompatibleList(jar.getId(), true).get();
+
+        allCaps.removeAll(compatibilities);
+
+        List<Cap> finalIncompatibles = new ArrayList<>(allCaps);
+
+
+        return finalIncompatibles.stream().map(cap -> new CapDTO(cap)).collect(Collectors.toList());
     }
 
     

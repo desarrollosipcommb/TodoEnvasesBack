@@ -162,7 +162,10 @@ public class ExtractosController {
         @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
         @ApiResponse(responseCode = "403", description = "Permiso denegado")
     })
-    public ResponseEntity<?> deleteExtracto(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractosDTO extractosDTO) {
+    public ResponseEntity<?> deleteExtracto(
+        @RequestHeader("Authorization") String authHeader, 
+        @RequestBody ExtractosDTO extractosDTO) 
+        {
         if(!permissionService.hasPermission(authHeader, "delete")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para eliminar extractos"));
         }
