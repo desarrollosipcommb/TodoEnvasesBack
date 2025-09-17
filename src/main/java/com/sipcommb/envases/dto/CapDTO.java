@@ -7,6 +7,7 @@ public class CapDTO {
 
     //TOOD: añadir los cambios que se le hicieron a la tabla cap
 
+    private long id;
     private String name;
     private String color;
     private int quantity;
@@ -26,6 +27,7 @@ public class CapDTO {
 
     // Parameterized constructor
     public CapDTO(Cap cap) {
+        this.id = cap.getId();
         this.name = cap.getName();
         this.color = cap.getColor();
         this.quantity = cap.getQuantity();
@@ -127,5 +129,12 @@ public class CapDTO {
         this.isActive = isActive;
     }
 
-    
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
 }
