@@ -104,7 +104,7 @@ public class ComboController {
     })
     public ResponseEntity<?> getComboLikeName(
         @RequestHeader("Authorization") String authHeader, 
-        @RequestBody String comboName,
+        @RequestParam String comboName,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size
     ) {

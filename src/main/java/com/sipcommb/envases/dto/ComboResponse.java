@@ -15,6 +15,7 @@ public class ComboResponse {
     private String description;
     private Integer cap_quantity; // Quantity of caps in the combo
     private Integer jar_quantity; // Quantity of jars in the combo
+    private Boolean active;
 
     public ComboResponse() {}
 
@@ -47,6 +48,7 @@ public class ComboResponse {
         this.description = combo.getDescription();
         this.cap_quantity = combo.getCap().getQuantity();
         this.jar_quantity = combo.getJar().getQuantity();
+        this.active=combo.getActive();
     }
 
     // Getters and Setters
@@ -139,4 +141,11 @@ public class ComboResponse {
         this.jar_quantity = jar_quantity;
     }
 
+  public Boolean getActive() {
+    return active;
+  }
+
+  public void setActive(Boolean active) {
+    this.active = active;
+  }
 }
