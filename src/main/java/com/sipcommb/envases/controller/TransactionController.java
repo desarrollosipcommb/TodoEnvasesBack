@@ -136,7 +136,9 @@ public class TransactionController {
     })
     public ResponseEntity<?> getTransactionsByUsername(
         @RequestHeader("Authorization") String authHeader,
-        @RequestBody String username,
+        @RequestParam String username,
+        @RequestParam String itemType,
+        @RequestParam String transactionType,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size
         ) {
@@ -145,7 +147,7 @@ public class TransactionController {
                 return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver transacciones"));
             }
             Pageable pageable = PageRequest.of(page, size);
-            Page<TransactionResponseDTO> transactions = inventoryService.getByUsername(pageable, username);
+            Page<TransactionResponseDTO> transactions = inventoryService.getByUsername(pageable, username, itemType, transactionType);
             return ResponseEntity.ok(transactions);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Algo salió mal: " + e.getMessage()));

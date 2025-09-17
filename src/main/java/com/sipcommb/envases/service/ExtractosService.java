@@ -60,7 +60,8 @@ public class ExtractosService {
 
         
         extractosRepository.save(newExtracto);
-        inventoryService.newItem(newExtracto.getId() != null ? newExtracto.getId().longValue() : null, "extracto", newExtracto.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(token).intValue(), "Se añadió " + newExtracto.getName() + " al inventario");
+        String cleanToken = token.trim().replace("Bearer ", "");
+        inventoryService.newItem(newExtracto.getId() != null ? newExtracto.getId().longValue() : null, "extracto", newExtracto.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(cleanToken).intValue(), "Se añadió " + newExtracto.getName() + " al inventario");
 
         return extractosDTO; // Replace with actual saved entity conversion
     }
