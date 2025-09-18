@@ -118,6 +118,29 @@ public class ComboController {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
+
+  @GetMapping("/activos/like-name")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Combo obtenido exitosamente por nombre y estado activo", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ComboResponse.class))),
+      @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+      @ApiResponse(responseCode = "404", description = "Combo no encontrado")
+  })
+  public ResponseEntity<?> getComboLikeNameActivos(
+      @RequestHeader("Authorization") String authHeader,
+      @RequestParam String comboName,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    if(!permissionService.hasPermission(authHeader, "read")) {
+      return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver los combos"));
+    }
+    try {
+      Pageable pageable = PageRequest.of(page, size);
+      return ResponseEntity.ok(comboService.getLikeNameActivo(comboName, pageable));
+    } catch (Exception e) {
+      return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+    }
+  }
     
     
     @PutMapping("/update")
