@@ -6,6 +6,8 @@ import java.util.List;
 
 public class SaleDTO {
 
+    private String sellerName;
+
     private String clientName;
 
     private String clientEmail;
@@ -13,6 +15,8 @@ public class SaleDTO {
     private String clientPhone;
 
     private BigDecimal totalPrice;
+
+    private String saleDate;
 
     private List<SaleItemDTO> saleItems;
 
@@ -32,6 +36,8 @@ public class SaleDTO {
         this.clientEmail = sale.getClientEmail();
         this.clientPhone = sale.getClientPhone();
         this.totalPrice = sale.getTotalAmount();
+        this.saleDate = sale.getSaleDate().toString();
+        this.sellerName = sale.getSeller() != null ? sale.getSeller().getFirstName() + " " + sale.getSeller().getLastName() : "N/A";
         this.saleItems = saleItems;
     }
 
@@ -77,5 +83,20 @@ public class SaleDTO {
         this.saleItems = saleItems;
     }
 
-    
+    public String getSellerName() {
+        return sellerName;
+    }
+
+    public void setSellerName(String sellerName) {
+        this.sellerName = sellerName;
+    }
+
+    public String getSaleDate() {
+        return saleDate;
+    }
+
+    public void setSaleDate(String saleDate) {
+        this.saleDate = saleDate;
+    }
+
 }
