@@ -106,22 +106,22 @@ public class JarService {
 
 
             }else if(unCompatibleCaps != null && unCompatibleCaps.length > 0) {
-              
+
                 List<Cap> unCompatible = getCaps(unCompatibleCaps, jar);
-     
+
                 List<Cap> compatible = capRepository.getFromCapDiameter(jar.getJarType().getDiameter()).get();
-                
+
                 compatible.removeAll(unCompatible);
                 addToCompatible(compatible, jar, true);
                 addToCompatible(unCompatible, jar, false);
             }
         }
     }
-    
+
     //Trae todas las tapas que coincidan con los nombres y el diametro del frasco
     private List<Cap> getCaps(String[] caps, Jar jar) {
         Set<Cap> capList = new HashSet<>();
-      
+
         if(caps != null && caps.length > 0) {
             for (String capName : caps) {
                 Optional<List<Cap>> capOptional = capRepository.getFromNameAndDiameter(capName, jar.getJarType().getDiameter());
@@ -140,14 +140,14 @@ public class JarService {
         for (Cap cap : compatible) {
             if(jarCapCompatibilityRepository.findByJarAndCap(jar.getId(), cap.getId()).isPresent()) {
                 JarCapCompatibility existingCompatibility = jarCapCompatibilityRepository.findByJarAndCap(jar.getId(), cap.getId()).get();
-               
+
                 existingCompatibility.setCompatible(isCompatible);
                 jarCapCompatibilityRepository.save(existingCompatibility);
                 continue;
             }
             jarCapCompatibilityRepository.save(new JarCapCompatibility(jar, cap, isCompatible));
         }
-        
+
     }
 
 
@@ -175,22 +175,22 @@ public class JarService {
 
   public JarDTO updateJar(JarRequestDTO jarRequestDTO, String token) {
         Optional<Jar> jarOptional = jarRepository.getByName(jarRequestDTO.getName().trim().toLowerCase());
-        
+
         if(!jarOptional.isPresent()) {
-            throw new IllegalArgumentException("No existe un frasco con ese id.");  
+            throw new IllegalArgumentException("No existe un frasco con ese id.");
         }
         Jar jar = jarOptional.get();
 
         if(jarRequestDTO.getDescription() != null){
             jar.setDescription(jarRequestDTO.getDescription().trim());
         }
-        
+
         if(jarRequestDTO.getQuantity() != null){
-            
+
             inventoryService.newItem(jar.getId(), "jar", jar.getQuantity().intValue(), "adjustment", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo "+jar.getName()+" su inventario ahora es: "+jar.getQuantity());
             jar.setQuantity(jarRequestDTO.getQuantity());
         }
-       
+
         if(jarRequestDTO.getUnitPrice() != null) {
             if(jarRequestDTO.getUnitPrice() <= 0) {
                 throw new IllegalArgumentException("El precio unitario no puede ser negativo o cero.");
@@ -228,7 +228,7 @@ public class JarService {
 
     public JarDTO updateCompatible(String[] capNames, String jarName, boolean isCompatible) {
         Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
-        
+
         if(!jarOptional.isPresent()) {
             throw new IllegalArgumentException("No existe un frasco con ese nombre.");
         }
@@ -247,7 +247,7 @@ public class JarService {
         capsNotPresent.removeAll(caps);
         List<Cap> existingCaps = jarCapCompatibilityRepository.findByJarId(jar.getId()).get();
         capsNotPresent.removeAll(existingCaps);
-        
+
         jar.setUpdatedAt(LocalDateTime.now());
         addToCompatible(caps, jar, isCompatible);
         addToCompatible(capsNotPresent, jar, !isCompatible);
@@ -257,7 +257,7 @@ public class JarService {
 
     public JarDTO activateJar(String jarName) {
         Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
-        
+
         if(!jarOptional.isPresent()) {
             throw new IllegalArgumentException("No existe un frasco con ese nombre.");
         }
@@ -268,7 +268,7 @@ public class JarService {
 
     public JarDTO deleteJar(String jarName) {
         Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
-        
+
         if(!jarOptional.isPresent()) {
             throw new IllegalArgumentException("No existe un frasco con ese nombre.");
         }
@@ -279,7 +279,7 @@ public class JarService {
 
     public JarDTO getJarByName(String jarName) {
         Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
-        
+
         if(!jarOptional.isPresent()) {
             throw new IllegalArgumentException("No existe un frasco con ese nombre.");
         }
@@ -316,7 +316,7 @@ public class JarService {
     }
 
     public Page<JarDTO> getPriceRange(PriceSearchRequest priceSearchRequest, Pageable pageable) {
-        
+
         boolean exactSearch = priceService.verifyPriceSearchRequest(priceSearchRequest);
 
         switch (priceSearchRequest.getPriceDeal()) {
@@ -347,23 +347,23 @@ public class JarService {
             default:
                 throw new IllegalArgumentException("Tipo de trato de precio no soportado.");
         }
-        
+
     }
 
     public List<CapDTO> getCompatibleCaps(String jarName, Pageable pageable) {
         Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
-        
+
         if(!jarOptional.isPresent()) {
             throw new IllegalArgumentException("No existe un frasco con ese nombre.");
         }
         Jar jar = jarOptional.get();
-        List<Cap> compatibilities = jarCapCompatibilityRepository.findByJarIdAndIsCompatibleList(jar.getId(), true).get();
+        List<Cap> compatibilities = jarCapCompatibilityRepository.findByJarIdAndIsCompatibleUnique(jar.getId(), true);
         return compatibilities.stream().map(cap -> new CapDTO(cap)).collect(Collectors.toList());
     }
 
      public List<CapDTO> getIncompatibleCaps(String jarName, Pageable pageable) {
         Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
-        
+
         if(!jarOptional.isPresent()) {
             throw new IllegalArgumentException("No existe un frasco con ese nombre.");
         }
@@ -385,8 +385,15 @@ public class JarService {
         List<Cap> finalIncompatibles = new ArrayList<>(allCaps);
 
 
-        return finalIncompatibles.stream().map(cap -> new CapDTO(cap)).collect(Collectors.toList());
+         return new ArrayList<>(finalIncompatibles.stream()
+                 .map(CapDTO::new)
+                 .collect(Collectors.toMap(
+                         CapDTO::getName,            // clave: el nombre
+                         cap -> cap,                 // valor: el propio objeto
+                         (existing, replacement) -> existing // si hay duplicado, conserva el primero
+                 ))
+                 .values());
     }
 
-    
+
 }

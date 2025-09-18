@@ -27,6 +27,19 @@ public interface JarCapCompatibilityRepository extends JpaRepository<JarCapCompa
 
         @Query("SELECT jcc.cap FROM JarCapCompatibility jcc WHERE jcc.jar.id = :jarId AND jcc.isCompatible = :isCompatible")
     Optional<List<Cap>> findByJarIdAndIsCompatibleList(@Param("jarId") Long jarId, @Param("isCompatible") boolean isCompatible);
+
+    @Query("SELECT c " +
+            "FROM Cap c " +
+            "WHERE c.id IN (" +
+            "   SELECT MIN(c2.id) " +
+            "   FROM JarCapCompatibility jcc2 " +
+            "   JOIN jcc2.cap c2 " +
+            "   WHERE jcc2.jar.id = :jarId " +
+            "   AND jcc2.isCompatible = :isCompatible " +
+            "   GROUP BY c2.name)")
+    List<Cap> findByJarIdAndIsCompatibleUnique(@Param("jarId") Long jarId,
+                                               @Param("isCompatible") boolean isCompatible);
+
 }
 
 
