@@ -120,6 +120,11 @@ public class ComboService {
         return combos.map(ComboResponse::new);
     }
 
+    public Page<ComboResponse> getLikeNameActivo(String comboName, Pageable pageable) {
+      Page<Combo> combos = comboRepository.findByNameContainingActive(comboName, pageable);
+      return combos.map(ComboResponse::new);
+    }
+
     public ComboResponse updateCombo(ComboRequest comboRequest) {
         Optional<Combo> existingComboOpt = comboRepository.findByName(comboRequest.getName().trim());
         if (!existingComboOpt.isPresent()) {
@@ -158,7 +163,7 @@ public class ComboService {
     }
 
     public ComboResponse activeCombo(String comboName) {
-        Optional<Combo> existingComboOpt = comboRepository.findByName(comboName.trim());
+        Optional<Combo> existingComboOpt = comboRepository.findByNameAll(comboName.trim());
         if (!existingComboOpt.isPresent()) {
             throw new IllegalArgumentException("No existe un combo con el nombre: " + comboName + ".");
         }

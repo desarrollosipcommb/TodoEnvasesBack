@@ -13,9 +13,12 @@ import org.springframework.data.repository.query.Param;
 public interface ComboRepository extends JpaRepository<Combo, Long> {
 
     @Query("SELECT c FROM Combo c WHERE c.name = :name AND c.active = 1")
-    Optional<Combo> findByName(@Param("name") String name);   
-    
-    @Query("SELECT c FROM Combo c WHERE c.active = 1")
+    Optional<Combo> findByName(@Param("name") String name);
+
+    @Query("SELECT c FROM Combo c WHERE c.name = :name")
+    Optional<Combo> findByNameAll(@Param("name") String name);
+
+  @Query("SELECT c FROM Combo c WHERE c.active = 1")
     List<Combo> findAllActiveCombos();
 
     @Query("SELECT c FROM Combo c WHERE c.active = 1")
@@ -30,8 +33,11 @@ public interface ComboRepository extends JpaRepository<Combo, Long> {
     @Query("SELECT c FROM Combo c WHERE c.jar.id = :jarId AND c.cap.id = :capId AND c.active = 1")
     Optional<Combo> findByJarAndCap(@Param("jarId") Long jarId, @Param("capId") Long capId);
 
-    @Query("SELECT c FROM Combo c WHERE c.name LIKE %:name% AND c.active = 1")
+    @Query("SELECT c FROM Combo c WHERE c.name LIKE %:name%")
     Page<Combo> findByNameContaining(@Param("name") String name, Pageable pageable);
+
+    @Query("SELECT c FROM Combo c WHERE c.name LIKE %:name% AND c.active = 1")
+    Page<Combo> findByNameContainingActive(@Param("name") String name, Pageable pageable);
 
     Page<Combo> findAll(Pageable pageable);
 
