@@ -114,6 +114,31 @@ public class SaleController {
         }
     }
 
+    @GetMapping("/like-sellerName-range")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de ventas obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas")
+    })
+    public ResponseEntity<?> getAllSales(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam() String fechaInicio,
+        @RequestParam() String fechaFin,
+        @RequestParam(required = false) String sellerName,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+      if(!permissionService.hasPermission(authHeader, "sales")) {
+        return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
+      }
+      try {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(saleService.getFindByFechaAndVendedor(fechaInicio,fechaFin,sellerName,pageable));
+      } catch (Exception e) {
+        return ResponseEntity.status(500).body(new CustomApiResponse("Error al obtener las ventas: " + e.getMessage()));
+      }
+    }
+
     @GetMapping("/by-email")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Lista de ventas del usuario obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
