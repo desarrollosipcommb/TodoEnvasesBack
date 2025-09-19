@@ -26,23 +26,39 @@ public class FileController {
 
     @PostMapping("/upload-excel")
     public ResponseEntity<?> uploadExcel(
-        @RequestParam("file") MultipartFile file, 
-        @RequestHeader("Authorization") String authHeader
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader("Authorization") String authHeader
     ) {
-        
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(new CustomApiResponse("No se ha subido ningun archivo"));
+            return ResponseEntity.badRequest().body(new CustomApiResponse("No se ha subido ningún archivo"));
         }
-        
-        
+        try {
+            if (!permissionService.hasPermission(authHeader, "create")) {
+                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para subir inventario"));
+            }
+            return ResponseEntity.ok(fileService.readFile(file, authHeader));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new CustomApiResponse("Error al subir el archivo: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/update-inventory-excel")
+    public ResponseEntity<?> updateInventoryByExcel(
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader("Authorization") String authHeader
+    ) {
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("No se ha subido ningún archivo"));
+        }
 
         try {
-
-            if(!permissionService.hasPermission(authHeader, "create")) {
-                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear tapas"));
+            if (!permissionService.hasPermission(authHeader, "create")) {
+                return ResponseEntity.status(403).body(
+                        new CustomApiResponse("Este usuario no tiene permiso para actualizar el inventario"));
             }
 
-            return ResponseEntity.ok(fileService.readFile(file, authHeader));
+            return ResponseEntity.ok(fileService.readFileInventory(file, authHeader));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(new CustomApiResponse("Error al subir el archivo: " + e.getMessage()));
         }
