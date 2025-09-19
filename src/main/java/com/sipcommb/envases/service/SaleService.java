@@ -24,6 +24,7 @@ import com.sipcommb.envases.repository.SaleItemRepository;
 import com.sipcommb.envases.repository.SaleRepository;
 import com.sipcommb.envases.repository.UserRepository;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -518,6 +519,20 @@ public class SaleService {
             saleDTOs.add(saleDTO);
         }
         return new PageImpl<>(saleDTOs, pageable, sales.getTotalElements());
+    }
+
+    public Page<SaleDTO> getFindByFechaAndVendedor(String fechaInicioStr, String fechaFinStr,String nombreUsuario, Pageable pageable) {
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+      LocalDate fechaInicio= LocalDate.parse(fechaInicioStr, formatter);
+      LocalDate fechaFin= LocalDate.parse(fechaFinStr, formatter);
+      Page<Sale> sales = saleRepository.findByFechaAndVendedor(fechaInicio,fechaFin,nombreUsuario,pageable);
+      List<SaleDTO> saleDTOs = new ArrayList<>();
+      for(Sale sale : sales){
+        SaleDTO saleDTO = toSaleDTO(sale);
+        saleDTOs.add(saleDTO);
+      }
+      return new PageImpl<>(saleDTOs, pageable, sales.getTotalElements());
     }
 
     public Page<SaleDTO> getSalesByEmail(String email, Pageable pageable) {
