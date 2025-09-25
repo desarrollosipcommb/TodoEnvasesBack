@@ -184,8 +184,10 @@ public class SaleService {
             } else if (saleItem.getItemType() == ItemType.CAP) {
                 saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getCapName() + ' ' + saleItemRequest.getCapColor(), saleItem));
             } else if (saleItem.getItemType() == ItemType.QUIMICO) {
+                System.out.println("Adding quimico to saleItemDTOList: " + saleItemRequest.getQuimicoName());
                 saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getQuimicoName(), saleItem));
             } else if (saleItem.getItemType() == ItemType.EXTRACTO) {
+                System.out.println("Adding extracto to saleItemDTOList: " + saleItemRequest.getExtractoName());
                 saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getExtractoName(), saleItem));
             }
         }
@@ -597,6 +599,12 @@ public class SaleService {
             } else if (saleItem.getItemType() == ItemType.CAP) {
                 saleItemDTOs.add(new SaleItemDTO(
                         capRepository.findById(saleItem.getCap().getId()).orElse(null).getName(), saleItem));
+            } else if (saleItem.getItemType() == ItemType.QUIMICO) {
+                saleItemDTOs.add(new SaleItemDTO(
+                        quimicosRepository.findById(saleItem.getQuimico().getId()).orElse(null).getName(), saleItem));
+            } else if (saleItem.getItemType() == ItemType.EXTRACTO) {
+                saleItemDTOs.add(new SaleItemDTO(
+                        extractosRepository.findById(saleItem.getExtracto().getId()).orElse(null).getName(), saleItem));
             }
         }
         SaleDTO saleDTO = new SaleDTO(sale, saleItemDTOs);
