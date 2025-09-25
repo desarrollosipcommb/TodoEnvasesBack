@@ -1,15 +1,11 @@
 package com.sipcommb.envases.service;
 
-import com.sipcommb.envases.dto.JarDTO;
 import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.dto.QuimicosDTO;
-import com.sipcommb.envases.entity.Jar;
 import com.sipcommb.envases.entity.Quimicos;
 import com.sipcommb.envases.repository.QuimicosRepository;
-
 import java.math.BigDecimal;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -71,6 +67,11 @@ public class QuimicosService {
 
     public Page<QuimicosDTO> getAllQuimicosByName(String searchName, Pageable pageable) {
         Page<Quimicos> quimicosPage = quimicosRepository.findByNameContainingIgnoreCase(searchName, pageable);
+        return quimicosPage.map(QuimicosDTO::new);
+    }
+
+    public Page<QuimicosDTO> getAllQuimicosByNameActive(String searchName, Pageable pageable) {
+        Page<Quimicos> quimicosPage = quimicosRepository.findByNameContainingIgnoreCaseAndActiveTrue(searchName, pageable);
         return quimicosPage.map(QuimicosDTO::new);
     }
 

@@ -33,4 +33,7 @@ public interface QuimicosRepository extends JpaRepository<Quimicos, Integer> {
 
     Page<Quimicos> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
+    @Query("SELECT q FROM Quimicos q WHERE q.active = 1 AND q.name LIKE %:name% AND q.active = 1")
+    Page<Quimicos> findByNameContainingIgnoreCaseAndActiveTrue(@Param("name") String name, Pageable pageable);
+
 }

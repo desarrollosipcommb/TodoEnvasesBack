@@ -22,8 +22,11 @@ public interface ExtractosRepository extends JpaRepository<Extractos, Integer> {
 
     Page<Extractos> findAllByActiveFalse(Pageable pageable);
 
-    @Query("SELECT e FROM Extractos e WHERE e.active = 1 AND e.name LIKE %:name%")
+    @Query("SELECT e FROM Extractos e WHERE e.name LIKE %:name%")
     Page<Extractos> findLikeName(@Param("name") String name, Pageable pageable);
+
+    @Query("SELECT e FROM Extractos e WHERE e.active = 1 AND e.name LIKE %:name% AND e.active = 1")
+    Page<Extractos> findLikeNameActive(@Param("name") String name, Pageable pageable);
 
     @Query("SELECT e FROM Extractos e WHERE e.active = 1 AND e.price22ml BETWEEN :minPrice AND :maxPrice")
     Page<Extractos> findByPrice22mlBetween(@Param("minPrice") BigDecimal minPrice,

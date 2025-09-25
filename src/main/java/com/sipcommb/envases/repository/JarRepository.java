@@ -39,38 +39,44 @@ public interface JarRepository extends JpaRepository<Jar, Long> {
 
     @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.cienPrice BETWEEN :minPrice AND :maxPrice")
     Page<Jar> findByCienPriceBetween(@Param("minPrice") BigDecimal minPrice,
-                                     @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
+            @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
 
     @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.docenaPrice = :exactPrice")
     Page<Jar> findByDocenaPrice(@Param("exactPrice") BigDecimal exactPrice, Pageable pageable);
 
     @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.docenaPrice BETWEEN :minPrice AND :maxPrice")
     Page<Jar> findByDocenaPriceBetween(@Param("minPrice") BigDecimal minPrice,
-                                       @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
+            @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
 
     @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.unitPrice = :exactPrice")
     Page<Jar> findByUnidadPrice(@Param("exactPrice") BigDecimal exactPrice,
-                                Pageable pageable);
+            Pageable pageable);
 
     @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.unitPrice BETWEEN :minPrice AND :maxPrice")
     Page<Jar> findByUnidadPriceBetween(@Param("minPrice") BigDecimal minPrice,
-                                       @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
+            @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
 
     @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.pacaPrice = :exactPrice")
     Page<Jar> findByPacaPrice(@Param("exactPrice") BigDecimal exactPrice,
-                              Pageable pageable);
+            Pageable pageable);
 
     @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.pacaPrice BETWEEN :minPrice AND :maxPrice")
     Page<Jar> findByPacaPriceBetween(@Param("minPrice") BigDecimal minPrice,
-                                     @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
+            @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
 
-  @Query("SELECT j FROM Jar j " +
-      "JOIN j.jarType jt "+
-      "WHERE (:name IS NULL OR j.name LIKE %:name%) " +
-      "AND (:diameter IS NULL OR jt.diameter LIKE %:diameter%) " )
-  Page<Jar> getFromNameLikeAndDiameter(@Param("name") String name,
-                                               @Param("diameter") String diameter, Pageable pageable);
+    @Query("SELECT j FROM Jar j " +
+            "JOIN j.jarType jt " +
+            "WHERE (:name IS NULL OR j.name LIKE %:name%) " +
+            "AND (:diameter IS NULL OR jt.diameter LIKE %:diameter%) ")
+    Page<Jar> getFromNameLikeAndDiameter(@Param("name") String name,
+            @Param("diameter") String diameter, Pageable pageable);
 
-
+    @Query("SELECT j FROM Jar j " +
+            "JOIN j.jarType jt " +
+            "WHERE (:name IS NULL OR j.name LIKE %:name%) " +
+            "AND (:diameter IS NULL OR jt.diameter LIKE %:diameter%) " +
+            "AND j.isActive = 1")
+    Page<Jar> getFromNameLikeAndDiameterActive(@Param("name") String name,
+            @Param("diameter") String diameter, Pageable pageable);
 
 }

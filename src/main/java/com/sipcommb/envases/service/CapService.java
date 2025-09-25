@@ -151,6 +151,11 @@ public class CapService {
         return caps.map(CapDTO::new);
     }
 
+    public Page<CapDTO> getFromNameLikeAndColorAndNameDiameterActive(String name, String color, String diameter, Pageable pageable) {
+        Page<Cap> caps = capRepository.getFromNameLikeAndColorAndDiameterActive(name, color, diameter, pageable);
+        return caps.map(CapDTO::new);
+    }
+
 
     public CapDTO updateCap(CapRequest capRequest, String token) {
 

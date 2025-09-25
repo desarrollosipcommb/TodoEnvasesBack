@@ -312,4 +312,30 @@ public class CapController {
     }
   }
 
+  @GetMapping("/by-name-diameter-color/active")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Tapa obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+      @ApiResponse(responseCode = "404", description = "Tapa no encontrada")
+  })
+  public ResponseEntity<?> getCapByNameActive(
+      @RequestParam(required = false) String name,
+      @RequestParam(required = false) String diameter,
+      @RequestParam(required = false) String color,
+      @RequestHeader("Authorization") String authHeader,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    if(!permissionService.hasPermission(authHeader, "read")) {
+      return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las tapas"));
+    }
+    try {
+      Pageable pageable = PageRequest.of(page, size);
+      Page<CapDTO> capDTO = capService.getFromNameLikeAndColorAndNameDiameterActive(name,color,diameter, pageable);
+      return ResponseEntity.ok(capDTO);
+    } catch (Exception e) {
+      return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
+    }
+  }
+
 }

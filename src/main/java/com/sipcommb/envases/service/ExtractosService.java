@@ -86,6 +86,13 @@ public class ExtractosService {
         return extractosRepository.findLikeName(name.trim(), pageable).map(ExtractosDTO::new);
     }
 
+    public Page<ExtractosDTO> getExtractosLikeNameActive(String name, Pageable pageable) {
+        if (name == null || name.trim().isEmpty()) {
+            return extractosRepository.findAll(pageable).map(ExtractosDTO::new);
+        }
+        return extractosRepository.findLikeNameActive(name.trim(), pageable).map(ExtractosDTO::new);
+    }
+
     public ExtractosDTO updateExtracto(ExtractosDTO extractosDTO, String token) {
         
         if (extractosDTO.getName() == null || extractosDTO.getName().trim().isEmpty()) {
