@@ -29,7 +29,6 @@ public class User {
     @Column(unique = true)
     private String username;
 
-    @NotBlank
     @Size(max = 100)
     @Email
     @Column(unique = true)

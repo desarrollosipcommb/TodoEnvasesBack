@@ -7,7 +7,6 @@ public class UserRequestDTO {
     @NotBlank(message = "Username is required")
     private String username;
 
-    @NotBlank(message = "Email is required")
     private String email;
 
     @NotBlank(message = "Password is required")
@@ -19,7 +18,6 @@ public class UserRequestDTO {
     @NotBlank(message = "Last name is required")
     private String lastName;
 
-    @NotBlank(message = "Phone number is required")
     private String phoneNumber;
 
     @NotBlank(message = "Role name is required")

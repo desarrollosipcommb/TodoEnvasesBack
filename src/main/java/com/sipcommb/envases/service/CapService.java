@@ -292,7 +292,7 @@ public class CapService {
             return new CapDTO(capRepository.save(cap));
         }
 
-        cap.setQuantity(cap.getQuantity());
+        cap.setQuantity(cap.getQuantity() + capRequest.getQuantity());
         inventoryService.newItem(
                 cap.getId(),
                 "cap",
