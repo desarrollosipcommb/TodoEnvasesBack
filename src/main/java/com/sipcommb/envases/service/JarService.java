@@ -161,6 +161,12 @@ public class JarService {
         return jars.map(JarDTO::new);
     }
 
+    public List<JarDTO> getAllActiveJars(String name) {
+        List<Jar> jars = jarRepository.getAllActiveJars(name).get();
+        return jars.stream().map(JarDTO::new).collect(Collectors.toList());
+    }
+
+
     public Page<JarDTO> getAllInactiveJars(Pageable pageable) {
         Page<Jar> jars = jarRepository.getAllInactiveJars(pageable).get();
         return jars.map(JarDTO::new);

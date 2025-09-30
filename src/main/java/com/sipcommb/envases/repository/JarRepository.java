@@ -22,14 +22,14 @@ public interface JarRepository extends JpaRepository<Jar, Long> {
     @Query("SELECT j FROM Jar j WHERE j.jarType.diameter = :diameter")
     Optional<List<Jar>> getFromDiameter(@Param("diameter") String diameter);
 
-    @Query("SELECT j FROM Jar j WHERE j.isActive = 1")
-    Optional<List<Jar>> getAllActiveJars();
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND (:name IS NULL OR j.name LIKE %:name%)")
+    Optional<List<Jar>> getAllActiveJars(@Param("name") String name);
 
     @Query("SELECT j FROM Jar j WHERE j.isActive = 1")
     Optional<Page<Jar>> getAllActiveJars(Pageable pageable);
 
-    @Query("SELECT j FROM Jar j WHERE j.isActive = 0")
-    Optional<List<Jar>> getAllInactiveJars();
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 0 AND (:name IS NULL OR j.name LIKE %:name%)")
+    Optional<List<Jar>> getAllInactiveJars(@Param("name") String name);
 
     @Query("SELECT j FROM Jar j WHERE j.isActive = 0")
     Optional<Page<Jar>> getAllInactiveJars(Pageable pageable);

@@ -151,10 +151,10 @@ public class FileService {
                         getCellAsNullableDouble(unitsInPacaCell).intValue()
                 ), token);
 
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Tipo de tapa agregado correctamente"));
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue()+" "+colorCell.getStringCellValue(), "Tipo de tapa agregado correctamente"));
 
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue()+" "+colorCell.getStringCellValue(), "Error, " + e.getMessage()));
             }
 
         }
@@ -298,12 +298,12 @@ public class FileService {
                         nameCell.getStringCellValue(),
                         getCellAsNullableString(descriptionCell),
                         Integer.valueOf((int) quantityCell.getNumericCellValue()),
-                        getCellAsNullableDouble(ml1000cell),
-                        getCellAsNullableDouble(ml500cell),
-                        getCellAsNullableDouble(ml250cell),
-                        getCellAsNullableDouble(ml125cell),
+                        getCellAsNullableDouble(ml22cell),
                         getCellAsNullableDouble(ml60cell),
-                        getCellAsNullableDouble(ml22cell)
+                        getCellAsNullableDouble(ml125cell),
+                        getCellAsNullableDouble(ml250cell),
+                        getCellAsNullableDouble(ml500cell),
+                        getCellAsNullableDouble(ml1000cell)
                 ), token);
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Extracto agregado correctamente"));
             } catch (Exception e) {
@@ -382,9 +382,9 @@ public class FileService {
                         getCellAsNullableDouble(unitsInPacaCell).intValue()
                 ), token);
 
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Inventario de la tapa ha sido actualizado"));
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue()+" "+colorCell.getStringCellValue(), "Inventario de la tapa ha sido actualizado"));
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue()+" "+colorCell.getStringCellValue(), "Error, " + e.getMessage()));
             }
         }
         return fileResponses;
