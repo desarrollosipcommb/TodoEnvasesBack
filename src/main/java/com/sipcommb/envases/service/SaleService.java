@@ -555,6 +555,18 @@ public class SaleService {
         return new PageImpl<>(saleDTOs, pageable, sales.getTotalElements());
     }
 
+    public BigDecimal getTotalAmountByFechaAndVendedor(String fechaInicioStr, String fechaFinStr,
+            String nombreUsuario) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        LocalDate fechaInicio = LocalDate.parse(fechaInicioStr, formatter);
+        LocalDate fechaFin = LocalDate.parse(fechaFinStr, formatter);
+        BigDecimal totalAmount = saleRepository.findByFechaAndVendedorTotal(fechaInicio, fechaFin,
+                nombreUsuario);
+        return totalAmount != null ? totalAmount : BigDecimal.ZERO;
+    }
+
+
     public Page<SaleDTO> getSalesByEmail(String email, Pageable pageable) {
         Optional<User> userOpt = userRepository.findByEmail(email.trim());
         if (!userOpt.isPresent()) {

@@ -33,4 +33,13 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
       Pageable pageable
   );
 
+  @Query("SELECT SUM(s.totalAmount) FROM Sale s "+
+        "WHERE (s.saleDate BETWEEN :fechaInicio AND :fechaFin) "+
+        "AND (:nombreVendedor IS NULL OR LOWER(s.seller.username) LIKE LOWER(CONCAT('%', :nombreVendedor, '%'))) ")
+  BigDecimal findByFechaAndVendedorTotal(
+      @Param("fechaInicio") LocalDate fechaInicio,
+      @Param("fechaFin") LocalDate fechaFin,
+      @Param("nombreVendedor") String nombreVendedor
+  );
+
 }

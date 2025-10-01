@@ -9,6 +9,9 @@ import com.sipcommb.envases.service.SaleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
+import java.math.BigDecimal;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -136,6 +139,30 @@ public class SaleController {
         return ResponseEntity.ok(saleService.getFindByFechaAndVendedor(fechaInicio,fechaFin,sellerName,pageable));
       } catch (Exception e) {
         return ResponseEntity.status(500).body(new CustomApiResponse("Error al obtener las ventas: " + e.getMessage()));
+      }
+    }
+
+
+    //TODO: es posible que esto necesite cambios cuando se puedan editar ventas
+    @GetMapping("/like-sellerName-range/total")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Total de ventas obtenido exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = BigDecimal.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener el total de ventas")
+    })
+    public ResponseEntity<?> getTotalSales(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam() String fechaInicio,
+        @RequestParam() String fechaFin,
+        @RequestParam(required = false) String sellerName
+    ) {
+      if(!permissionService.hasPermission(authHeader, "sales")) {
+        return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
+      }
+      try {
+        return ResponseEntity.ok(saleService.getTotalAmountByFechaAndVendedor(fechaInicio,fechaFin,sellerName));
+      } catch (Exception e) {
+        return ResponseEntity.status(500).body(new CustomApiResponse("Error al obtener el total de ventas: " + e.getMessage()));
       }
     }
 
