@@ -1,14 +1,14 @@
 package com.sipcommb.envases.service;
 
+import com.sipcommb.envases.dto.ExtractosDTO;
+import com.sipcommb.envases.dto.PriceSearchRequest;
+import com.sipcommb.envases.entity.Extractos;
+import com.sipcommb.envases.repository.ExtractosRepository;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import com.sipcommb.envases.dto.ExtractosDTO;
-import com.sipcommb.envases.dto.PriceSearchRequest;
-import com.sipcommb.envases.entity.Extractos;
-import com.sipcommb.envases.repository.ExtractosRepository;
 
 @Service
 public class ExtractosService {
@@ -60,7 +60,8 @@ public class ExtractosService {
 
         
         extractosRepository.save(newExtracto);
-        inventoryService.newItem(newExtracto.getId() != null ? newExtracto.getId().longValue() : null, "extracto", newExtracto.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(token).intValue(), "Se añadió " + newExtracto.getName() + " al inventario");
+        String cleanToken = token.trim().replace("Bearer ", "");
+        inventoryService.newItem(newExtracto.getId() != null ? newExtracto.getId().longValue() : null, "extracto", newExtracto.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(cleanToken).intValue(), "Se añadió " + newExtracto.getName() + " al inventario");
 
         return extractosDTO; // Replace with actual saved entity conversion
     }
@@ -83,6 +84,13 @@ public class ExtractosService {
             return extractosRepository.findAll(pageable).map(ExtractosDTO::new);
         }
         return extractosRepository.findLikeName(name.trim(), pageable).map(ExtractosDTO::new);
+    }
+
+    public Page<ExtractosDTO> getExtractosLikeNameActive(String name, Pageable pageable) {
+        if (name == null || name.trim().isEmpty()) {
+            return extractosRepository.findAll(pageable).map(ExtractosDTO::new);
+        }
+        return extractosRepository.findLikeNameActive(name.trim(), pageable).map(ExtractosDTO::new);
     }
 
     public ExtractosDTO updateExtracto(ExtractosDTO extractosDTO, String token) {

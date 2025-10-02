@@ -1,6 +1,13 @@
 package com.sipcommb.envases.service;
 
 
+import com.sipcommb.envases.dto.CapRequest;
+import com.sipcommb.envases.dto.ExtractosDTO;
+import com.sipcommb.envases.dto.FileResponse;
+import com.sipcommb.envases.dto.JarRequestDTO;
+import com.sipcommb.envases.dto.JarTypeDTO;
+import com.sipcommb.envases.dto.QuimicosDTO;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,13 +20,6 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.sipcommb.envases.dto.CapRequest;
-import com.sipcommb.envases.dto.ExtractosDTO;
-import com.sipcommb.envases.dto.FileResponse;
-import com.sipcommb.envases.dto.JarRequestDTO;
-import com.sipcommb.envases.dto.JarTypeDTO;
-import com.sipcommb.envases.dto.QuimicosDTO;
 
 @Service
 public class FileService {
@@ -43,7 +43,7 @@ public class FileService {
     public List<FileResponse> readFile(MultipartFile file, String token) {
         token = token.replace("Bearer ", "");
         List<FileResponse> fileResponses = new ArrayList<>();
-        try{
+        try {
             InputStream inputStream = file.getInputStream();
 
             Workbook workbook = WorkbookFactory.create(inputStream);
@@ -52,6 +52,21 @@ public class FileService {
             fileResponses.addAll(readJar(workbook.getSheetAt(2), token));
             fileResponses.addAll(readQuimicos(workbook.getSheetAt(3), token));
             fileResponses.addAll(readExtractos(workbook.getSheetAt(4), token));
+            return fileResponses;
+        } catch (Exception e) {
+            throw new RuntimeException("Error al leer el archivo: " + e.getMessage());
+        }
+    }
+
+    public List<FileResponse> readFileInventory(MultipartFile file, String token) {
+        token = token.replace("Bearer ", "");
+        List<FileResponse> fileResponses = new ArrayList<>();
+        try {
+            InputStream inputStream = file.getInputStream();
+            Workbook workbook = WorkbookFactory.create(inputStream);
+            fileResponses.addAll(CapInventory(workbook.getSheetAt(1), token));
+            fileResponses.addAll(JarInventory(workbook.getSheetAt(2), token));
+            fileResponses.addAll(QuimicoInventory(workbook.getSheetAt(3), token));
             return fileResponses;
         } catch (Exception e) {
             throw new RuntimeException("Error al leer el archivo: " + e.getMessage());
@@ -71,20 +86,20 @@ public class FileService {
             Cell nameCell = row.getCell(1);
             Cell descriptionCell = row.getCell(2);
 
-            try{
+            try {
 
-                jarTypeService.addJarTypes( new JarTypeDTO(
-                    nameCell.getStringCellValue(),
-                    descriptionCell.getStringCellValue(),
-                    getCellAsString(diameterCell)
+                jarTypeService.addJarTypes(new JarTypeDTO(
+                        nameCell.getStringCellValue(),
+                        descriptionCell.getStringCellValue(),
+                        getCellAsString(diameterCell)
                 ));
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Tipo de envase agregado correctamente"));
 
-            }catch (Exception e) {
+            } catch (Exception e) {
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
             }
-            
+
         }
         return fileResponses;
     }
@@ -109,39 +124,39 @@ public class FileService {
             Cell colorCell = row.getCell(8);
             Cell quantityCell = row.getCell(9);
 
-            try{
+            try {
 
-                if(quantityCell == null && (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
+                if (quantityCell == null && (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
                     throw new RuntimeException("la cantidad de la tapa y nombre es obligatorio");
                 }
 
-                if(quantityCell == null) {
+                if (quantityCell == null) {
                     throw new RuntimeException("la cantidad de la tapa es obligatoria");
                 }
 
-                if(nameCell == null || nameCell.getStringCellValue().isEmpty()) {
+                if (nameCell == null || nameCell.getStringCellValue().isEmpty()) {
                     throw new RuntimeException("el nombre de la tapa es obligatorio");
                 }
 
                 capService.addCaps(new CapRequest(
-                    nameCell.getStringCellValue(),
-                    getCellAsNullableString(descriptionCell),
-                    colorCell.getStringCellValue(),
-                    getCellAsString(diameterCell),
-                    (int) quantityCell.getNumericCellValue(),
-                    unidadCell.getNumericCellValue(),
-                    getCellAsNullableDouble(docenaCell),
-                    getCellAsNullableDouble(cienCell),
-                    getCellAsNullableDouble(pacaCell),
-                    getCellAsNullableDouble(unitsInPacaCell).intValue()
+                        nameCell.getStringCellValue(),
+                        getCellAsNullableString(descriptionCell),
+                        colorCell.getStringCellValue(),
+                        getCellAsString(diameterCell),
+                        (int) quantityCell.getNumericCellValue(),
+                        unidadCell.getNumericCellValue(),
+                        getCellAsNullableDouble(docenaCell),
+                        getCellAsNullableDouble(cienCell),
+                        getCellAsNullableDouble(pacaCell),
+                        getCellAsNullableDouble(unitsInPacaCell).intValue()
                 ), token);
 
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Tipo de tapa agregado correctamente"));
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue()+" "+colorCell.getStringCellValue(), "Tipo de tapa agregado correctamente"));
 
-            }catch (Exception e) {
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+            } catch (Exception e) {
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue()+" "+colorCell.getStringCellValue(), "Error, " + e.getMessage()));
             }
-            
+
         }
         return fileResponses;
     }
@@ -157,7 +172,6 @@ public class FileService {
             }
 
 
-
             Cell nameCell = row.getCell(0);
             Cell descriptionCell = row.getCell(1);
             Cell diameterCell = row.getCell(2);
@@ -167,35 +181,34 @@ public class FileService {
             Cell pacaCell = row.getCell(6);
             Cell unitsInPacaCell = row.getCell(7);
             Cell quantityCell = row.getCell(8);
-           
 
 
             try {
 
-                if(quantityCell == null && (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
+                if (quantityCell == null && (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
                     throw new RuntimeException("la cantidad del frasco y nombre es obligatorio");
                 }
 
-                if(quantityCell == null) {
+                if (quantityCell == null) {
                     throw new RuntimeException("la cantidad del frasco es obligatoria");
                 }
 
-                if(nameCell == null || nameCell.getStringCellValue().isEmpty()) {
+                if (nameCell == null || nameCell.getStringCellValue().isEmpty()) {
                     throw new RuntimeException("el nombre del frasco es obligatorio");
                 }
 
                 jarService.addJar(new JarRequestDTO(
-                    nameCell.getStringCellValue(), 
-                    getCellAsNullableString(descriptionCell), 
-                    getCellAsString(diameterCell), 
-                    (int) quantityCell.getNumericCellValue(), 
-                    getCellAsNullableDouble(unidadCell), 
-                    getCellAsNullableDouble(docenaCell), 
-                    getCellAsNullableDouble(cienCell), 
-                    getCellAsNullableDouble(pacaCell), 
-                    getCellAsNullableDouble(unitsInPacaCell).intValue(), 
-                    getCaps(row.getCell(10)), 
-                    getCaps(row.getCell(9))), token);
+                        nameCell.getStringCellValue(),
+                        getCellAsNullableString(descriptionCell),
+                        getCellAsString(diameterCell),
+                        (int) quantityCell.getNumericCellValue(),
+                        getCellAsNullableDouble(unidadCell),
+                        getCellAsNullableDouble(docenaCell),
+                        getCellAsNullableDouble(cienCell),
+                        getCellAsNullableDouble(pacaCell),
+                        getCellAsNullableDouble(unitsInPacaCell).intValue(),
+                        getCaps(row.getCell(10)),
+                        getCaps(row.getCell(9))), token);
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Tipo de tapa agregado correctamente"));
 
@@ -222,23 +235,23 @@ public class FileService {
 
             try {
 
-                if(quantityCell == null && (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
+                if (quantityCell == null && (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
                     throw new RuntimeException("la cantidad del químico y nombre es obligatorio");
                 }
 
-                if(quantityCell == null) {
+                if (quantityCell == null) {
                     throw new RuntimeException("la cantidad del químico es obligatoria");
                 }
 
-                if(nameCell == null || nameCell.getStringCellValue().isEmpty()) {
+                if (nameCell == null || nameCell.getStringCellValue().isEmpty()) {
                     throw new RuntimeException("el nombre del químico es obligatorio");
                 }
 
                 quimicosService.addQuimico(new QuimicosDTO(
-                    nameCell.getStringCellValue(),
-                    getCellAsNullableString(descriptionCell),
-                    (int) quantityCell.getNumericCellValue(),
-                    unidadCell.getNumericCellValue()
+                        nameCell.getStringCellValue(),
+                        getCellAsNullableString(descriptionCell),
+                        (int) quantityCell.getNumericCellValue(),
+                        unidadCell.getNumericCellValue()
                 ), token);
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Químico agregado correctamente"));
             } catch (Exception e) {
@@ -269,30 +282,135 @@ public class FileService {
 
             try {
 
-                if(quantityCell == null && (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
+                if (quantityCell == null && (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
                     throw new RuntimeException("la cantidad del extracto y nombre es obligatorio");
                 }
 
-                if(quantityCell == null) {
+                if (quantityCell == null) {
                     throw new RuntimeException("la cantidad del extracto es obligatoria");
                 }
 
-                if(nameCell == null || nameCell.getStringCellValue().isEmpty()) {
+                if (nameCell == null || nameCell.getStringCellValue().isEmpty()) {
                     throw new RuntimeException("el nombre del extracto es obligatorio");
                 }
 
                 extractosService.addExtracto(new ExtractosDTO(
-                    nameCell.getStringCellValue(),
-                    getCellAsNullableString(descriptionCell),
-                    Integer.valueOf((int) quantityCell.getNumericCellValue()),
-                    getCellAsNullableDouble(ml1000cell),
-                    getCellAsNullableDouble(ml500cell),
-                    getCellAsNullableDouble(ml250cell),
-                    getCellAsNullableDouble(ml125cell),
-                    getCellAsNullableDouble(ml60cell),
-                    getCellAsNullableDouble(ml22cell)
+                        nameCell.getStringCellValue(),
+                        getCellAsNullableString(descriptionCell),
+                        Integer.valueOf((int) quantityCell.getNumericCellValue()),
+                        getCellAsNullableDouble(ml22cell),
+                        getCellAsNullableDouble(ml60cell),
+                        getCellAsNullableDouble(ml125cell),
+                        getCellAsNullableDouble(ml250cell),
+                        getCellAsNullableDouble(ml500cell),
+                        getCellAsNullableDouble(ml1000cell)
                 ), token);
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Extracto agregado correctamente"));
+            } catch (Exception e) {
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+            }
+        }
+        return fileResponses;
+    }
+
+
+    private List<FileResponse> JarInventory(Sheet sheet, String token) {
+        boolean firstRow = true;
+
+        List<FileResponse> fileResponses = new ArrayList<>();
+        for (Row row : sheet) {
+            if (firstRow) {
+                firstRow = false;
+                continue;
+            }
+            Cell nameCell = row.getCell(0);
+            Cell quantityCell = row.getCell(8);
+            try {
+                if (quantityCell == null || (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
+                    throw new RuntimeException("la cantidad del frasco y nombre es obligatorio");
+                }
+
+                jarService.updateInventoryJar(
+                        nameCell.getStringCellValue(),
+                        (int) quantityCell.getNumericCellValue(), token);
+
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Inventario del envase actualizado"));
+            } catch (Exception e) {
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+            }
+        }
+        return fileResponses;
+    }
+
+    private List<FileResponse> CapInventory(Sheet sheet, String token) {
+        boolean firstRow = true;
+
+        List<FileResponse> fileResponses = new ArrayList<>();
+        for (Row row : sheet) {
+            if (firstRow) {
+                firstRow = false;
+                continue;
+            }
+            Cell nameCell = row.getCell(0);
+            Cell descriptionCell = row.getCell(1);
+            Cell diameterCell = row.getCell(2);
+            Cell unidadCell = row.getCell(3);
+            Cell docenaCell = row.getCell(4);
+            Cell cienCell = row.getCell(5);
+            Cell pacaCell = row.getCell(6);
+            Cell unitsInPacaCell = row.getCell(7);
+            Cell colorCell = row.getCell(8);
+            Cell quantityCell = row.getCell(9);
+            try {
+                if (quantityCell == null || (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
+                    throw new RuntimeException("la cantidad de la tapa y nombre es obligatorio");
+                }
+                if (diameterCell == null || diameterCell.getStringCellValue().isEmpty() ) {
+                    throw new RuntimeException("el diametro de la tapa es obligatorio");
+                }
+
+                capService.updateCapInventory(new CapRequest(
+                        nameCell.getStringCellValue(),
+                        getCellAsNullableString(descriptionCell),
+                        colorCell.getStringCellValue(),
+                        getCellAsString(diameterCell),
+                        (int) quantityCell.getNumericCellValue(),
+                        unidadCell.getNumericCellValue(),
+                        getCellAsNullableDouble(docenaCell),
+                        getCellAsNullableDouble(cienCell),
+                        getCellAsNullableDouble(pacaCell),
+                        getCellAsNullableDouble(unitsInPacaCell).intValue()
+                ), token);
+
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue()+" "+colorCell.getStringCellValue(), "Inventario de la tapa ha sido actualizado"));
+            } catch (Exception e) {
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue()+" "+colorCell.getStringCellValue(), "Error, " + e.getMessage()));
+            }
+        }
+        return fileResponses;
+    }
+
+    private List<FileResponse> QuimicoInventory(Sheet sheet, String token) {
+        boolean firstRow = true;
+
+        List<FileResponse> fileResponses = new ArrayList<>();
+        for (Row row : sheet) {
+            if (firstRow) {
+                firstRow = false;
+                continue;
+            }
+            Cell nameCell = row.getCell(0);
+            Cell quantityCell = row.getCell(3);
+            try {
+                if (quantityCell == null || (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
+                    throw new RuntimeException("la cantidad del químico y/o nombre es obligatorio");
+                }
+
+                quimicosService.updateInventoryQuimico(
+                        nameCell.getStringCellValue(),
+                        (int) quantityCell.getNumericCellValue(), token);
+
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Inventario del químico actualizado"));
             } catch (Exception e) {
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
             }
@@ -309,18 +427,18 @@ public class FileService {
             case NUMERIC:
                 // Si quieres quitar los decimales si es entero:
                 double d = cell.getNumericCellValue();
-                    if (d == Math.floor(d)) {
-                        return String.valueOf((int) d);
-                    } else {
-                        return String.valueOf(d);
-                    }
+                if (d == Math.floor(d)) {
+                    return String.valueOf((int) d);
+                } else {
+                    return String.valueOf(d);
+                }
             default:
                 return "";
         }
     }
 
     private String getCellAsNullableString(Cell cell) {
-        if (cell == null ) {
+        if (cell == null) {
             return null;
         }
         return getCellAsString(cell);

@@ -1,11 +1,18 @@
 package com.sipcommb.envases.controller;
 
 
+import com.sipcommb.envases.dto.CapDTO;
+import com.sipcommb.envases.dto.CapRequest;
 import com.sipcommb.envases.dto.CustomApiResponse;
+import com.sipcommb.envases.dto.PriceSearchRequest;
+import com.sipcommb.envases.service.CapService;
+import com.sipcommb.envases.service.PermissionService;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,15 +23,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.sipcommb.envases.dto.CapDTO;
-import com.sipcommb.envases.dto.CapRequest;
-import com.sipcommb.envases.dto.PriceSearchRequest;
-import com.sipcommb.envases.service.CapService;
-import com.sipcommb.envases.service.PermissionService;
-
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @RestController
 @RequestMapping("/caps")
@@ -308,6 +306,32 @@ public class CapController {
     try {
       Pageable pageable = PageRequest.of(page, size);
       Page<CapDTO> capDTO = capService.getFromNameLikeAndColorAndNameDiameter(name,color,diameter, pageable);
+      return ResponseEntity.ok(capDTO);
+    } catch (Exception e) {
+      return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
+    }
+  }
+
+  @GetMapping("/by-name-diameter-color/active")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Tapa obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+      @ApiResponse(responseCode = "404", description = "Tapa no encontrada")
+  })
+  public ResponseEntity<?> getCapByNameActive(
+      @RequestParam(required = false) String name,
+      @RequestParam(required = false) String diameter,
+      @RequestParam(required = false) String color,
+      @RequestHeader("Authorization") String authHeader,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    if(!permissionService.hasPermission(authHeader, "read")) {
+      return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las tapas"));
+    }
+    try {
+      Pageable pageable = PageRequest.of(page, size);
+      Page<CapDTO> capDTO = capService.getFromNameLikeAndColorAndNameDiameterActive(name,color,diameter, pageable);
       return ResponseEntity.ok(capDTO);
     } catch (Exception e) {
       return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));

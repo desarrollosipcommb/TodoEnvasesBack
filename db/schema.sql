@@ -127,6 +127,7 @@ CREATE TABLE sales (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (client_id) REFERENCES clientes(id) ON DELETE RESTRICT,
     CHECK (total_amount >= 0)
 );
 
@@ -241,7 +242,7 @@ CREATE TABLE quimicos (
 
 
 -- ============================================
--- 11. Extractos
+-- 12. Extractos
 -- ============================================
 
 CREATE TABLE extractos (
@@ -256,6 +257,22 @@ CREATE TABLE extractos (
     price500ml DECIMAL(10, 2) DEFAULT 0.00,
     price1000ml DECIMAL(10, 2) DEFAULT 0.00,
     is_active BOOLEAN DEFAULT TRUE
+);
+
+-- ============================================
+-- 13. Clientes 
+-- ============================================
+
+CREATE TABLE clientes (
+    client_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    address TEXT,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 
@@ -284,4 +301,5 @@ CREATE INDEX idx_sales_date ON sales(sale_date);
 CREATE INDEX idx_sale_items_sale ON sale_items(sale_id);
 CREATE INDEX idx_transactions_item ON transactions(item_type, item_id);
 CREATE INDEX idx_transactions_date ON transactions(transaction_date);
+
 

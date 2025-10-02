@@ -2,28 +2,25 @@ package com.sipcommb.envases.controller;
 
 
 import com.sipcommb.envases.dto.CustomApiResponse;
-import org.springframework.data.domain.Pageable;
+import com.sipcommb.envases.dto.ExtractosDTO;
+import com.sipcommb.envases.dto.PriceSearchRequest;
+import com.sipcommb.envases.service.ExtractosService;
+import com.sipcommb.envases.service.PermissionService;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestBody;
-
-import com.sipcommb.envases.dto.ExtractosDTO;
-import com.sipcommb.envases.dto.PriceSearchRequest;
-import com.sipcommb.envases.service.ExtractosService;
-import com.sipcommb.envases.service.PermissionService;
-
-
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @Controller
 @RequestMapping("/extractos")
@@ -141,6 +138,29 @@ public class ExtractosController {
         }
     }
 
+    @GetMapping("/like-name/active")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Extractos obtenidos exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener los extractos")
+    })
+    public ResponseEntity<?> getExtractosLikeNameActive(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam String name,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver extractos"));
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(extractosService.getExtractosLikeNameActive(name, pageable));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al obtener los extractos: " + e.getMessage()));
+        }
+    }
+
     @PutMapping("/update")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Extracto actualizado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
@@ -165,7 +185,10 @@ public class ExtractosController {
         @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
         @ApiResponse(responseCode = "403", description = "Permiso denegado")
     })
-    public ResponseEntity<?> deleteExtracto(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractosDTO extractosDTO) {
+    public ResponseEntity<?> deleteExtracto(
+        @RequestHeader("Authorization") String authHeader, 
+        @RequestBody ExtractosDTO extractosDTO) 
+        {
         if(!permissionService.hasPermission(authHeader, "delete")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para eliminar extractos"));
         }

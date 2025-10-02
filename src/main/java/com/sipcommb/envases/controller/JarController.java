@@ -3,6 +3,14 @@ package com.sipcommb.envases.controller;
 
 import com.sipcommb.envases.dto.CapDTO;
 import com.sipcommb.envases.dto.CustomApiResponse;
+import com.sipcommb.envases.dto.JarDTO;
+import com.sipcommb.envases.dto.JarRequestDTO;
+import com.sipcommb.envases.dto.PriceSearchRequest;
+import com.sipcommb.envases.dto.UpdateCompatibleCapsRequest;
+import com.sipcommb.envases.service.JarService;
+import com.sipcommb.envases.service.PermissionService;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,15 +24,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-
-import com.sipcommb.envases.dto.JarDTO;
-import com.sipcommb.envases.dto.JarRequestDTO;
-import com.sipcommb.envases.dto.PriceSearchRequest;
-import com.sipcommb.envases.dto.UpdateCompatibleCapsRequest;
-import com.sipcommb.envases.service.JarService;
-import com.sipcommb.envases.service.PermissionService;
 
 @RestController
 @RequestMapping("/jars")
@@ -99,6 +98,26 @@ public class JarController {
         try{
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok().body(jarService.getAllActiveJars(pageable));
+        }catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/all/active/no-page/by-name")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de frascos activos obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de frascos activos")
+    })
+    public ResponseEntity<?> getAllActiveJars(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam String name
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver frascos"));
+        }
+        try{
+            return ResponseEntity.ok().body(jarService.getAllActiveJars(name));
         }catch (Exception e) {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
@@ -307,5 +326,75 @@ public class JarController {
       return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
     }
   }
+
+  @GetMapping("/by-name-diameter/active")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Envases obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+      @ApiResponse(responseCode = "404", description = "Tapa no encontrada")
+  })
+  public ResponseEntity<?> getCapByNameActive(
+      @RequestParam(required = false) String name,
+      @RequestParam(required = false) String diameter,
+      @RequestHeader("Authorization") String authHeader,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    if(!permissionService.hasPermission(authHeader, "read")) {
+      return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las tapas"));
+    }
+    try {
+      Pageable pageable = PageRequest.of(page, size);
+      return ResponseEntity.ok(jarService.getFromNameLikeAndNameDiameterActive(name,diameter, pageable));
+    } catch (Exception e) {
+      return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
+    }
+  }
+
+  @GetMapping("/compatible-caps")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Tapas compatibles obtenidas exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+      @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+      @ApiResponse(responseCode = "404", description = "Frasco no encontrado")
+  })
+  public ResponseEntity<?> getCompatibleCapsByJarName(
+      @RequestParam String jarName,
+      @RequestHeader("Authorization") String authHeader,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    if(!permissionService.hasPermission(authHeader, "read")) {
+      return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer frascos"));
+    }
+    try {
+      Pageable pageable = PageRequest.of(page, size);
+      return ResponseEntity.ok(jarService.getCompatibleCaps(jarName, pageable));
+    } catch (Exception e) {
+      return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
+    }
+  }
+
+  @GetMapping("/incompatible-caps")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Tapas incompatibles obtenidas exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "404", description = "Frasco no encontrado")
+    })
+    public ResponseEntity<?> getIncompatibleCapsByJarName(
+        @RequestParam String jarName,
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer frascos"));
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(jarService.getIncompatibleCaps(jarName, pageable));
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body(new CustomApiResponse(e.getMessage()));
+        }
+    }
 
 }

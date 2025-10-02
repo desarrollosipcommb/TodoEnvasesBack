@@ -1,25 +1,23 @@
 package com.sipcommb.envases.controller;
 
 import com.sipcommb.envases.dto.CustomApiResponse;
-import org.springframework.data.domain.Pageable;
+import com.sipcommb.envases.dto.TransactionResponseDTO;
+import com.sipcommb.envases.service.InventoryService;
+import com.sipcommb.envases.service.PermissionService;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestBody;
-import com.sipcommb.envases.dto.TransactionResponseDTO;
-import com.sipcommb.envases.service.InventoryService;
-import com.sipcommb.envases.service.PermissionService;
-
-
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @Controller
 @RequestMapping("/transactions")
@@ -138,7 +136,9 @@ public class TransactionController {
     })
     public ResponseEntity<?> getTransactionsByUsername(
         @RequestHeader("Authorization") String authHeader,
-        @RequestBody String username,
+        @RequestParam String username,
+        @RequestParam String itemType,
+        @RequestParam String transactionType,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size
         ) {
@@ -147,7 +147,7 @@ public class TransactionController {
                 return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver transacciones"));
             }
             Pageable pageable = PageRequest.of(page, size);
-            Page<TransactionResponseDTO> transactions = inventoryService.getByUsername(pageable, username);
+            Page<TransactionResponseDTO> transactions = inventoryService.getByUsername(pageable, username, itemType, transactionType);
             return ResponseEntity.ok(transactions);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Algo salió mal: " + e.getMessage()));

@@ -1,10 +1,17 @@
 package com.sipcommb.envases.controller;
 
 
+import com.sipcommb.envases.dto.ComboRequest;
+import com.sipcommb.envases.dto.ComboResponse;
 import com.sipcommb.envases.dto.CustomApiResponse;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageRequest;
+import com.sipcommb.envases.dto.PriceSearchRequest;
+import com.sipcommb.envases.service.ComboService;
+import com.sipcommb.envases.service.PermissionService;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,15 +22,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.sipcommb.envases.dto.ComboRequest;
-import com.sipcommb.envases.dto.ComboResponse;
-import com.sipcommb.envases.dto.PriceSearchRequest;
-import com.sipcommb.envases.service.ComboService;
-import com.sipcommb.envases.service.PermissionService;
-
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @RestController
 @RequestMapping("/combos")
@@ -106,7 +104,7 @@ public class ComboController {
     })
     public ResponseEntity<?> getComboLikeName(
         @RequestHeader("Authorization") String authHeader, 
-        @RequestBody String comboName,
+        @RequestParam String comboName,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size
     ) {
@@ -120,6 +118,29 @@ public class ComboController {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
+
+  @GetMapping("/activos/like-name")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Combo obtenido exitosamente por nombre y estado activo", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ComboResponse.class))),
+      @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+      @ApiResponse(responseCode = "404", description = "Combo no encontrado")
+  })
+  public ResponseEntity<?> getComboLikeNameActivos(
+      @RequestHeader("Authorization") String authHeader,
+      @RequestParam String comboName,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "10") int size
+  ) {
+    if(!permissionService.hasPermission(authHeader, "read")) {
+      return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver los combos"));
+    }
+    try {
+      Pageable pageable = PageRequest.of(page, size);
+      return ResponseEntity.ok(comboService.getLikeNameActivo(comboName, pageable));
+    } catch (Exception e) {
+      return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+    }
+  }
     
     
     @PutMapping("/update")

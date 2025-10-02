@@ -1,9 +1,8 @@
 package com.sipcommb.envases.dto;
 
-import javax.validation.constraints.NotBlank;
-
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
+import javax.validation.constraints.NotBlank;
 
 public class CapRequest {
 

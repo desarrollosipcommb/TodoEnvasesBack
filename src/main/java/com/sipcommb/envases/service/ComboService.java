@@ -1,16 +1,5 @@
 package com.sipcommb.envases.service;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-
-import javax.transaction.Transactional;
-
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
 import com.sipcommb.envases.dto.ComboRequest;
 import com.sipcommb.envases.dto.ComboResponse;
 import com.sipcommb.envases.dto.PriceDeals;
@@ -23,6 +12,13 @@ import com.sipcommb.envases.repository.CapRepository;
 import com.sipcommb.envases.repository.ComboRepository;
 import com.sipcommb.envases.repository.JarCapCompatibilityRepository;
 import com.sipcommb.envases.repository.JarRepository;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import javax.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
@@ -124,6 +120,11 @@ public class ComboService {
         return combos.map(ComboResponse::new);
     }
 
+    public Page<ComboResponse> getLikeNameActivo(String comboName, Pageable pageable) {
+      Page<Combo> combos = comboRepository.findByNameContainingActive(comboName, pageable);
+      return combos.map(ComboResponse::new);
+    }
+
     public ComboResponse updateCombo(ComboRequest comboRequest) {
         Optional<Combo> existingComboOpt = comboRepository.findByName(comboRequest.getName().trim());
         if (!existingComboOpt.isPresent()) {
@@ -162,7 +163,7 @@ public class ComboService {
     }
 
     public ComboResponse activeCombo(String comboName) {
-        Optional<Combo> existingComboOpt = comboRepository.findByName(comboName.trim());
+        Optional<Combo> existingComboOpt = comboRepository.findByNameAll(comboName.trim());
         if (!existingComboOpt.isPresent()) {
             throw new IllegalArgumentException("No existe un combo con el nombre: " + comboName + ".");
         }
