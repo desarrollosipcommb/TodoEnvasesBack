@@ -34,16 +34,18 @@ public class JarTypeController {
 
     @PostMapping("/add")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Tipo de tapa creado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error al crear el tipo de tapa")
+            @ApiResponse(responseCode = "200", description = "Tipo de tapa creado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al crear el tipo de tapa")
     })
-    public ResponseEntity<?> addJarType(@RequestBody JarTypeDTO jarTypeDTO, @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> addJarType(@RequestBody JarTypeDTO jarTypeDTO,
+            @RequestHeader("Authorization") String authHeader) {
 
         try {
 
-            if(!permissionService.hasPermission(authHeader, "create")) {
-                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear tapas"));
+            if (!permissionService.hasPermission(authHeader, "create")) {
+                return ResponseEntity.status(403)
+                        .body(new CustomApiResponse("Este usuario no tiene permiso para crear tapas"));
             }
 
             JarTypeDTO response = jarTypeService.addJarTypes(jarTypeDTO);
@@ -56,17 +58,17 @@ public class JarTypeController {
 
     @GetMapping("/by-diameter")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Tipo de tapa obtenido exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error al obtener el tipo de tapa")
+            @ApiResponse(responseCode = "200", description = "Tipo de tapa obtenido exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al obtener el tipo de tapa")
     })
     public ResponseEntity<?> getJarTypeByDiameter(
-        @RequestBody String diameter, 
-        @RequestHeader("Authorization") String authHeader
-    ) {
+            @RequestBody String diameter,
+            @RequestHeader("Authorization") String authHeader) {
         try {
-            if(!permissionService.hasPermission(authHeader, "read")) {
-                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer los tipos de tapas"));
+            if (!permissionService.hasPermission(authHeader, "read")) {
+                return ResponseEntity.status(403)
+                        .body(new CustomApiResponse("Este usuario no tiene permiso para leer los tipos de tapas"));
             }
             JarTypeDTO jarTypeDTO = jarTypeService.getByDiameter(diameter);
             return ResponseEntity.ok(jarTypeDTO);
@@ -78,18 +80,18 @@ public class JarTypeController {
 
     @GetMapping("/all")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lista de tipos de tapa obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tipos de tapa")
+            @ApiResponse(responseCode = "200", description = "Lista de tipos de tapa obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tipos de tapa")
     })
     public ResponseEntity<?> getAllJarTypes(
-        @RequestHeader("Authorization") String authHeader,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
-    ) {
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            if(!permissionService.hasPermission(authHeader, "read")) {
-                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer los tipos de tapas"));
+            if (!permissionService.hasPermission(authHeader, "read")) {
+                return ResponseEntity.status(403)
+                        .body(new CustomApiResponse("Este usuario no tiene permiso para leer los tipos de tapas"));
             }
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(jarTypeService.getAll(pageable));
@@ -99,17 +101,18 @@ public class JarTypeController {
         }
     }
 
-
     @PutMapping("/update")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Tipo de tapa actualizado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error al actualizar el tipo de tapa")
+            @ApiResponse(responseCode = "200", description = "Tipo de tapa actualizado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al actualizar el tipo de tapa")
     })
-    public ResponseEntity<?> updateJarType(@RequestBody JarTypeDTO jarTypeDTO, @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> updateJarType(@RequestBody JarTypeDTO jarTypeDTO,
+            @RequestHeader("Authorization") String authHeader) {
         try {
-            if(!permissionService.hasPermission(authHeader, "update")) {
-                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar tipos de tapas"));
+            if (!permissionService.hasPermission(authHeader, "update")) {
+                return ResponseEntity.status(403)
+                        .body(new CustomApiResponse("Este usuario no tiene permiso para actualizar tipos de tapas"));
             }
             JarTypeDTO updatedJarType = jarTypeService.updateJarType(jarTypeDTO.getDiameter(), jarTypeDTO);
             return ResponseEntity.ok(updatedJarType);
@@ -118,23 +121,22 @@ public class JarTypeController {
                     .body(new CustomApiResponse(e.getMessage()));
         }
     }
-    
 
     @GetMapping("/like-name")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lista de tipos de tapa obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tipos de tapa")
+            @ApiResponse(responseCode = "200", description = "Lista de tipos de tapa obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tipos de tapa")
     })
     public ResponseEntity<?> getJarTypesLikeName(
-        @RequestParam String name,
-        @RequestHeader("Authorization") String authHeader,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
-    ) {
+            @RequestParam String name,
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            if(!permissionService.hasPermission(authHeader, "read")) {
-                return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer los tipos de tapas"));
+            if (!permissionService.hasPermission(authHeader, "read")) {
+                return ResponseEntity.status(403)
+                        .body(new CustomApiResponse("Este usuario no tiene permiso para leer los tipos de tapas"));
             }
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(jarTypeService.getLikeName(pageable, name));
@@ -144,25 +146,63 @@ public class JarTypeController {
         }
     }
 
-  @GetMapping("/listar")
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Lista de tipos de tapa obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
-      @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-      @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tipos de tapa")
-  })
-  public ResponseEntity<?> getJarTypesLikeName(
-      @RequestHeader("Authorization") String authHeader
-  ) {
-    try {
-      if(!permissionService.hasPermission(authHeader, "read")) {
-        return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer los tipos de tapas"));
-      }
-      return ResponseEntity.ok(jarTypeService.getAll());
-    } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(new CustomApiResponse("Error al obtener los tipos de tapa: " + e.getMessage()));
+    @GetMapping("/listar")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lista de tipos de tapa obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tipos de tapa")
+    })
+    public ResponseEntity<?> getJarTypesLikeName(
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            if (!permissionService.hasPermission(authHeader, "read")) {
+                return ResponseEntity.status(403)
+                        .body(new CustomApiResponse("Este usuario no tiene permiso para leer los tipos de tapas"));
+            }
+            return ResponseEntity.ok(jarTypeService.getAll());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new CustomApiResponse("Error al obtener los tipos de tapa: " + e.getMessage()));
+        }
     }
-  }
 
+    @PostMapping("/deactivate")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Tipo de tapa desactivado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarTypeDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al desactivar el tipo de tapa")
+    })
+    public ResponseEntity<?> deactivateJarType(
+            @RequestParam String diameter,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            if (!permissionService.hasPermission(authHeader, "delete")) {
+                return ResponseEntity.status(403)
+                        .body(new CustomApiResponse("Este usuario no tiene permiso para desactivar tipos de tapas"));
+            }
+            JarTypeDTO jarTypeDTO = jarTypeService.setActive(diameter, false);
+            return ResponseEntity.ok(jarTypeDTO);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new CustomApiResponse("Error al desactivar el tipo de tapa: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/activate")
+    public ResponseEntity<?> activateJarType(
+            @RequestParam String diameter,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            if (!permissionService.hasPermission(authHeader, "update")) {
+                return ResponseEntity.status(403)
+                        .body(new CustomApiResponse("Este usuario no tiene permiso para activar tipos de tapas"));
+            }
+            JarTypeDTO jarTypeDTO = jarTypeService.setActive(diameter, true);
+            return ResponseEntity.ok(jarTypeDTO);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new CustomApiResponse("Error al activar el tipo de tapa: " + e.getMessage()));
+        }
+    }
 
 }

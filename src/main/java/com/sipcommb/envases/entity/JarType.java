@@ -44,9 +44,15 @@ public class JarType {
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "is_active")
+    private Boolean isActive = true;
     
     @OneToMany(mappedBy = "jarType")
     private List<Jar> jars;
+
+    @OneToMany(mappedBy = "jarType")
+    private List<Cap> caps;
     
     // Constructors
     public JarType() {}
@@ -85,4 +91,10 @@ public class JarType {
     
     public List<Jar> getJars() { return jars; }
     public void setJars(List<Jar> jars) { this.jars = jars; }
+
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public List<Cap> getCaps() { return caps; }
+    public void setCaps(List<Cap> caps) { this.caps = caps; }
 }

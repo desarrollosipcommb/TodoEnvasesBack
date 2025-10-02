@@ -1,7 +1,11 @@
 package com.sipcommb.envases.service;
 
 import com.sipcommb.envases.dto.JarTypeDTO;
+import com.sipcommb.envases.entity.Jar;
+import com.sipcommb.envases.entity.Cap;
 import com.sipcommb.envases.entity.JarType;
+import com.sipcommb.envases.repository.CapRepository;
+import com.sipcommb.envases.repository.JarRepository;
 import com.sipcommb.envases.repository.JarTypeRepository;
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +20,12 @@ public class JarTypeService {
     
     @Autowired
     private JarTypeRepository jarTypeRepository;
+
+    @Autowired
+    private JarRepository jarRepository;
+
+    @Autowired
+    private CapRepository capRepository;
 
     public Optional<JarType> getJarTypeByName(String name) {
         return jarTypeRepository.getTypeByName(name);
@@ -96,4 +106,37 @@ public class JarTypeService {
           .collect(Collectors.toList());
     }
 
+    public JarTypeDTO setActive(String diameter, Boolean isActive) {
+        Optional<JarType> jarTypeOpt = jarTypeRepository.getTypeByDiameter(diameter);
+
+        if(!jarTypeOpt.isPresent()) {
+            throw new RuntimeException("No se encontro el tipo de tapa con diametro: " + diameter);
+        }
+
+        JarType jarType = jarTypeOpt.get();
+        jarType.setIsActive(isActive);
+
+        if(!isActive) {
+            List<Jar> jars = jarType.getJars();
+            if(jars != null && !jars.isEmpty()) {
+                for(Jar jar : jars) {
+                    jar.setIsActive(false);
+                    jarRepository.save(jar);
+                }
+            }
+            List<Cap> caps = jarType.getCaps();
+            if(caps != null && !caps.isEmpty()) {
+                for(Cap cap : caps) {
+                    cap.setIsActive(false);
+                    capRepository.save(cap);
+                }
+            }
+        }
+
+        jarTypeRepository.save(jarType);
+        
+        return new JarTypeDTO(jarType);
+    }
+
+    
 }

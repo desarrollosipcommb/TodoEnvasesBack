@@ -91,7 +91,7 @@ public class FileService {
                 jarTypeService.addJarTypes(new JarTypeDTO(
                         nameCell.getStringCellValue(),
                         descriptionCell.getStringCellValue(),
-                        getCellAsString(diameterCell)
+                        getCellAsString(diameterCell), true
                 ));
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Tipo de envase agregado correctamente"));

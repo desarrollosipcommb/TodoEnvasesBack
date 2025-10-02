@@ -234,7 +234,12 @@ public class CapService {
         if (!capOptional.isPresent()) {
             throw new RuntimeException("No existe una tapa con estas especificaciones.");
         }
+
         Cap cap = capOptional.get();
+
+        if(cap.getJarType().getIsActive() == false) {
+            throw new RuntimeException("No se puede activar la tapa porque el tipo de frasco asociado está inactivo.");
+        }
         cap.setIsActive(true);
         cap.setUpdatedAt(LocalDateTime.now());
         capRepository.save(cap);

@@ -272,6 +272,11 @@ public class JarService {
             throw new IllegalArgumentException("No existe un frasco con ese nombre.");
         }
         Jar jar = jarOptional.get();
+
+        if (jar.getJarType() != null && jar.getJarType().getIsActive() == false) {
+            throw new IllegalArgumentException("No se puede activar el frasco porque el tipo de frasco asociado está inactivo.");
+        }
+
         jar.setIsActive(true);
         return new JarDTO(jarRepository.save(jar));
     }

@@ -15,6 +15,7 @@ CREATE TABLE jar_types (
     diameter VARCHAR(50) PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE,
     description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -205,6 +206,7 @@ CREATE TABLE combos (
     docena_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a dozen combos
     cien_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a hundred combos
     paca_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a pack of combos
+    units_in_paca INT DEFAULT 0, -- Number of combos in a pack
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
