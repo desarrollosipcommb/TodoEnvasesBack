@@ -90,10 +90,14 @@ public class ComboService {
             throw new IllegalArgumentException("El precio por cien no puede ser negativo.");
         }
 
+        if(comboRequest.getPacaPrice() < 0) {
+            throw new IllegalArgumentException("El precio por paca no puede ser negativo.");
+        }
+
         combo.setCienPrice(comboRequest.getCienPrice() != null ? comboRequest.getCienPrice() : 0.00);
-
         combo.setDescription(comboRequest.getDescription() != null ? comboRequest.getDescription().trim() : "");
-
+        combo.setUnitsInPaca(jarOpt.get().getUnitsInPaca());
+        combo.setPacaPrice(comboRequest.getPacaPrice() != null ? comboRequest.getPacaPrice() : 0.00);
         combo.setCreatedAt(LocalDateTime.now());
         combo.setUpdatedAt(LocalDateTime.now());
 
@@ -149,6 +153,12 @@ public class ComboService {
             existingCombo.setCienPrice(comboRequest.getCienPrice());
         } else if(comboRequest.getCienPrice() < 0) {
             throw new IllegalArgumentException("El precio por cien no puede ser 0 o negativo.");
+        }
+
+        if(comboRequest.getPacaPrice() != null && comboRequest.getPacaPrice() > 0) {
+            existingCombo.setPacaPrice(comboRequest.getPacaPrice());
+        } else if(comboRequest.getPacaPrice() < 0) {
+            throw new IllegalArgumentException("El precio por paca no puede ser 0 o negativo.");
         }
 
         if(comboRequest.getDescription()!=null){

@@ -3,7 +3,7 @@ package com.sipcommb.envases.dto;
 import com.sipcommb.envases.entity.Combo;
 
 public class ComboResponse {
-    
+
     private String name;
     private String jarName;
     private String capName;
@@ -12,16 +12,19 @@ public class ComboResponse {
     private Double unitPrice;
     private Double docenaPrice; // Price for a dozen combos
     private Double cienPrice; // Price for a hundred combos
+    private Double pacaPrice; // Price for a pack of combos
+    private Integer unitsInPaca; // Number of combos in a pack
     private String description;
     private Integer cap_quantity; // Quantity of caps in the combo
     private Integer jar_quantity; // Quantity of jars in the combo
     private Boolean active;
 
-    public ComboResponse() {}
+    public ComboResponse() {
+    }
 
     public ComboResponse(String name, String jarName, String capName, String diameter, String color,
-                         Double unitPrice, Double docenaPrice, Double cienPrice, String description,
-                         Integer cap_quantity, Integer jar_quantity) {
+            Double unitPrice, Double docenaPrice, Double cienPrice, String description,
+            Integer cap_quantity, Integer jar_quantity) {
         this.name = name;
         this.jarName = jarName;
         this.capName = capName;
@@ -33,10 +36,10 @@ public class ComboResponse {
         this.description = description;
         this.cap_quantity = cap_quantity;
         this.jar_quantity = jar_quantity;
-    
+
     }
 
-    public ComboResponse(Combo combo){
+    public ComboResponse(Combo combo) {
         this.name = combo.getName();
         this.jarName = combo.getJar().getName();
         this.capName = combo.getCap().getName();
@@ -45,10 +48,12 @@ public class ComboResponse {
         this.unitPrice = combo.getUnitPrice();
         this.docenaPrice = combo.getDocenaPrice();
         this.cienPrice = combo.getCienPrice();
+        this.pacaPrice = combo.getPacaPrice();
+        this.unitsInPaca = combo.getUnitsInPaca();
         this.description = combo.getDescription();
         this.cap_quantity = combo.getCap().getQuantity();
         this.jar_quantity = combo.getJar().getQuantity();
-        this.active=combo.getActive();
+        this.active = combo.getActive();
     }
 
     // Getters and Setters
@@ -141,11 +146,28 @@ public class ComboResponse {
         this.jar_quantity = jar_quantity;
     }
 
-  public Boolean getActive() {
-    return active;
-  }
+    public Boolean getActive() {
+        return active;
+    }
 
-  public void setActive(Boolean active) {
-    this.active = active;
-  }
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    public Double getPacaPrice() {
+        return pacaPrice;
+    }
+
+    public void setPacaPrice(Double pacaPrice) {
+        this.pacaPrice = pacaPrice;
+    }
+
+    public Integer getUnitsInPaca() {
+        return unitsInPaca;
+    }
+
+    public void setUnitsInPaca(Integer unitsInPaca) {
+        this.unitsInPaca = unitsInPaca;
+    }
+
 }

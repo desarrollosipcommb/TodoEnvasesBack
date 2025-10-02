@@ -34,6 +34,12 @@ public class Combo {
     @Column(name = "cien_price", precision = 10, scale = 2, nullable = false)
     private Double cienPrice = 0.00; // Price for a hundred combos
 
+    @Column(name = "paca_price", precision = 10, scale = 2, nullable = false)
+    private Double pacaPrice = 0.00; // Price for a pack of combos
+
+    @Column(name = "units_in_paca", nullable = false)
+    private Integer unitsInPaca = 0; // Number of combos in a pack
+
     @Column(name = "is_active", nullable = false)
     private Boolean active = true;
 
@@ -142,25 +148,20 @@ public class Combo {
         this.updatedAt = updatedAt;
     }
 
+    public Double getPacaPrice() {
+        return pacaPrice;
+    }
+
+    public void setPacaPrice(Double pacaPrice) {
+        this.pacaPrice = pacaPrice;
+    }
+
+    public Integer getUnitsInPaca() {
+        return unitsInPaca;
+    }
+
+    public void setUnitsInPaca(Integer unitsInPaca) {
+        this.unitsInPaca = unitsInPaca;
+    }
+
 }
-
-
-/* 
-CREATE TABLE combos (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    jar_id INT NOT NULL, -- Array of jar IDs in the combo
-    cap_id INT NOT NULL, -- Array of cap IDs in the combo
-    unit_price DECIMAL(10, 2) DEFAULT 0.00,
-    docena_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a dozen combos
-    cien_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a hundred combos
-    paca_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a pack of combos
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (jar_id) REFERENCES jars(id) ON DELETE RESTRICT,
-    FOREIGN KEY (cap_id) REFERENCES caps(id) ON DELETE RESTRICT
-);
-
-*/

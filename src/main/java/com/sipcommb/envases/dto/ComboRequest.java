@@ -20,6 +20,8 @@ public class ComboRequest {
 
     private Double cienPrice; // Price for a hundred combos
 
+    private Double pacaPrice; // Price for a pack of combos
+
     private String description;
 
     public ComboRequest() {}
@@ -121,5 +123,12 @@ public class ComboRequest {
         this.description = description;
     }
 
+    public Double getPacaPrice() {
+        return pacaPrice;
+    }
+
+    public void setPacaPrice(Double pacaPrice) {
+        this.pacaPrice = pacaPrice;
+    }
 
 }
