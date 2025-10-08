@@ -6,6 +6,7 @@ import com.sipcommb.envases.dto.SaleItemDTO;
 import com.sipcommb.envases.dto.SaleItemRequest;
 import com.sipcommb.envases.dto.SaleRequest;
 import com.sipcommb.envases.entity.Cap;
+import com.sipcommb.envases.entity.CapColor;
 import com.sipcommb.envases.entity.Combo;
 import com.sipcommb.envases.entity.Extractos;
 import com.sipcommb.envases.entity.ItemType;
@@ -14,6 +15,7 @@ import com.sipcommb.envases.entity.Quimicos;
 import com.sipcommb.envases.entity.Sale;
 import com.sipcommb.envases.entity.SaleItem;
 import com.sipcommb.envases.entity.User;
+import com.sipcommb.envases.repository.CapColorRepository;
 import com.sipcommb.envases.repository.CapRepository;
 import com.sipcommb.envases.repository.ComboRepository;
 import com.sipcommb.envases.repository.ExtractosRepository;
@@ -69,6 +71,9 @@ public class SaleService {
 
     @Autowired
     private ExtractosRepository extractosRepository;
+
+    @Autowired
+    private CapColorRepository capColorRepository;
 
     @Autowired
     private PriceService priceService;
@@ -260,8 +265,7 @@ public class SaleService {
         }
 
         if (saleItemRequest.getCapName() != null) {
-            Cap cap = manageCap(saleItemRequest.getCapName(), saleItemRequest.getDiameter(),
-                    saleItemRequest.getCapColor());
+            Cap cap = manageCap(saleItemRequest.getCapName(), saleItemRequest.getDiameter());
             return createSaleItem(cap, saleItemRequest);
         }
 
@@ -272,7 +276,11 @@ public class SaleService {
     private SaleItem createSaleItem(Combo combo, SaleItemRequest saleItemRequest) {
         SaleItem saleItem = new SaleItem();
         saleItem.setJar(combo.getJar());
-        saleItem.setCap(combo.getCap());
+
+        CapColor capColor = capColorRepository.findByCapAndColor(combo.getCap(), saleItemRequest.getCapColor())
+                .orElseThrow(() -> new IllegalArgumentException("El color no existe en el tipo de tapa: " + combo.getCap().getName()));
+
+        saleItem.setCapColor(capColor);
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(BigDecimal.valueOf(determinePrice(combo, saleItemRequest)));
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(BigDecimal.valueOf(saleItemRequest.getQuantity())));
@@ -284,7 +292,7 @@ public class SaleService {
     private SaleItem createSaleItem(Jar jar, SaleItemRequest saleItemRequest) {
         SaleItem saleItem = new SaleItem();
         saleItem.setJar(jar);
-        saleItem.setCap(null);
+        saleItem.setCapColor(null);
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(determinePrice(jar, saleItemRequest));
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(BigDecimal.valueOf(saleItemRequest.getQuantity())));
@@ -296,7 +304,11 @@ public class SaleService {
     private SaleItem createSaleItem(Cap cap, SaleItemRequest saleItemRequest) {
         SaleItem saleItem = new SaleItem();
         saleItem.setJar(null);
-        saleItem.setCap(cap);
+
+        CapColor capColor = capColorRepository.findByCapAndColor(cap, saleItemRequest.getCapColor())
+                .orElseThrow(() -> new IllegalArgumentException("El color no existe en el tipo de tapa: " + cap.getName()));
+
+        saleItem.setCapColor(capColor);
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(determinePrice(cap, saleItemRequest));
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(BigDecimal.valueOf(saleItemRequest.getQuantity())));
@@ -309,7 +321,7 @@ public class SaleService {
     private SaleItem createSaleItem(Quimicos quimico, SaleItemRequest saleItemRequest) {
         SaleItem saleItem = new SaleItem();
         saleItem.setJar(null);
-        saleItem.setCap(null);
+        saleItem.setCapColor(null);
         saleItem.setQuimico(quimico);
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(quimico.getUnitPrice());
@@ -322,7 +334,7 @@ public class SaleService {
     private SaleItem createSaleItem(Extractos extracto, SaleItemRequest saleItemRequest) {
         SaleItem saleItem = new SaleItem();
         saleItem.setJar(null);
-        saleItem.setCap(null);
+        saleItem.setCapColor(null);
         saleItem.setExtracto(extracto);
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(determinePrice(extracto, saleItemRequest));
@@ -362,11 +374,11 @@ public class SaleService {
         return jar;
     }
 
-    private Cap manageCap(String capName, String diameter, String color) {
-        Optional<Cap> capOpt = capRepository.findByNameAndDiameterAndColor(capName, diameter, color);
+    private Cap manageCap(String capName, String diameter) {
+        Optional<Cap> capOpt = capRepository.findByNameAndDiameter(capName, diameter);
         if (!capOpt.isPresent()) {
             throw new IllegalArgumentException(
-                    "Tapa no encontrada: " + capName + " con diámetro: " + diameter + " y color: " + color);
+                    "Tapa no encontrada: " + capName + " con diámetro: " + diameter);
         }
 
         Cap cap = capOpt.get();
@@ -414,21 +426,25 @@ public class SaleService {
     }
 
     private BigDecimal determinePrice(Cap cap, SaleItemRequest saleItemRequest) {
-        if (saleItemRequest.getQuantity() == cap.getUnitsInPaca()) {
-            return cap.getPacaPrice();
+        CapColor capColor = capColorRepository.findByCapAndColor(cap, saleItemRequest.getCapColor())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "El color " + saleItemRequest.getCapColor() + " no existe en el tipo de tapa: " + cap.getName()));
+
+        if (saleItemRequest.getQuantity() == capColor.getUnits_in_paca()) {
+            return BigDecimal.valueOf(capColor.getPaca_price());
         }
 
-        if (cap.getCienPrice() != null && cap.getCienPrice().compareTo(BigDecimal.ZERO) > 0
+        if (capColor.getCien_price() != null && capColor.getCien_price() > 0
                 && saleItemRequest.getQuantity() >= 100) {
-            return cap.getCienPrice();
+            return BigDecimal.valueOf(capColor.getCien_price());
         }
 
-        if ((cap.getDocenaPrice() != null && cap.getDocenaPrice().compareTo(BigDecimal.ZERO) > 0)
+        if ((capColor.getDocena_price() != null && capColor.getDocena_price() > 0)
                 && (saleItemRequest.getQuantity() >= 12 || saleItemRequest.getQuantity() % 12 == 0)) {
-            return cap.getDocenaPrice();
+            return BigDecimal.valueOf(capColor.getDocena_price());
         }
 
-        return cap.getUnitPrice();
+        return BigDecimal.valueOf(capColor.getUnit_price());
 
     }
 
@@ -477,17 +493,16 @@ public class SaleService {
     private void modifyInventory(SaleItem saleItem, int userId) {
         if (saleItem.getItemType() == ItemType.COMBO) {
             Jar jar = saleItem.getJar();
-            Cap cap = saleItem.getCap();
+            CapColor capColor = saleItem.getCapColor();
             jar.setQuantity(jar.getQuantity() - saleItem.getQuantity());
-            cap.setQuantity(cap.getQuantity() - saleItem.getQuantity());
+            capColor.setQuantity(capColor.getQuantity() - saleItem.getQuantity());
             jar.setUpdatedAt(LocalDateTime.now());
-            cap.setUpdatedAt(LocalDateTime.now());
             jarRepository.save(jar);
-            capRepository.save(cap);
+            capColorRepository.save(capColor);
             inventoryService.newItem(jar.getId(), "jar", saleItem.getQuantity(), "sale", userId,
                     "Se vendieron " + saleItem.getQuantity() + " del envase en combo: " + jar.getName());
-            inventoryService.newItem(cap.getId(), "cap", saleItem.getQuantity(), "sale", userId,
-                    "Se vendieron " + saleItem.getQuantity() + " de tapa en combo: " + cap.getName());
+            inventoryService.newItem(capColor.getId(), "cap", saleItem.getQuantity(), "sale", userId,
+                    "Se vendieron " + saleItem.getQuantity() + " de tapa en combo: " + capColor.getCap().getName());
         } else if (saleItem.getItemType() == ItemType.JAR) {
             Jar jar = saleItem.getJar();
             jar.setQuantity(jar.getQuantity() - saleItem.getQuantity());
@@ -496,12 +511,11 @@ public class SaleService {
             inventoryService.newItem(jar.getId(), "jar", saleItem.getQuantity(), "sale", userId,
                     "Se vendieron " + saleItem.getQuantity() + " de tarro: " + jar.getName());
         } else if (saleItem.getItemType() == ItemType.CAP) {
-            Cap cap = saleItem.getCap();
-            cap.setQuantity(cap.getQuantity() - saleItem.getQuantity());
-            cap.setUpdatedAt(LocalDateTime.now());
-            capRepository.save(cap);
-            inventoryService.newItem(cap.getId(), "cap", saleItem.getQuantity(), "sale", userId,
-                    "Se vendieron " + saleItem.getQuantity() + " de tapa: " + cap.getName());
+            CapColor capColor = saleItem.getCapColor();
+            capColor.setQuantity(capColor.getQuantity() - saleItem.getQuantity());
+            capColorRepository.save(capColor);
+            inventoryService.newItem(capColor.getId(), "cap", saleItem.getQuantity(), "sale", userId,
+                    "Se vendieron " + saleItem.getQuantity() + " de tapa: " + capColor.getCap().getName());
         } else if (saleItem.getItemType() == ItemType.QUIMICO) {
             Quimicos quimico = saleItem.getQuimico();
             quimico.setQuantity(quimico.getQuantity() - saleItem.getQuantity());
@@ -603,14 +617,14 @@ public class SaleService {
         for (SaleItem saleItem : saleItems) {
             if (saleItem.getItemType() == ItemType.COMBO) {
                 saleItemDTOs.add(new SaleItemDTO(comboRepository
-                        .findByJarAndCap(saleItem.getJar().getId(), saleItem.getCap().getId()).orElse(null).getName(),
+                        .findByJarAndCap(saleItem.getJar().getId(), saleItem.getCapColor().getId()).orElse(null).getName(),
                         saleItem));
             } else if (saleItem.getItemType() == ItemType.JAR) {
                 saleItemDTOs.add(new SaleItemDTO(
                         jarRepository.findById(saleItem.getJar().getId()).orElse(null).getName(), saleItem));
             } else if (saleItem.getItemType() == ItemType.CAP) {
                 saleItemDTOs.add(new SaleItemDTO(
-                        capRepository.findById(saleItem.getCap().getId()).orElse(null).getName(), saleItem));
+                        capColorRepository.findById(saleItem.getCapColor().getId()).orElse(null).getCap().getName(), saleItem, saleItem.getCapColor().getColor()));
             } else if (saleItem.getItemType() == ItemType.QUIMICO) {
                 saleItemDTOs.add(new SaleItemDTO(
                         quimicosRepository.findById(saleItem.getQuimico().getId()).orElse(null).getName(), saleItem));

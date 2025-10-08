@@ -10,8 +10,6 @@ public class SaleDTO {
 
     private String clientName;
 
-    private String clientEmail;
-
     private String clientPhone;
 
     private BigDecimal totalPrice;
@@ -23,9 +21,8 @@ public class SaleDTO {
     public SaleDTO() {
     }
 
-    public SaleDTO(String clientName, String clientEmail, String clientPhone, BigDecimal totalPrice, List<SaleItemDTO> saleItems) {
+    public SaleDTO(String clientName, String clientPhone, BigDecimal totalPrice, List<SaleItemDTO> saleItems) {
         this.clientName = clientName;
-        this.clientEmail = clientEmail;
         this.clientPhone = clientPhone;
         this.totalPrice = totalPrice;
         this.saleItems = saleItems;
@@ -33,7 +30,6 @@ public class SaleDTO {
 
     public SaleDTO(Sale sale, List<SaleItemDTO> saleItems) {
         this.clientName = sale.getClientName();
-        this.clientEmail = sale.getClientEmail();
         this.clientPhone = sale.getClientPhone();
         this.totalPrice = sale.getTotalAmount();
         this.saleDate = sale.getSaleDate().toString();
@@ -50,15 +46,7 @@ public class SaleDTO {
     public void setClientName(String clientName) {
         this.clientName = clientName;
     }
-
-    public String getClientEmail() {
-        return clientEmail;
-    }
-
-    public void setClientEmail(String clientEmail) {
-        this.clientEmail = clientEmail;
-    }
-
+    
     public String getClientPhone() {
         return clientPhone;
     }

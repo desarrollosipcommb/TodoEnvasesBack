@@ -55,7 +55,7 @@ public class ComboService {
             combo.setJar(jarOpt.get());
         }
 
-        Optional<Cap> capOpt = capRepository.findByNameAndDiameterAndColor(comboRequest.getCapName().trim(), comboRequest.getDiameter(), comboRequest.getColor());
+        Optional<Cap> capOpt = capRepository.findByNameAndDiameter(comboRequest.getCapName().trim(), comboRequest.getDiameter());
         if(!capOpt.isPresent()) {
             throw new IllegalArgumentException("No existe una tapa con el nombre: " + comboRequest.getCapName() + ".");
         }else {

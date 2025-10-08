@@ -12,8 +12,6 @@ public class ComboRequest {
 
     private String diameter;
 
-    private String color;
-
     private Double unitPrice;
 
     private Double docenaPrice; // Price for a dozen combos
@@ -32,7 +30,6 @@ public class ComboRequest {
         this.jarName = jarName;
         this.capName = capName;
         this.diameter = diameter;
-        this.color = color;
         this.unitPrice = unitPrice;
         this.docenaPrice = docenaPrice;
         this.cienPrice = cienPrice;
@@ -44,7 +41,6 @@ public class ComboRequest {
         this.jarName = combo.getJar().getName();
         this.capName = combo.getCap().getName();
         this.diameter = combo.getJar().getJarType().getDiameter();
-        this.color = combo.getCap().getColor();
         this.unitPrice = combo.getUnitPrice();
         this.docenaPrice = combo.getDocenaPrice();
         this.cienPrice = combo.getCienPrice();
@@ -81,14 +77,6 @@ public class ComboRequest {
 
     public void setDiameter(String diameter) {
         this.diameter = diameter;
-    }
-
-    public String getColor() {
-        return color;
-    }
-
-    public void setColor(String color) {
-        this.color = color;
     }
 
     public Double getUnitPrice() {

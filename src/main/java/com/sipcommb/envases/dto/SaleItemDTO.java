@@ -13,6 +13,8 @@ public class SaleItemDTO {
 
     private BigDecimal subtotal;
 
+    private String color;
+
     public SaleItemDTO() {
     }
 
@@ -28,6 +30,14 @@ public class SaleItemDTO {
         this.quantity = saleItem.getQuantity();
         this.unitPrice = saleItem.getUnitPrice();
         this.subtotal = saleItem.getSubtotal();
+    }
+
+    public SaleItemDTO(String name, SaleItem saleItem, String color) {
+        this.name = name;
+        this.quantity = saleItem.getQuantity();
+        this.unitPrice = saleItem.getUnitPrice();
+        this.subtotal = saleItem.getSubtotal();
+        this.color = color;
     }
 
     public String getName() {
@@ -61,5 +71,13 @@ public class SaleItemDTO {
     public void setSubtotal(BigDecimal subtotal) {
         this.subtotal = subtotal;
     }   
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
     
 }

@@ -15,7 +15,6 @@ public class ComboResponse {
     private Double pacaPrice; // Price for a pack of combos
     private Integer unitsInPaca; // Number of combos in a pack
     private String description;
-    private Integer cap_quantity; // Quantity of caps in the combo
     private Integer jar_quantity; // Quantity of jars in the combo
     private Boolean active;
 
@@ -34,7 +33,6 @@ public class ComboResponse {
         this.docenaPrice = docenaPrice;
         this.cienPrice = cienPrice;
         this.description = description;
-        this.cap_quantity = cap_quantity;
         this.jar_quantity = jar_quantity;
 
     }
@@ -44,14 +42,12 @@ public class ComboResponse {
         this.jarName = combo.getJar().getName();
         this.capName = combo.getCap().getName();
         this.diameter = combo.getJar().getJarType().getDiameter();
-        this.color = combo.getCap().getColor();
         this.unitPrice = combo.getUnitPrice();
         this.docenaPrice = combo.getDocenaPrice();
         this.cienPrice = combo.getCienPrice();
         this.pacaPrice = combo.getPacaPrice();
         this.unitsInPaca = combo.getUnitsInPaca();
         this.description = combo.getDescription();
-        this.cap_quantity = combo.getCap().getQuantity();
         this.jar_quantity = combo.getJar().getQuantity();
         this.active = combo.getActive();
     }
@@ -128,14 +124,6 @@ public class ComboResponse {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public Integer getCap_quantity() {
-        return cap_quantity;
-    }
-
-    public void setCap_quantity(Integer cap_quantity) {
-        this.cap_quantity = cap_quantity;
     }
 
     public Integer getJar_quantity() {

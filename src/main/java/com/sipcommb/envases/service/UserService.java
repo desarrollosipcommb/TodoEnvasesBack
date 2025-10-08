@@ -172,6 +172,7 @@ public class UserService {
     }
 
     public UserDTO registerAdmin(UserRequestDTO userRequestDTO, String authHeader) {
+        
         if (!jwtService.getRoleFromToken(authHeader).equals("admin")) {
             throw new RuntimeException("Este usuario no tiene permiso para crear administradores");
         }

@@ -1,6 +1,7 @@
 package com.sipcommb.envases.service;
 
 
+import com.sipcommb.envases.dto.CapColorRequest;
 import com.sipcommb.envases.dto.CapRequest;
 import com.sipcommb.envases.dto.ExtractosDTO;
 import com.sipcommb.envases.dto.FileResponse;
@@ -138,18 +139,36 @@ public class FileService {
                     throw new RuntimeException("el nombre de la tapa es obligatorio");
                 }
 
-                capService.addCaps(new CapRequest(
+                if(capService.existsByNameAndDiameter(nameCell.getStringCellValue(), getCellAsString(diameterCell))) {
+                   capService.addCapColor(new CapColorRequest(
+                           nameCell.getStringCellValue(),
+                           getCellAsString(diameterCell),
+                           colorCell.getStringCellValue(),
+                           (int) quantityCell.getNumericCellValue(),
+                           unidadCell.getNumericCellValue(),
+                           getCellAsNullableDouble(docenaCell),
+                           getCellAsNullableDouble(cienCell),
+                           getCellAsNullableDouble(pacaCell),
+                           getCellAsNullableDouble(unitsInPacaCell).intValue()
+                   ), token);
+                }else{
+                    capService.addCaps(new CapRequest(
                         nameCell.getStringCellValue(),
                         getCellAsNullableString(descriptionCell),
-                        colorCell.getStringCellValue(),
-                        getCellAsString(diameterCell),
-                        (int) quantityCell.getNumericCellValue(),
-                        unidadCell.getNumericCellValue(),
-                        getCellAsNullableDouble(docenaCell),
-                        getCellAsNullableDouble(cienCell),
-                        getCellAsNullableDouble(pacaCell),
-                        getCellAsNullableDouble(unitsInPacaCell).intValue()
-                ), token);
+                        getCellAsString(diameterCell)
+                    ), token);
+                    capService.addCapColor(new CapColorRequest(
+                            nameCell.getStringCellValue(),
+                            getCellAsString(diameterCell),
+                            colorCell.getStringCellValue(),
+                            (int) quantityCell.getNumericCellValue(),
+                            unidadCell.getNumericCellValue(),
+                            getCellAsNullableDouble(docenaCell),
+                            getCellAsNullableDouble(cienCell),
+                            getCellAsNullableDouble(pacaCell),
+                            getCellAsNullableDouble(unitsInPacaCell).intValue()
+                    ), token);
+                }
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue()+" "+colorCell.getStringCellValue(), "Tipo de tapa agregado correctamente"));
 
@@ -352,7 +371,7 @@ public class FileService {
                 continue;
             }
             Cell nameCell = row.getCell(0);
-            Cell descriptionCell = row.getCell(1);
+           
             Cell diameterCell = row.getCell(2);
             Cell unidadCell = row.getCell(3);
             Cell docenaCell = row.getCell(4);
@@ -369,18 +388,17 @@ public class FileService {
                     throw new RuntimeException("el diametro de la tapa es obligatorio");
                 }
 
-                capService.updateCapInventory(new CapRequest(
-                        nameCell.getStringCellValue(),
-                        getCellAsNullableString(descriptionCell),
-                        colorCell.getStringCellValue(),
-                        getCellAsString(diameterCell),
-                        (int) quantityCell.getNumericCellValue(),
-                        unidadCell.getNumericCellValue(),
-                        getCellAsNullableDouble(docenaCell),
-                        getCellAsNullableDouble(cienCell),
-                        getCellAsNullableDouble(pacaCell),
-                        getCellAsNullableDouble(unitsInPacaCell).intValue()
-                ), token);
+                capService.updateCapInventory(new CapColorRequest(
+                           nameCell.getStringCellValue(),
+                           getCellAsString(diameterCell),
+                           colorCell.getStringCellValue(),
+                           (int) quantityCell.getNumericCellValue(),
+                           unidadCell.getNumericCellValue(),
+                           getCellAsNullableDouble(docenaCell),
+                           getCellAsNullableDouble(cienCell),
+                           getCellAsNullableDouble(pacaCell),
+                           getCellAsNullableDouble(unitsInPacaCell).intValue()
+                   ), token);
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue()+" "+colorCell.getStringCellValue(), "Inventario de la tapa ha sido actualizado"));
             } catch (Exception e) {

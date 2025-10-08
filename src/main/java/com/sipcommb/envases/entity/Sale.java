@@ -63,6 +63,8 @@ public class Sale {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    private SaleType type;
+
     // Enums
     public enum PaymentMethod {
         CASH, CARD, TRANSFER, OTHER
@@ -77,6 +79,7 @@ public class Sale {
         this.totalAmount = totalAmount;
         this.paymentMethod = paymentMethod;
         this.saleDate = LocalDate.now();
+        this.type = SaleType.DOMICILIO;
     }
 
     @PrePersist
@@ -126,6 +129,9 @@ public class Sale {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public SaleType getType() { return type; }
+    public void setType(SaleType type) { this.type = type; }
 
     public void addPrice(BigDecimal price) {
         if (this.totalAmount == null) {

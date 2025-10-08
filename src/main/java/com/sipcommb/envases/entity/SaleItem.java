@@ -37,7 +37,7 @@ public class SaleItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cap_id")
-    private Cap cap;
+    private CapColor capColor;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quimico_id")
@@ -74,9 +74,9 @@ public class SaleItem {
         
     }
     
-    public SaleItem(Sale sale, Cap cap, Integer quantity, BigDecimal unitPrice, Quimicos quimico, Extractos extracto) {
+    public SaleItem(Sale sale, CapColor capColor, Integer quantity, BigDecimal unitPrice, Quimicos quimico, Extractos extracto) {
         this.sale = sale;
-        this.cap = cap;
+        this.capColor = capColor;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.quimico = quimico;
@@ -95,9 +95,9 @@ public class SaleItem {
     
     public Jar getJar() { return jar; }
     public void setJar(Jar jar) { this.jar = jar; }
-    
-    public Cap getCap() { return cap; }
-    public void setCap(Cap cap) { this.cap = cap; }
+
+    public CapColor getCapColor() { return capColor; }
+    public void setCapColor(CapColor capColor) { this.capColor = capColor; }
 
     public Integer getQuantity() { return quantity; }
 

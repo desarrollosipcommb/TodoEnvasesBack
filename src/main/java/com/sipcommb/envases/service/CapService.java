@@ -1,17 +1,17 @@
 package com.sipcommb.envases.service;
 
+import com.sipcommb.envases.dto.CapColorDTO;
+import com.sipcommb.envases.dto.CapColorRequest;
 import com.sipcommb.envases.dto.CapDTO;
 import com.sipcommb.envases.dto.CapRequest;
-import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.entity.Cap;
+import com.sipcommb.envases.entity.CapColor;
 import com.sipcommb.envases.entity.JarType;
 import com.sipcommb.envases.repository.CapRepository;
 import com.sipcommb.envases.repository.JarTypeRepository;
-
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,14 +29,11 @@ public class CapService {
     private JarTypeRepository jarTypeRepository;
 
 
-    @Autowired
-    private InventoryService inventoryService;
 
     @Autowired
-    private JwtService jwtService;
+    private CapColorService capColorService;
 
-    @Autowired
-    private PriceService priceService;
+
 
     public CapDTO addCaps(CapRequest capRequest, String token) {
 
@@ -44,40 +41,12 @@ public class CapService {
             throw new IllegalArgumentException("El nombre de la tapa no puede estar vacío.");
         }
 
-        if (capRequest.getQuantity() == null) {
-            throw new IllegalArgumentException("La cantidad de tapas no puede estar vacía.");
-        }
-
         if (capRequest.getDiameter().isEmpty()) {
             capRequest.setDiameter("");
         }
 
-        if (capRequest.getUnitPrice() == null || capRequest.getUnitPrice() <= 0) {
-            throw new IllegalArgumentException("El precio unitario no puede ser negativo o cero.");
-        }
-
-        if (capRequest.getDocenaPrice() != null && capRequest.getDocenaPrice() < 0) {
-            throw new IllegalArgumentException("El precio por docena no puede ser negativo.");
-        }
-
-        if (capRequest.getCienPrice() != null && capRequest.getCienPrice() < 0) {
-            throw new IllegalArgumentException("El precio por cien no puede ser negativo.");
-        }
-
-        if (capRequest.getPacaPrice() != null && capRequest.getPacaPrice() < 0) {
-            throw new IllegalArgumentException("El precio por paca no puede ser negativo.");
-        }
-
-        if (capRequest.getUnitsInPaca() != null && capRequest.getUnitsInPaca() < 0) {
-            throw new IllegalArgumentException("El numero de unidades en una paca no puede ser negativo.");
-        }
-
-        if (capRepository.findByNameAndDiameterAndColor(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor()).isPresent()) {
-            throw new RuntimeException("Ya existe una tapa con el mismo nombre, diametro y color");
-        }
-
-        if (capRequest.getColor() == null || capRequest.getColor().isEmpty() || capRequest.getColor().equals("")) {
-            throw new IllegalArgumentException("El color es obligatorio.");
+        if (capRepository.findByNameAndDiameter(capRequest.getName(), capRequest.getDiameter()).isPresent()) {
+            throw new RuntimeException("Ya existe una tapa con el mismo nombre y diametro");
         }
 
         Cap cap = new Cap();
@@ -92,19 +61,25 @@ public class CapService {
 
         cap.setName(capRequest.getName().toLowerCase().trim());
         cap.setDescription(capRequest.getDescription());
-        cap.setColor(capRequest.getColor());
-        cap.setQuantity(capRequest.getQuantity());
-        cap.setUnitPrice(BigDecimal.valueOf(capRequest.getUnitPrice()));
-        cap.setDocenaPrice(BigDecimal.valueOf(capRequest.getDocenaPrice()));
-        cap.setCienPrice(BigDecimal.valueOf(capRequest.getCienPrice()));
-        cap.setPacaPrice(BigDecimal.valueOf(capRequest.getPacaPrice()));
-        cap.setUnitsInPaca(capRequest.getUnitsInPaca());
         cap = capRepository.save(cap);
 
-        inventoryService.newItem(cap.getId(), "cap", cap.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(token).intValue(), "Se añadio " + cap.getName() + " al inventario");
         CapDTO capDTO = new CapDTO(cap);
 
         return capDTO;
+    }
+
+    //TODO: probar.
+
+    public CapDTO addCapColor(CapColorRequest capColorRequest, String token) {
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capColorRequest.getName(), capColorRequest.getDiameter());
+        if (!capOptional.isPresent()) {
+            throw new RuntimeException("No existe una tapa con estas especificaciones con el nombre " + capColorRequest.getName() + ".");
+        }
+        Cap cap = capOptional.get();
+        capColorService.addCapColor(cap, capColorRequest, token);
+        
+        return new CapDTO(capRepository.save(cap));
+
     }
 
     public Page<CapDTO> getAllCaps(Pageable pageable) {
@@ -115,6 +90,26 @@ public class CapService {
     public Page<CapDTO> getAllActiveCaps(Pageable pageable) {
         Page<Cap> caps = capRepository.findAllByIsActiveTrue(pageable);
         return caps.map(CapDTO::new);
+    }
+
+    public Page<CapColorDTO> getAllCapColor(CapRequest capRequest, String color, Pageable pageable) {
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capRequest.getName(), capRequest.getDiameter());
+        if (!capOptional.isPresent()) {
+            throw new RuntimeException("No existe una tapa con estas especificaciones con el nombre " + capRequest.getName() + ".");
+        }
+        Cap cap = capOptional.get();
+        Page<CapColorDTO> capColors = capColorService.getAllCapColors(cap, color, pageable);
+        return capColors;
+    }
+
+    public Page<CapColorDTO> getAllActiveCapColor(CapRequest capRequest, String color, Pageable pageable) {
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capRequest.getName(), capRequest.getDiameter());
+        if (!capOptional.isPresent()) {
+            throw new RuntimeException("No existe una tapa con estas especificaciones con el nombre " + capRequest.getName() + ".");
+        }
+        Cap cap = capOptional.get();
+        Page<CapColorDTO> capColors = capColorService.getAllCapColorsActive(cap, color, pageable);
+        return capColors;
     }
 
     public Page<CapDTO> getAllInactiveCaps(Pageable pageable) {
@@ -138,28 +133,21 @@ public class CapService {
         return caps.map(CapDTO::new);
     }
 
-    public Page<CapDTO> getByColor(String color, Pageable pageable) {
-        Page<Cap> caps = capRepository.getFromColor(color, pageable).get();
-        if (caps.isEmpty()) {
-            throw new RuntimeException("No existen tapas con el color especificado.");
-        }
+    public Page<CapDTO> getFromNameLikeAndNameDiameter(String name, String diameter, Pageable pageable) {
+        Page<Cap> caps = capRepository.getFromNameLikeAndDiameter(name, diameter, pageable);
         return caps.map(CapDTO::new);
     }
 
-    public Page<CapDTO> getFromNameLikeAndColorAndNameDiameter(String name, String color, String diameter, Pageable pageable) {
-        Page<Cap> caps = capRepository.getFromNameLikeAndColorAndDiameter(name, color, diameter, pageable);
+    public Page<CapDTO> getFromNameLikeAndNameDiameterActive(String name, String diameter, Pageable pageable) {
+        Page<Cap> caps = capRepository.getFromNameLikeAndDiameter(name, diameter, pageable);
         return caps.map(CapDTO::new);
     }
 
-    public Page<CapDTO> getFromNameLikeAndColorAndNameDiameterActive(String name, String color, String diameter, Pageable pageable) {
-        Page<Cap> caps = capRepository.getFromNameLikeAndColorAndDiameterActive(name, color, diameter, pageable);
-        return caps.map(CapDTO::new);
-    }
-
+    //TODO: 
 
     public CapDTO updateCap(CapRequest capRequest, String token) {
 
-        Optional<Cap> capOptional = capRepository.findByNameAndDiameterAndColor(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor());
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capRequest.getName(), capRequest.getDiameter());
 
         if (!capOptional.isPresent()) {
             throw new RuntimeException("No existe una tapa con estas especificaciones.");
@@ -167,44 +155,8 @@ public class CapService {
 
         Cap cap = capOptional.get();
 
-        if (capRequest.getQuantity() != null) {
-            cap.setQuantity(capRequest.getQuantity());
-            inventoryService.newItem(cap.getId(), "cap", cap.getQuantity().intValue(), "adjustment", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo la tapa: " + cap.getName() + ", su inventario ahora es: " + cap.getQuantity());
-
-        }
-
         if (capRequest.getDescription() != null && !capRequest.getDescription().isEmpty()) {
             cap.setDescription(capRequest.getDescription());
-        }
-
-        if (capRequest.getUnitPrice() != null && capRequest.getUnitPrice() <= 0) {
-            throw new IllegalArgumentException("El precio unitario no puede ser negativo o cero.");
-        } else if (capRequest.getUnitPrice() != null) {
-            cap.setUnitPrice(BigDecimal.valueOf(capRequest.getUnitPrice()));
-        }
-
-        if (capRequest.getDocenaPrice() != null && capRequest.getDocenaPrice() < 0) {
-            throw new IllegalArgumentException("El precio por docena no puede ser negativo.");
-        } else if (capRequest.getDocenaPrice() != null) {
-            cap.setDocenaPrice(BigDecimal.valueOf(capRequest.getDocenaPrice()));
-        }
-
-        if (capRequest.getCienPrice() != null && capRequest.getCienPrice() < 0) {
-            throw new IllegalArgumentException("El precio por cien no puede ser negativo.");
-        } else if (capRequest.getCienPrice() != null) {
-            cap.setCienPrice(BigDecimal.valueOf(capRequest.getCienPrice()));
-        }
-
-        if (capRequest.getPacaPrice() != null && capRequest.getPacaPrice() < 0) {
-            throw new IllegalArgumentException("El precio por paca no puede ser negativo.");
-        } else if (capRequest.getPacaPrice() != null) {
-            cap.setPacaPrice(BigDecimal.valueOf(capRequest.getPacaPrice()));
-        }
-
-        if (capRequest.getUnitsInPaca() != null && capRequest.getUnitsInPaca() < 0) {
-            throw new IllegalArgumentException("El numero de unidades en una paca no puede ser negativo.");
-        } else if (capRequest.getUnitsInPaca() != null) {
-            cap.setUnitsInPaca(capRequest.getUnitsInPaca());
         }
 
         cap.setDescription(capRequest.getDescription());
@@ -215,22 +167,40 @@ public class CapService {
         return new CapDTO(cap);
     }
 
+    public CapDTO updateColorCap(CapColorRequest capColorRequest, String token) {
+
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capColorRequest.getName(), capColorRequest.getDiameter());
+        if (!capOptional.isPresent()) {
+            throw new RuntimeException("No existe una tapa con estas especificaciones.");
+        }
+        Cap cap = capOptional.get();
+
+        capColorService.updateCapColor(cap, capColorRequest);
+
+        return new CapDTO(capRepository.save(cap));
+    }
+
     public CapDTO deleteCap(CapRequest capRequest) {
 
-        Optional<Cap> capOptional = capRepository.findByNameAndDiameterAndColor2(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor());
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capRequest.getName(), capRequest.getDiameter());
         if (!capOptional.isPresent()) {
             throw new RuntimeException("No existe una tapa con estas especificaciones.");
         }
         Cap cap = capOptional.get();
         cap.setUpdatedAt(LocalDateTime.now());
         cap.setIsActive(false);
+
+        List<CapColor> activeColors = cap.getColors();
+        for (CapColor capColor : activeColors) {
+            capColorService.deactivateCapColor(capColor);
+        }
         capRepository.save(cap);
         return new CapDTO(cap);
     }
 
     public CapDTO activateCap(CapRequest capRequest) {
 
-        Optional<Cap> capOptional = capRepository.findByNameAndDiameterAndColor2(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor());
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capRequest.getName(), capRequest.getDiameter());
         if (!capOptional.isPresent()) {
             throw new RuntimeException("No existe una tapa con estas especificaciones.");
         }
@@ -242,115 +212,44 @@ public class CapService {
         }
         cap.setIsActive(true);
         cap.setUpdatedAt(LocalDateTime.now());
+
+        List<CapColor> inactiveColors = cap.getColors();
+        for (CapColor capColor : inactiveColors) {
+            capColorService.activateCapColor(capColor);
+        }
+
         capRepository.save(cap);
         return new CapDTO(cap);
     }
 
-    public CapDTO updateCapInventory(CapRequest capRequest, String token) {
-        Optional<Cap> capOptional = capRepository.findByNameAndDiameterAndColor(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor());
+    public CapDTO updateCapInventory(CapColorRequest capColorRequest, String token) {
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capColorRequest.getName(), capColorRequest.getDiameter());
         if (!capOptional.isPresent()) {
             throw new RuntimeException("No existe una tapa con estas especificaciones.");
         }
         Cap cap = capOptional.get();
 
-        if (capRequest.getQuantity() == null) {
-            throw new IllegalArgumentException("La cantidad debe ser especificada.");
-        }
-
-        if (capRequest.getQuantity() < 0) {
-            cap.setQuantity(Math.max((cap.getQuantity() + capRequest.getQuantity()), 0));
-            inventoryService.newItem(cap.getId(), "cap", capRequest.getQuantity(),
-                    "damage", jwtService.getUserIdFromToken(token).intValue(),
-                    "Se a reportado un daño en el inventario de la tapa: " + cap.getName() +
-                            ", su inventario ahora es: " + cap.getQuantity());
-            return new CapDTO(capRepository.save(cap));
-        }
-
-        cap.setQuantity(capRequest.getQuantity());
-        inventoryService.newItem(
-                cap.getId(),
-                "cap",
-                capRequest.getQuantity(),
-                "restock",
-                jwtService.getUserIdFromToken(token).intValue(),
-                "Se actualizo el inventario de la tapa: " + cap.getName() + ", su inventario ahora es: " + cap.getQuantity()
-        );
+        capColorService.updateCapColorInventory(cap, capColorRequest, token);
+        capRepository.save(cap);
 
         return new CapDTO(cap);
     }
 
 
-    public CapDTO changeInventory(CapRequest capRequest, String token) {
-        Optional<Cap> capOptional = capRepository.findByNameAndDiameterAndColor(capRequest.getName(), capRequest.getDiameter(), capRequest.getColor());
+    public CapDTO changeInventory(CapColorRequest capColorRequest, String token) {
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capColorRequest.getName(), capColorRequest.getDiameter());
         if (!capOptional.isPresent()) {
             throw new RuntimeException("No existe una tapa con estas especificaciones.");
         }
+
         Cap cap = capOptional.get();
-
-        if (capRequest.getQuantity() == null) {
-            throw new IllegalArgumentException("La cantidad debe ser especificada.");
-        }
-
-        if (capRequest.getQuantity() < 0) {
-            cap.setQuantity(cap.getQuantity() + capRequest.getQuantity());
-            inventoryService.newItem(cap.getId(), "cap", capRequest.getQuantity().intValue(), "damage", jwtService.getUserIdFromToken(token).intValue(), "Se a reportado un daño en el inventario de la tapa: " + cap.getName() + ", su inventario ahora es: " + cap.getQuantity());
-            return new CapDTO(capRepository.save(cap));
-        }
-
-        cap.setQuantity(cap.getQuantity() + capRequest.getQuantity());
-        inventoryService.newItem(
-                cap.getId(),
-                "cap",
-                capRequest.getQuantity().intValue(),
-                "restock",
-                jwtService.getUserIdFromToken(token).intValue(),
-                "Se actualizo el inventario de la tapa: " + cap.getName() + ", su inventario ahora es: " + cap.getQuantity()
-        );
-
+        capColorService.updateCapColorInventory(cap, capColorRequest, token);
+        capRepository.save(cap);
         return new CapDTO(cap);
     }
 
-    public Page<CapDTO> getPriceRange(PriceSearchRequest priceSearchRequest, Pageable pageable) {
-
-        boolean exactSearch = priceService.verifyPriceSearchRequest(priceSearchRequest);
-
-        switch (priceSearchRequest.getPriceDeal()) {
-            case CIEN:
-
-                if (exactSearch) {
-                    return capRepository.findByCienPrice(priceSearchRequest.getExactPrice(), pageable).map(CapDTO::new);
-                }
-
-                return capRepository.findByCienPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(CapDTO::new);
-
-            case DOCENA:
-
-                if (exactSearch) {
-                    return capRepository.findByDocenaPrice(priceSearchRequest.getExactPrice(), pageable).map(CapDTO::new);
-                }
-
-                return capRepository.findByDocenaPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(CapDTO::new);
-
-            case UNIDAD:
-                if (exactSearch) {
-                    return capRepository.findByUnidadPrice(priceSearchRequest.getExactPrice(), pageable).map(CapDTO::new);
-                }
-
-                return capRepository.findByUnidadPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(CapDTO::new);
-
-            case PACA:
-                if (exactSearch) {
-                    return capRepository.findByPacaPrice(priceSearchRequest.getExactPrice(), pageable).map(CapDTO::new);
-                }
-                return capRepository.findByPacaPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(CapDTO::new);
-
-
-            default:
-                throw new IllegalArgumentException("Tipo de trato de precio no soportado.");
-
-        }
-
+    public boolean existsByNameAndDiameter(String name, String diameter) {
+        return capRepository.findByNameAndDiameter(name, diameter).isPresent();
     }
-
 
 }

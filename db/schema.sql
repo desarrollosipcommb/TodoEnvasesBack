@@ -6,7 +6,7 @@
 
 -- Create database
 CREATE DATABASE IF NOT EXISTS envases_inventory;
-USE envases_inventory;
+USE envases_inventory2;
 
 -- ============================================
 -- 1. JAR TYPES TABLE
@@ -19,8 +19,6 @@ CREATE TABLE jar_types (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
-ALTER TABLE jar_types CHANGE id diameter VARCHAR(50) NOT NULL;
 
 -- ============================================
 -- 2. ROLES TABLE
@@ -67,21 +65,12 @@ CREATE TABLE jars (
     cien_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a hundred jars
     paca_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a pack of jars
     units_in_paca INT DEFAULT 0, -- Number of jars in a pack
-    volume DECIMAL(10, 2) DEFAULT 0.00, -- Volume in liters or milliliters
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cap_diameter) REFERENCES jar_types(diameter) ON DELETE RESTRICT
 );
 
-ALTER TABLE jars ADD COLUMN docena_price DECIMAL(10, 2) DEFAULT 0.00; -- Price for a dozen jars
-ALTER TABLE jars ADD COLUMN cien_price DECIMAL(10, 2) DEFAULT 0.00; -- Price for a hundred jars
-ALTER TABLE jars ADD COLUMN paca_price DECIMAL(10, 2) DEFAULT 0.00; -- Price for a pack of jars
-ALTER TABLE jars ADD COLUMN units_in_paca INT DEFAULT 0; -- Number of jars in a pack   
-ALTER TABLE jars ADD COLUMN volume DECIMAL(10, 2) DEFAULT 0.00; -- Volume in liters or milliliters
-ALTER TABLE jars CHANGE diameter diameter VARCHAR(50); -- Change jar_type_id to diameter
-
-ALTER TABLE jars ADD CONSTRAINT fk_jars_cap_diameter FOREIGN KEY (cap_diameter) REFERENCES jar_types(diameter) ON DELETE RESTRICT;
 -- ============================================
 -- 5. CAPS TABLE
 -- ============================================
@@ -90,6 +79,17 @@ CREATE TABLE caps (
     name VARCHAR(100) NOT NULL,
     description TEXT,
     diameter VARCHAR(50) NOT NULL, -- Must match jar type for compatibility
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (diameter) REFERENCES jar_types(diameter) ON DELETE RESTRICT
+);
+
+CREATE TABLE cap_colors (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    color VARCHAR(50) NOT NULL UNIQUE,
+    cap_id INT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
     color VARCHAR(50),
     quantity INT NOT NULL DEFAULT 0,-- Stock quantity
     unit_price DECIMAL(10, 2) DEFAULT 0.00,
@@ -97,20 +97,8 @@ CREATE TABLE caps (
     cien_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a hundred jars
     paca_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a pack of jars
     units_in_paca INT DEFAULT 0, -- Number of caps in a pack
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (diameter) REFERENCES jar_types(diameter) ON DELETE RESTRICT
+    FOREIGN KEY (cap_id) REFERENCES caps(id) ON DELETE CASCADE
 );
-
-ALTER TABLE caps ADD COLUMN docena_price DECIMAL(10, 2) DEFAULT 0.00; -- Price for a dozen caps
-ALTER TABLE caps ADD COLUMN cien_price DECIMAL(10, 2) DEFAULT 0.00; -- Price for a hundred caps
-ALTER TABLE caps ADD COLUMN paca_price DECIMAL(10, 2) DEFAULT 0.00; -- Price for a pack of caps
-ALTER TABLE caps ADD COLUMN units_in_paca INT DEFAULT 0; -- Number of caps in a pack
-
-ALTER TABLE caps CHANGE jar_type_id diameter VARCHAR(50) NOT NULL; -- Change jar_type_id to diameter
-
-ALTER TABLE caps ADD CONSTRAINT fk_caps_diameter FOREIGN KEY (diameter) REFERENCES jar_types(diameter) ON DELETE RESTRICT;
 
 -- ============================================
 -- 6. SALES TABLE
@@ -118,17 +106,17 @@ ALTER TABLE caps ADD CONSTRAINT fk_caps_diameter FOREIGN KEY (diameter) REFERENC
 CREATE TABLE sales (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL, -- Who made the sale
-    client_name VARCHAR(100),
-    client_phone VARCHAR(20),
-    client_email VARCHAR(100),
+    client_id INT, -- Client to whom the sale was made
     total_amount DECIMAL(10, 2) NOT NULL,
     payment_method ENUM('cash', 'card', 'transfer', 'other') DEFAULT 'cash',
+    type ENUM('DOMICILIO', 'PUNTODEVENTA') DEFAULT 'DOMICILIO',
     notes TEXT,
     sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
-    FOREIGN KEY (client_id) REFERENCES clientes(id) ON DELETE RESTRICT,
+    FOREIGN KEY (client_id) REFERENCES clientes(client_id) ON DELETE RESTRICT,
     CHECK (total_amount >= 0)
 );
 
@@ -152,12 +140,9 @@ CREATE TABLE sale_items (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
     FOREIGN KEY (jar_id) REFERENCES jars(id) ON DELETE RESTRICT,
-    FOREIGN KEY (cap_id) REFERENCES caps(id) ON DELETE RESTRICT,
+    FOREIGN KEY (cap_color_id) REFERENCES cap_colors(id) ON DELETE RESTRICT,,
     FOREIGN KEY (quimico_id) REFERENCES quimicos(id) ON DELETE RESTRICT,
     FOREIGN KEY (extracto_id) REFERENCES extractos(id) ON DELETE RESTRICT,
-    CHECK (quantity > 0),
-    CHECK (unit_price >= 0),
-    CHECK (subtotal >= 0),
     -- Ensure at least one item is specified based on type
     CHECK (
         (item_type = 'jar' AND jar_id IS NOT NULL AND cap_id IS NULL) OR
@@ -166,19 +151,12 @@ CREATE TABLE sale_items (
     )
 );
 
-
-ALTER TABLE sale_items ADD COLUMN quimico_id INT;
-ALTER TABLE sale_items ADD COLUMN extracto_id INT;
-
-ALTER TABLE sale_items ADD CONSTRAINT FOREIGN KEY (quimico_id) REFERENCES quimicos(id) ON DELETE RESTRICT;
-ALTER TABLE sale_items ADD CONSTRAINT FOREIGN KEY (extracto_id) REFERENCES extractos(id) ON DELETE RESTRICT;
-
 -- ============================================
 -- 8. TRANSACTIONS TABLE (Inventory movements)
 -- ============================================
 CREATE TABLE transactions (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    item_type ENUM('jar', 'cap', 'combo') NOT NULL,
+    item_type ENUM('jar', 'cap', 'quimico', 'extracto', 'combo') NOT NULL,
     item_id INT NOT NULL, -- TODO revisar posible cambio a varchar para ubicar más facil el item afectado
     quantity_change INT NOT NULL, -- Positive for additions, negative for subtractions
     transaction_type ENUM('sale', 'restock', 'adjustment', 'damage', 'return') NOT NULL, -- TODO revisar si cambiar los enums
@@ -238,7 +216,7 @@ CREATE TABLE quimicos (
     name VARCHAR(100) NOT NULL,
     description TEXT,
     quantity INT NOT NULL DEFAULT 0, -- Stock quantity
-    unit_price DECIMAL(10, 2) DEFAULT 0.00
+    unit_price DECIMAL(10, 2) DEFAULT 0.00,
     is_active BOOLEAN DEFAULT TRUE
 );
 
@@ -268,13 +246,10 @@ CREATE TABLE extractos (
 CREATE TABLE clientes (
     client_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
-    phone VARCHAR(20),
-    email VARCHAR(100),
-    address TEXT,
+    address VARCHAR(100),
+    phone VARCHAR(100),
     description TEXT,
     is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 
@@ -286,7 +261,7 @@ CREATE TABLE clientes (
 -- Insert default roles
 INSERT INTO roles (name, description, permissions) VALUES
 ('admin', 'Administrator with full access', '["create", "read", "update", "delete", "sales"]'),
-('seller', 'Sales person with limited access', '["read", "sales", "view_own_sales"]');
+('seller', 'Sales person with limited access', '["read", "sales", "view_own_sales", "create_client"]');
 
 -- Insert default admin user (password: admin123 - should be hashed in production)
 
