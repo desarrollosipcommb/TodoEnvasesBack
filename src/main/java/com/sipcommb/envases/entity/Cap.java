@@ -46,7 +46,7 @@ public class Cap {
     @JoinColumn(name = "diameter", nullable = true)
     private JarType jarType;
 
-    @OneToMany(mappedBy = "cap", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "cap", fetch = FetchType.EAGER)
     private List<CapColor> colors = new ArrayList<>();
     
     // Constructors

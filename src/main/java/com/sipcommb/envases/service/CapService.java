@@ -76,9 +76,9 @@ public class CapService {
             throw new RuntimeException("No existe una tapa con estas especificaciones con el nombre " + capColorRequest.getName() + ".");
         }
         Cap cap = capOptional.get();
-        capColorService.addCapColor(cap, capColorRequest, token);
-        
-        return new CapDTO(capRepository.save(cap));
+        cap = capColorService.addCapColor(cap, capColorRequest, token);
+        capRepository.save(cap);
+        return new CapDTO(cap);
 
     }
 
@@ -93,11 +93,12 @@ public class CapService {
     }
 
     public Page<CapColorDTO> getAllCapColor(CapRequest capRequest, String color, Pageable pageable) {
-        Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capRequest.getName(), capRequest.getDiameter());
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameterIncludingInactive(capRequest.getName(), capRequest.getDiameter());
         if (!capOptional.isPresent()) {
             throw new RuntimeException("No existe una tapa con estas especificaciones con el nombre " + capRequest.getName() + ".");
         }
         Cap cap = capOptional.get();
+       
         Page<CapColorDTO> capColors = capColorService.getAllCapColors(cap, color, pageable);
         return capColors;
     }
@@ -143,7 +144,6 @@ public class CapService {
         return caps.map(CapDTO::new);
     }
 
-    //TODO: 
 
     public CapDTO updateCap(CapRequest capRequest, String token) {
 
@@ -171,7 +171,7 @@ public class CapService {
 
         Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capColorRequest.getName(), capColorRequest.getDiameter());
         if (!capOptional.isPresent()) {
-            throw new RuntimeException("No existe una tapa con estas especificaciones.");
+            throw new RuntimeException("No existe una tapa con estas especificaciones: " + capColorRequest.getName() + " - " + capColorRequest.getDiameter());
         }
         Cap cap = capOptional.get();
 
@@ -200,7 +200,7 @@ public class CapService {
 
     public CapDTO activateCap(CapRequest capRequest) {
 
-        Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capRequest.getName(), capRequest.getDiameter());
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameterIncludingInactive(capRequest.getName(), capRequest.getDiameter());
         if (!capOptional.isPresent()) {
             throw new RuntimeException("No existe una tapa con estas especificaciones.");
         }

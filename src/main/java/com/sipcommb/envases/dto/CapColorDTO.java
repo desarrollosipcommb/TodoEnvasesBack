@@ -4,6 +4,7 @@ import com.sipcommb.envases.entity.CapColor;
 
 public class CapColorDTO {
 
+    private String name;
     private String color;
     private boolean isActive;
     private Integer quantity;
@@ -16,7 +17,8 @@ public class CapColorDTO {
     public CapColorDTO() {
     }
 
-    public CapColorDTO(String color, boolean isActive, Integer quantity, Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, Integer unitsInPaca) {
+    public CapColorDTO(String name, String color, boolean isActive, Integer quantity, Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, Integer unitsInPaca) {
+        this.name = name;
         this.color = color;
         this.isActive = isActive;
         this.quantity = quantity;
@@ -28,6 +30,7 @@ public class CapColorDTO {
     }
 
     public CapColorDTO(CapColor capColor) {
+        this.name = capColor.getCap().getName();
         this.color = capColor.getColor();
         this.isActive = capColor.getIs_active();
         this.quantity = capColor.getQuantity();
@@ -103,7 +106,11 @@ public class CapColorDTO {
         this.unitsInPaca = unitsInPaca;
     }
 
-    
-    
-    
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

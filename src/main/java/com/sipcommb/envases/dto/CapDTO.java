@@ -23,6 +23,7 @@ public class CapDTO {
         this.name = cap.getName();
         this.diameter = cap.getJarType() != null ? cap.getJarType().getDiameter() : "";
         this.description = cap.getDescription();
+        this.isActive = cap.getIsActive();
         this.colors = cap.getColors().stream().map(CapColorDTO::new).collect(Collectors.toList());
     }
 

@@ -31,14 +31,14 @@ public class CapColorService {
     @Autowired
     private PriceService priceService;
 
-    public CapColorDTO addCapColor(Cap cap, CapColorRequest request, String token) {
+    public Cap addCapColor(Cap cap, CapColorRequest request, String token) {
 
         List<CapColor> existingColors = cap.getColors();
 
         for (CapColor color : existingColors) {
             if (color.getColor().equalsIgnoreCase(request.getColor())) {
                 throw new IllegalArgumentException(
-                        "El color ya existe este color en el tipo de tapa: " + cap.getName());
+                        "El color ya existe el color: " + request.getColor() + " en el tipo de tapa: " + cap.getName());
             }
         }
 
@@ -77,6 +77,8 @@ public class CapColorService {
                 request.getUnitsInPaca() != null ? request.getUnitsInPaca() : 0);
 
         capColorRepository.save(newColor);
+
+        
         inventoryService.newItem(
             newColor.getId() != null ? newColor.getId().longValue() : null, 
             "cap", 
@@ -84,8 +86,8 @@ public class CapColorService {
             "restock", 
             jwtService.getUserIdFromToken(token).intValue(), 
             "Se añadió " + newColor.getCap().getName() +" "+ newColor.getColor() + " al inventario");
-
-        return new CapColorDTO(newColor);
+        
+        return newColor.getCap();
     }
 
     public CapColorDTO updateCapColor(Cap cap, CapColorRequest request) {
@@ -160,7 +162,7 @@ public class CapColorService {
             return new CapColorDTO(capColorRepository.save(capColor));
         }
 
-        capColor.setQuantity(capColor.getQuantity());
+        capColor.setQuantity(capColor.getQuantity() + request.getQuantity());
         inventoryService.newItem(
                 cap.getId(),
                 "cap",

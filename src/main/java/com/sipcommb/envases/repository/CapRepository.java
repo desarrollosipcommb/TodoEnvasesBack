@@ -15,48 +15,51 @@ public interface CapRepository extends JpaRepository<Cap, Long> {
 
         boolean existsByName(String name);
 
-    @Query("SELECT c FROM Cap c WHERE c.name = :name and c.jarType.diameter = :diameter AND c.isActive = 1")
-    Optional<Cap> findByNameAndDiameter(@Param("name") String name,
-            @Param("diameter") String diameter);
+        @Query("SELECT c FROM Cap c WHERE c.name = :name and c.jarType.diameter = :diameter AND c.isActive = 1")
+        Optional<Cap> findByNameAndDiameter(@Param("name") String name,
+                        @Param("diameter") String diameter);
 
+        @Query("SELECT c FROM Cap c WHERE c.name = :name and c.jarType.diameter = :diameter")
+        Optional<Cap> findByNameAndDiameterIncludingInactive(@Param("name") String name,
+                        @Param("diameter") String diameter);
 
-    @Query("SELECT c FROM Cap c WHERE c.name LIKE %:name% AND c.jarType.diameter = :diameter AND c.isActive = 1")
-    Optional<List<Cap>> getFromNameAndDiameter(String name, String diameter);
+        @Query("SELECT c FROM Cap c WHERE c.name LIKE %:name% AND c.jarType.diameter = :diameter AND c.isActive = 1")
+        Optional<List<Cap>> getFromNameAndDiameter(String name, String diameter);
 
-    @Query("SELECT c FROM Cap c WHERE c.jarType.diameter = :diameter AND c.isActive = 1")
-    Optional<Page<Cap>> getFromCapDiameter(@Param("diameter") String diameter, Pageable pageable);
+        @Query("SELECT c FROM Cap c WHERE c.jarType.diameter = :diameter AND c.isActive = 1")
+        Optional<Page<Cap>> getFromCapDiameter(@Param("diameter") String diameter, Pageable pageable);
 
-    @Query("SELECT c FROM Cap c WHERE c.jarType.diameter = :diameter AND c.isActive = 1")
-    Optional<List<Cap>> getFromCapDiameter(@Param("diameter") String diameter);
+        @Query("SELECT c FROM Cap c WHERE c.jarType.diameter = :diameter AND c.isActive = 1")
+        Optional<List<Cap>> getFromCapDiameter(@Param("diameter") String diameter);
 
-    @Query("SELECT c FROM Cap c WHERE c.name LIKE %:name% AND c.isActive = 1")
-    Optional<Page<Cap>> getFromNameLike(@Param("name") String name, Pageable pageable);
+        @Query("SELECT c FROM Cap c WHERE c.name LIKE %:name% AND c.isActive = 1")
+        Optional<Page<Cap>> getFromNameLike(@Param("name") String name, Pageable pageable);
 
-    @Query("SELECT c FROM Cap c WHERE c.isActive = 1")
-    List<Cap> findAllByIsActive();
+        @Query("SELECT c FROM Cap c WHERE c.isActive = 1")
+        List<Cap> findAllByIsActive();
 
-    @Query("SELECT c FROM Cap c WHERE c.isActive = 0")
-    List<Cap> findAllByIsActiveFalse();
+        @Query("SELECT c FROM Cap c WHERE c.isActive = 0")
+        List<Cap> findAllByIsActiveFalse();
 
-    Page<Cap> findAll(Pageable pageable);
+        Page<Cap> findAll(Pageable pageable);
 
-    Page<Cap> findAllByIsActiveTrue(Pageable pageable);
+        Page<Cap> findAllByIsActiveTrue(Pageable pageable);
 
-    Page<Cap> findAllByIsActiveFalse(Pageable pageable);
+        Page<Cap> findAllByIsActiveFalse(Pageable pageable);
 
-    @Query("SELECT c FROM Cap c " +
-            "JOIN c.jarType jt " +
-            "WHERE (:name IS NULL OR c.name LIKE %:name%) " +
-            "AND (:diameter IS NULL OR jt.diameter LIKE %:diameter%) ")
-    Page<Cap> getFromNameLikeAndDiameter(@Param("name") String name,
-            @Param("diameter") String diameter, Pageable pageable);
+        @Query("SELECT c FROM Cap c " +
+                        "JOIN c.jarType jt " +
+                        "WHERE (:name IS NULL OR c.name LIKE %:name%) " +
+                        "AND (:diameter IS NULL OR jt.diameter LIKE %:diameter%) ")
+        Page<Cap> getFromNameLikeAndDiameter(@Param("name") String name,
+                        @Param("diameter") String diameter, Pageable pageable);
 
-    @Query("SELECT c FROM Cap c " +
-            "JOIN c.jarType jt " +
-            "WHERE (:name IS NULL OR c.name LIKE %:name%) " +
-            "AND (:diameter IS NULL OR jt.diameter LIKE %:diameter%) " +
-            "AND c.isActive = 1")
-    Page<Cap> getFromNameLikeAndDiameterActive(@Param("name") String name,
-            @Param("diameter") String diameter, Pageable pageable);
+        @Query("SELECT c FROM Cap c " +
+                        "JOIN c.jarType jt " +
+                        "WHERE (:name IS NULL OR c.name LIKE %:name%) " +
+                        "AND (:diameter IS NULL OR jt.diameter LIKE %:diameter%) " +
+                        "AND c.isActive = 1")
+        Page<Cap> getFromNameLikeAndDiameterActive(@Param("name") String name,
+                        @Param("diameter") String diameter, Pageable pageable);
 
 }

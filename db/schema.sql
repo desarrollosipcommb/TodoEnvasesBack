@@ -252,6 +252,21 @@ CREATE TABLE clientes (
     is_active BOOLEAN DEFAULT TRUE,
 );
 
+CREATE TABLE bodega(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    sale_id INT NOT NULL,
+    jar_id INT NULL, -- If selling jar or combo
+    cap_id INT NULL, -- If selling cap or combo
+    quimico_id INT NULL, -- If selling quimico
+    extracto_id INT NULL, -- If selling extracto
+    quantity INT NULL,
+    FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
+    FOREIGN KEY (jar_id) REFERENCES jars(id) ON DELETE RESTRICT,
+    FOREIGN KEY (cap_id) REFERENCES caps(id) ON DELETE RESTRICT,
+    FOREIGN KEY (quimico_id) REFERENCES quimicos(id) ON DELETE RESTRICT,
+    FOREIGN KEY (extracto_id) REFERENCES extractos(id) ON DELETE RESTRICT
+);
 
 
 -- ============================================
