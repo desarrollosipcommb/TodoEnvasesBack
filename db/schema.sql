@@ -179,7 +179,6 @@ CREATE TABLE combos (
     name VARCHAR(100) NOT NULL,
     description TEXT,
     jar_id INT NOT NULL, -- Array of jar IDs in the combo
-    cap_id INT NOT NULL, -- Array of cap IDs in the combo
     unit_price DECIMAL(10, 2) DEFAULT 0.00,
     docena_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a dozen combos
     cien_price DECIMAL(10, 2) DEFAULT 0.00, -- Price for a hundred combos
@@ -189,8 +188,21 @@ CREATE TABLE combos (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (jar_id) REFERENCES jars(id) ON DELETE RESTRICT,
-    FOREIGN KEY (cap_id) REFERENCES caps(id) ON DELETE RESTRICT
 );
+
+-- ============================================
+-- 9.1 combo_caps
+-- ============================================
+
+CREATE TABLE combo_caps (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    combo_id INT NOT NULL,
+    cap_id INT NOT NULL,
+    FOREIGN KEY (combo_id) REFERENCES combos(id) ON DELETE CASCADE,
+    FOREIGN KEY (cap_id) REFERENCES caps(id) ON DELETE RESTRICT,
+    UNIQUE (combo_id, cap_id) -- Evita duplicados
+);
+
 
 -- ============================================
 -- 10. IS compatible (table for jar and cap sale combinations)
@@ -251,6 +263,10 @@ CREATE TABLE clientes (
     description TEXT,
     is_active BOOLEAN DEFAULT TRUE,
 );
+
+-- ============================================
+-- 14. Bodega (Inventory tracking table)
+-- ============================================
 
 CREATE TABLE bodega(
     id INT PRIMARY KEY AUTO_INCREMENT,

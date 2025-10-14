@@ -1,6 +1,10 @@
 package com.sipcommb.envases.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -9,6 +13,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
@@ -53,9 +58,8 @@ public class Combo {
     @JoinColumn(name = "jar_id", nullable = false)
     private Jar jar; // Array of jar IDs in the combo
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cap_id", nullable = false)
-    private Cap cap; // Array of cap IDs in the combo
+    @OneToMany(mappedBy = "combo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<ComboCap> caps = new ArrayList<>(); // Array of cap IDs in the combo
 
     public Combo() {
     }
@@ -68,8 +72,8 @@ public class Combo {
         return jar;
     }
 
-    public Cap getCap() {
-        return cap;
+    public List<ComboCap> getCaps() {
+        return caps;
     }
 
     public String getName() {
@@ -112,8 +116,8 @@ public class Combo {
         this.jar = jar;
     }
 
-    public void setCap(Cap cap) {
-        this.cap = cap;
+    public void setCaps(List<ComboCap> caps) {
+        this.caps = caps;
     }
 
     public void setName(String name) {
@@ -162,6 +166,12 @@ public class Combo {
 
     public void setUnitsInPaca(Integer unitsInPaca) {
         this.unitsInPaca = unitsInPaca;
+    }
+
+    public List<String> getCapNames() {
+        return caps.stream()
+                   .map(ComboCap::getCapName)
+                   .collect(java.util.stream.Collectors.toList());
     }
 
 }

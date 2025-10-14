@@ -1,12 +1,15 @@
 package com.sipcommb.envases.dto;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.sipcommb.envases.entity.Combo;
 
 public class ComboResponse {
 
     private String name;
     private String jarName;
-    private String capName;
+    private List<CapDTO> caps;
     private String diameter;
     private String color;
     private Double unitPrice;
@@ -21,12 +24,12 @@ public class ComboResponse {
     public ComboResponse() {
     }
 
-    public ComboResponse(String name, String jarName, String capName, String diameter, String color,
+    public ComboResponse(String name, String jarName, List<CapDTO> caps, String diameter, String color,
             Double unitPrice, Double docenaPrice, Double cienPrice, String description,
             Integer cap_quantity, Integer jar_quantity) {
         this.name = name;
         this.jarName = jarName;
-        this.capName = capName;
+        this.caps = caps;
         this.diameter = diameter;
         this.color = color;
         this.unitPrice = unitPrice;
@@ -40,7 +43,9 @@ public class ComboResponse {
     public ComboResponse(Combo combo) {
         this.name = combo.getName();
         this.jarName = combo.getJar().getName();
-        this.capName = combo.getCap().getName();
+        this.caps = combo.getCaps().stream()
+                .map(cap -> new CapDTO(cap.getCap()))
+                .collect(Collectors.toList());
         this.diameter = combo.getJar().getJarType().getDiameter();
         this.unitPrice = combo.getUnitPrice();
         this.docenaPrice = combo.getDocenaPrice();
@@ -70,12 +75,8 @@ public class ComboResponse {
         this.jarName = jarName;
     }
 
-    public String getCapName() {
-        return capName;
-    }
-
-    public void setCapName(String capName) {
-        this.capName = capName;
+    public List<CapDTO> getCaps() {
+        return caps;
     }
 
     public String getDiameter() {

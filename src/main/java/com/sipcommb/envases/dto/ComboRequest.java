@@ -1,5 +1,8 @@
 package com.sipcommb.envases.dto;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.sipcommb.envases.entity.Combo;
 
 public class ComboRequest {
@@ -8,9 +11,7 @@ public class ComboRequest {
 
     private String jarName;
 
-    private String capName;
-
-    private String diameter;
+    private List<CapRequest> capRequests;
 
     private Double unitPrice;
 
@@ -23,13 +24,13 @@ public class ComboRequest {
     private String description;
 
     public ComboRequest() {}
-    
-    public ComboRequest(String name, String jarName, String capName, String diameter, String
-            color, Integer quantity, Double unitPrice, Double docenaPrice, Double cienPrice, String description) {
+
+    public ComboRequest(String name, String jarName, List<CapRequest> capRequests, String color, 
+            Integer quantity, Double unitPrice, Double docenaPrice, Double cienPrice, String description) {
+
         this.name = name;
         this.jarName = jarName;
-        this.capName = capName;
-        this.diameter = diameter;
+        this.capRequests = capRequests;
         this.unitPrice = unitPrice;
         this.docenaPrice = docenaPrice;
         this.cienPrice = cienPrice;
@@ -38,9 +39,9 @@ public class ComboRequest {
 
     public ComboRequest(Combo combo){
         this.name = combo.getName();
-        this.jarName = combo.getJar().getName();
-        this.capName = combo.getCap().getName();
-        this.diameter = combo.getJar().getJarType().getDiameter();
+        this.capRequests = combo.getCaps().stream()
+                            .map(cc -> new CapRequest(cc.getCap().getName(), cc.getCap().getDescription(), cc.getCap().getJarType().getDiameter()))
+                            .collect(Collectors.toList());
         this.unitPrice = combo.getUnitPrice();
         this.docenaPrice = combo.getDocenaPrice();
         this.cienPrice = combo.getCienPrice();
@@ -63,20 +64,12 @@ public class ComboRequest {
         this.jarName = jarName;
     }
 
-    public String getCapName() {
-        return capName;
+    public List<CapRequest> getCapRequests() {
+        return capRequests;
     }
 
-    public void setCapName(String capName) {
-        this.capName = capName;
-    }
-
-    public String getDiameter() {
-        return diameter;
-    }
-
-    public void setDiameter(String diameter) {
-        this.diameter = diameter;
+    public void setCapRequests(List<CapRequest> capRequests) {
+        this.capRequests = capRequests;
     }
 
     public Double getUnitPrice() {

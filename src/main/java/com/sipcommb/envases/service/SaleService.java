@@ -277,10 +277,14 @@ public class SaleService {
         SaleItem saleItem = new SaleItem();
         saleItem.setJar(combo.getJar());
 
+        /*
+
+        TODO
+
         CapColor capColor = capColorRepository.findByCapAndColor(combo.getCap(), saleItemRequest.getCapColor())
                 .orElseThrow(() -> new IllegalArgumentException("El color no existe en el tipo de tapa: " + combo.getCap().getName()));
 
-        saleItem.setCapColor(capColor);
+        saleItem.setCapColor(capColor);       */
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(BigDecimal.valueOf(determinePrice(combo, saleItemRequest)));
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(BigDecimal.valueOf(saleItemRequest.getQuantity())));
@@ -616,9 +620,11 @@ public class SaleService {
         List<SaleItemDTO> saleItemDTOs = new ArrayList<>();
         for (SaleItem saleItem : saleItems) {
             if (saleItem.getItemType() == ItemType.COMBO) {
+                /* TODO
                 saleItemDTOs.add(new SaleItemDTO(comboRepository
                         .findByJarAndCap(saleItem.getJar().getId(), saleItem.getCapColor().getId()).orElse(null).getName(),
                         saleItem));
+                */
             } else if (saleItem.getItemType() == ItemType.JAR) {
                 saleItemDTOs.add(new SaleItemDTO(
                         jarRepository.findById(saleItem.getJar().getId()).orElse(null).getName(), saleItem));
