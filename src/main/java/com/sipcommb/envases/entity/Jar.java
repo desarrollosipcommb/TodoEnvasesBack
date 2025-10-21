@@ -2,6 +2,9 @@ package com.sipcommb.envases.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -10,6 +13,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
@@ -33,9 +37,6 @@ public class Jar {
     
     @Column(columnDefinition = "TEXT")
     private String description;
-    
-
-    private Integer quantity = 0;
     
     @DecimalMin("0.0")
     @Column(name = "unit_price", precision = 10, scale = 2)
@@ -65,15 +66,17 @@ public class Jar {
 
     @Column(name = "units_in_paca")
     private int unitsInPaca = 0;
+
+    @OneToMany(mappedBy = "jar", fetch = FetchType.LAZY)
+    private List<BodegaJar> bodegas = new ArrayList<>();
     
     // Constructors
     public Jar() {}
     
-    public Jar(String name, String description, JarType jarType, Integer quantity, BigDecimal unitPrice) {
+    public Jar(String name, String description, JarType jarType, BigDecimal unitPrice) {
         this.name = name;
         this.description = description;
         this.jarType = jarType;
-        this.quantity = quantity;
         this.unitPrice = unitPrice;
     }
     
@@ -97,9 +100,6 @@ public class Jar {
     
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    
-    public Integer getQuantity() { return quantity; }
-    public void setQuantity(Integer quantity) { this.quantity = quantity; }
     
     public BigDecimal getUnitPrice() { return unitPrice; }
     public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
@@ -128,5 +128,7 @@ public class Jar {
     public int getUnitsInPaca() { return unitsInPaca; }
     public void setUnitsInPaca(int unitsInPaca) { this.unitsInPaca = unitsInPaca; }
 
+    public List<BodegaJar> getBodegas() { return bodegas; }
+    public void setBodegas(List<BodegaJar> bodegas) { this.bodegas = bodegas; }
     
 }

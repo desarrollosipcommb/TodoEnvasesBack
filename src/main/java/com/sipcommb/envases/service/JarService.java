@@ -4,9 +4,12 @@ import com.sipcommb.envases.dto.CapDTO;
 import com.sipcommb.envases.dto.JarDTO;
 import com.sipcommb.envases.dto.JarRequestDTO;
 import com.sipcommb.envases.dto.PriceSearchRequest;
+import com.sipcommb.envases.entity.Bodega;
+import com.sipcommb.envases.entity.BodegaJar;
 import com.sipcommb.envases.entity.Cap;
 import com.sipcommb.envases.entity.Jar;
 import com.sipcommb.envases.entity.JarCapCompatibility;
+import com.sipcommb.envases.repository.BodegaJarRepository;
 import com.sipcommb.envases.repository.CapRepository;
 import com.sipcommb.envases.repository.JarCapCompatibilityRepository;
 import com.sipcommb.envases.repository.JarRepository;
@@ -53,6 +56,12 @@ public class JarService {
     @Autowired
     private PriceService priceService;
 
+    @Autowired
+    private BodegaService bodegaService;
+
+    @Autowired
+    private BodegaJarRepository bodegaJarRepository;
+
     public JarDTO addJar(JarRequestDTO jarRequest, String token) {
 
         if (jarRepository.getByName(jarRequest.getName().trim()).isPresent()) {
@@ -68,6 +77,8 @@ public class JarService {
             throw new IllegalArgumentException("El precio unitario no puede ser negativo o cero.");
         }
 
+        Bodega bodega = bodegaService.getBodegaByName(jarRequest.getBodegaName());
+
         Jar jar = new Jar();
 
         if (!jarRequest.getDiameter().isEmpty()) {
@@ -76,7 +87,7 @@ public class JarService {
 
         jar.setName(jarRequest.getName().trim().toLowerCase());
         jar.setDescription(jarRequest.getDescription().trim());
-        jar.setQuantity(jarRequest.getQuantity());
+ 
         jar.setUnitPrice(BigDecimal.valueOf(jarRequest.getUnitPrice()));
         jar.setDocenaPrice(BigDecimal.valueOf(jarRequest.getDocenaPrice()));
         jar.setCienPrice(BigDecimal.valueOf(jarRequest.getCienPrice()));
@@ -84,9 +95,12 @@ public class JarService {
         jar.setUnitsInPaca(jarRequest.getUnitsInPaca());
         jarRepository.save(jar);
 
+        bodegaJarRepository.save(new BodegaJar(bodega, jar, jarRequest.getQuantity()));
+
+        jarRepository.save(jar);
         manageCompatibility(jarRequest.getCompatibleCaps(), jarRequest.getUnCompatibleCaps(), jar);
 
-        inventoryService.newItem(jar.getId(), "jar", jar.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(token).intValue(), "Se añadio " + jar.getName() + " al inventario");
+        inventoryService.newItem(jar.getId(), "jar", jarRequest.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(token).intValue(), "Se añadio " + jar.getName() + " al inventario");
 
         return new JarDTO(jar);
     }
@@ -195,10 +209,12 @@ public class JarService {
             jar.setDescription(jarRequestDTO.getDescription().trim());
         }
 
-        if (jarRequestDTO.getQuantity() != null) {
+        Bodega bodega = bodegaService.getBodegaByName(jarRequestDTO.getBodegaName());
 
-            inventoryService.newItem(jar.getId(), "jar", jar.getQuantity().intValue(), "adjustment", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo " + jar.getName() + " su inventario ahora es: " + jar.getQuantity());
-            jar.setQuantity(jarRequestDTO.getQuantity());
+        Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository.findByBodegaAndJar(bodega, jar);
+
+        if(!bodegaJarOpt.isPresent()) {
+            throw new IllegalArgumentException("El frasco no está asociado a la bodega especificada.");
         }
 
         if (jarRequestDTO.getUnitPrice() != null) {
@@ -230,6 +246,20 @@ public class JarService {
                 throw new IllegalArgumentException("Las unidades en paca no pueden ser cero o negativas.");
             }
             jar.setUnitsInPaca(jarRequestDTO.getUnitsInPaca());
+        }
+
+
+        if(jarRequestDTO.getQuantity() != null && jarRequestDTO.getQuantity() != bodegaJarOpt.get().getQuantity()) {
+            bodegaJarOpt.get().setQuantity(jarRequestDTO.getQuantity());
+            bodegaJarRepository.save(bodegaJarOpt.get());
+            inventoryService.newItem(
+                jar.getId().longValue(),
+                "extracto",
+                jarRequestDTO.getQuantity().intValue(),
+                "adjustment",
+                jwtService.getUserIdFromToken(token).intValue(),
+                "Se actualizo el inventario del extracto " + jar.getName()+", su inventario ahora es: " + jarRequestDTO.getQuantity()
+            );
         }
 
         return new JarDTO(jarRepository.save(jar));
@@ -301,7 +331,7 @@ public class JarService {
         return new JarDTO(jarOptional.get());
     }
 
-    public JarDTO updateInventoryJar(String nameJar, Integer quantityJar, String token) {
+    public JarDTO updateInventoryJar(String nameJar, Integer quantityJar, String bodegaName, String token) {
         Optional<Jar> jarOptional = jarRepository.getByName(nameJar.trim().toLowerCase());
 
         if (!jarOptional.isPresent()) {
@@ -311,47 +341,35 @@ public class JarService {
         if (quantityJar == null) {
             throw new IllegalArgumentException("La cantidad no puede ser nula.");
         }
-        if (quantityJar < 0) {
-            jar.setQuantity(Math.max((jar.getQuantity() + quantityJar), 0));
 
-            inventoryService.newItem(jar.getId(), "jar", jar.getQuantity(),
+        Bodega bodega = bodegaService.getBodegaByName(bodegaName);
+
+        Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository.findByBodegaAndJar(bodega, jar);
+
+        if(!bodegaJarOpt.isPresent()) {
+            throw new IllegalArgumentException("El frasco no está asociado a la bodega especificada.");
+        }
+
+        BodegaJar bodegaJar = bodegaJarOpt.get();
+
+        if (quantityJar < 0) {
+            bodegaJar.setQuantity(Math.max(bodegaJar.getQuantity() + quantityJar, 0));
+            bodegaJarRepository.save(bodegaJar);
+            inventoryService.newItem(jar.getId(), "jar", bodegaJar.getQuantity(),
                     "damage", jwtService.getUserIdFromToken(token).intValue(),
-                    "Se reporto un daño en " + jar.getName() + " su inventario ahora es: " + jar.getQuantity());
+                    "Se reporto un daño en " + jar.getName() + " su inventario ahora es: " + bodegaJar.getQuantity());
             return new JarDTO(jarRepository.save(jar));
         }
-        jar.setQuantity(quantityJar);
-        inventoryService.newItem(jar.getId(), "jar", jar.getQuantity(),
+
+
+        bodegaJar.setQuantity(quantityJar);
+        inventoryService.newItem(jar.getId(), "jar", bodegaJar.getQuantity(),
                 "restock", jwtService.getUserIdFromToken(token).intValue(),
-                "Se actualizo " + jar.getName() + " su inventario ahora es: " + jar.getQuantity());
+                "Se actualizo " + jar.getName() + " su inventario ahora es: " + bodegaJar.getQuantity());
 
         return new JarDTO(jarRepository.save(jar));
     }
 
-
-    public JarDTO updateInventoryCap(String nameJar, Integer quantityJar, String token) {
-        Optional<Jar> jarOptional = jarRepository.getByName(nameJar.trim().toLowerCase());
-
-        if (!jarOptional.isPresent()) {
-            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
-        }
-        Jar jar = jarOptional.get();
-        if (quantityJar == null) {
-            throw new IllegalArgumentException("La cantidad no puede ser nula.");
-        }
-        if (quantityJar < 0) {
-            jar.setQuantity(jar.getQuantity() + quantityJar);
-            inventoryService.newItem(jar.getId(), "jar", jar.getQuantity(), "damage",
-                    jwtService.getUserIdFromToken(token).intValue(), "Se reporto un daño en " + jar.getName() +
-                            " su inventario ahora es: " + jar.getQuantity());
-            return new JarDTO(jarRepository.save(jar));
-        }
-        jar.setQuantity(quantityJar);
-        inventoryService.newItem(jar.getId(), "jar", jar.getQuantity(), "restock",
-                jwtService.getUserIdFromToken(token).intValue(), "Se actualizo " + jar.getName() +
-                        " su inventario ahora es: " + jar.getQuantity());
-
-        return new JarDTO(jarRepository.save(jar));
-    }
 
     public JarDTO changeInventory(JarRequestDTO jarRequestDTO, String token) {
         Optional<Jar> jarOptional = jarRepository.getByName(jarRequestDTO.getName().trim().toLowerCase());
@@ -365,14 +383,26 @@ public class JarService {
             throw new IllegalArgumentException("La cantidad no puede ser nula.");
         }
 
+        Bodega bodega = bodegaService.getBodegaByName(jarRequestDTO.getBodegaName());
+
+        Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository.findByBodegaAndJar(bodega, jar);
+
+        if(!bodegaJarOpt.isPresent()) {
+            throw new IllegalArgumentException("El frasco no está asociado a la bodega especificada.");
+        }
+
+        BodegaJar bodegaJar = bodegaJarOpt.get();
+
         if (jarRequestDTO.getQuantity() < 0) {
-            jar.setQuantity(jar.getQuantity() + jarRequestDTO.getQuantity());
-            inventoryService.newItem(jar.getId(), "jar", jar.getQuantity().intValue(), "damage", jwtService.getUserIdFromToken(token).intValue(), "Se reporto un daño en " + jar.getName() + " su inventario ahora es: " + jar.getQuantity());
+            bodegaJar.setQuantity(bodegaJar.getQuantity() + jarRequestDTO.getQuantity());
+            bodegaJarRepository.save(bodegaJar);
+            inventoryService.newItem(jar.getId(), "jar", bodegaJar.getQuantity().intValue(), "damage", jwtService.getUserIdFromToken(token).intValue(), "Se reporto un daño en " + jar.getName() + " su inventario ahora es: " + bodegaJar.getQuantity());
             return new JarDTO(jarRepository.save(jar));
         }
 
-        jar.setQuantity(jarRequestDTO.getQuantity() + jar.getQuantity());
-        inventoryService.newItem(jar.getId(), "jar", jar.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo " + jar.getName() + " su inventario ahora es: " + jar.getQuantity());
+        bodegaJar.setQuantity(jarRequestDTO.getQuantity() + bodegaJar.getQuantity());
+        bodegaJarRepository.save(bodegaJar);
+        inventoryService.newItem(jar.getId(), "jar", bodegaJar.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo " + jar.getName() + " su inventario ahora es: " + bodegaJar.getQuantity());
 
         return new JarDTO(jarRepository.save(jar));
     }
@@ -462,5 +492,24 @@ public class JarService {
                 .values());
     }
 
+    public JarDTO addBodega(JarRequestDTO jarRequestDTO) {
+        Optional<Jar> jarOptional = jarRepository.getByName(jarRequestDTO.getName().trim().toLowerCase());
+
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        Jar jar = jarOptional.get();
+
+        Bodega bodega = bodegaService.getBodegaByName(jarRequestDTO.getBodegaName());
+
+        if(bodegaJarRepository.findByBodegaAndJar(bodega, jar).isPresent()) {
+            throw new IllegalArgumentException("El frasco ya está asociado a la bodega especificada.");
+        }
+
+        BodegaJar bodegaJar = new BodegaJar(bodega, jar, jarRequestDTO.getQuantity() == null ? 0 : jarRequestDTO.getQuantity());
+        bodegaJarRepository.save(bodegaJar);
+
+        return new JarDTO(jarRepository.save(jar));
+    }
 
 }

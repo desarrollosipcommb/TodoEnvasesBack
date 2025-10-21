@@ -2,7 +2,6 @@ package com.sipcommb.envases.dto;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
 import com.sipcommb.envases.entity.Combo;
 
 public class ComboResponse {
@@ -18,7 +17,7 @@ public class ComboResponse {
     private Double pacaPrice; // Price for a pack of combos
     private Integer unitsInPaca; // Number of combos in a pack
     private String description;
-    private Integer jar_quantity; // Quantity of jars in the combo
+    private List<BodegaDTO> jar_quantity; // Quantity of jars in the combo
     private Boolean active;
 
     public ComboResponse() {
@@ -26,7 +25,7 @@ public class ComboResponse {
 
     public ComboResponse(String name, String jarName, List<CapDTO> caps, String diameter, String color,
             Double unitPrice, Double docenaPrice, Double cienPrice, String description,
-            Integer cap_quantity, Integer jar_quantity) {
+            Integer cap_quantity, List<BodegaDTO> jar_quantity) {
         this.name = name;
         this.jarName = jarName;
         this.caps = caps;
@@ -53,7 +52,7 @@ public class ComboResponse {
         this.pacaPrice = combo.getPacaPrice();
         this.unitsInPaca = combo.getUnitsInPaca();
         this.description = combo.getDescription();
-        this.jar_quantity = combo.getJar().getQuantity();
+        this.jar_quantity = combo.getJar().getBodegas().stream().map(BodegaDTO::new).collect(Collectors.toList());
         this.active = combo.getActive();
     }
 
@@ -127,11 +126,11 @@ public class ComboResponse {
         this.description = description;
     }
 
-    public Integer getJar_quantity() {
+    public List<BodegaDTO> getJar_quantity() {
         return jar_quantity;
     }
 
-    public void setJar_quantity(Integer jar_quantity) {
+    public void setJar_quantity(List<BodegaDTO> jar_quantity) {
         this.jar_quantity = jar_quantity;
     }
 

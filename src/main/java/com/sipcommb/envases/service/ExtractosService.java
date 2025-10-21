@@ -1,8 +1,12 @@
 package com.sipcommb.envases.service;
 
+import com.sipcommb.envases.dto.ExtractoRequest;
 import com.sipcommb.envases.dto.ExtractosDTO;
 import com.sipcommb.envases.dto.PriceSearchRequest;
+import com.sipcommb.envases.entity.Bodega;
+import com.sipcommb.envases.entity.BodegaExtractos;
 import com.sipcommb.envases.entity.Extractos;
+import com.sipcommb.envases.repository.BodegaExtractoRepository;
 import com.sipcommb.envases.repository.ExtractosRepository;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +28,16 @@ public class ExtractosService {
 
     @Autowired
     private PriceService priceService;
+
+    @Autowired
+    private BodegaService bodegaService;
+
+    @Autowired
+    private BodegaExtractoRepository bodegaExtractoRepository;
+
     
     // Method to add a new extracto
-    public ExtractosDTO addExtracto(ExtractosDTO extractosDTO, String token) {
+    public ExtractosDTO addExtracto(ExtractoRequest extractosDTO, String token) {
         
         if (extractosDTO.getName() == null || extractosDTO.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del extracto no puede estar vacío.");
@@ -46,6 +57,8 @@ public class ExtractosService {
             extractosDTO.setQuantity(0); // Default quantity if not provided
         }
 
+        Bodega bodega = bodegaService.getBodegaByName(extractosDTO.getBodegaName());
+
         Extractos newExtracto = new Extractos();
         newExtracto.setName(extractosDTO.getName().trim().toLowerCase());
         newExtracto.setPrice22ml(java.math.BigDecimal.valueOf(extractosDTO.getPrice22ml()));
@@ -56,14 +69,18 @@ public class ExtractosService {
         newExtracto.setPrice1000ml(java.math.BigDecimal.valueOf(extractosDTO.getPrice1000ml()));
         newExtracto.setDescription(extractosDTO.getDescription() != null ? extractosDTO.getDescription() : "Sin descripción");
         newExtracto.setActive(true);
-        newExtracto.setQuantity(extractosDTO.getQuantity());
 
-        
         extractosRepository.save(newExtracto);
-        String cleanToken = token.trim().replace("Bearer ", "");
-        inventoryService.newItem(newExtracto.getId() != null ? newExtracto.getId().longValue() : null, "extracto", newExtracto.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(cleanToken).intValue(), "Se añadió " + newExtracto.getName() + " al inventario");
 
-        return extractosDTO; // Replace with actual saved entity conversion
+        BodegaExtractos bodegaExtractos = bodegaExtractoRepository.save(new BodegaExtractos(bodega, newExtracto, extractosDTO.getQuantity()));
+        newExtracto.getBodegas().add(bodegaExtractos);
+        extractosRepository.save(newExtracto);
+        ExtractosDTO extractosReturn = new ExtractosDTO(newExtracto);
+        
+        String cleanToken = token.trim().replace("Bearer ", "");
+        inventoryService.newItem(newExtracto.getId() != null ? newExtracto.getId().longValue() : null, "extracto", extractosDTO.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(cleanToken).intValue(), "Se añadió " + newExtracto.getName() + " al inventario");
+
+        return extractosReturn;
     }
     
 
@@ -93,7 +110,7 @@ public class ExtractosService {
         return extractosRepository.findLikeNameActive(name.trim(), pageable).map(ExtractosDTO::new);
     }
 
-    public ExtractosDTO updateExtracto(ExtractosDTO extractosDTO, String token) {
+    public ExtractosDTO updateExtracto(ExtractoRequest extractosDTO, String token) {
         
         if (extractosDTO.getName() == null || extractosDTO.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del extracto no puede estar vacío.");
@@ -111,8 +128,12 @@ public class ExtractosService {
             extractoToUpdate.setDescription(extractosDTO.getDescription());
         }
 
-        if (extractosDTO.getQuantity() != null) {
-            extractoToUpdate.setQuantity(extractosDTO.getQuantity());
+        Bodega bodega = bodegaService.getBodegaByName(extractosDTO.getBodegaName());
+
+        Optional<BodegaExtractos> bodegaExtractosOpt = bodegaExtractoRepository.findByBodegaAndExtracto(bodega, extractoToUpdate);
+
+        if (!bodegaExtractosOpt.isPresent()) {
+            throw new IllegalArgumentException("El extracto no está asociado a la bodega especificada: " + extractosDTO.getBodegaName());
         }
 
         if (extractosDTO.getPrice22ml() != null && extractosDTO.getPrice22ml() > 0) {
@@ -141,23 +162,29 @@ public class ExtractosService {
             extractoToUpdate.setPrice1000ml(java.math.BigDecimal.valueOf(extractosDTO.getPrice1000ml()));
         }
 
-        if(extractosDTO.getQuantity() != null && extractosDTO.getQuantity() != extractoToUpdate.getQuantity()) {
-            extractoToUpdate.setQuantity(extractosDTO.getQuantity());
+
+        int originalQuantity = bodegaExtractosOpt.get().getQuantity();
+        
+
+        if(extractosDTO.getQuantity() != null && extractosDTO.getQuantity() != originalQuantity) {
+            bodegaExtractosOpt.get().setQuantity(extractosDTO.getQuantity());
+            bodegaExtractoRepository.save(bodegaExtractosOpt.get());
             inventoryService.newItem(
                 extractoToUpdate.getId().longValue(),
                 "extracto",
                 extractosDTO.getQuantity().intValue(),
                 "adjustment",
                 jwtService.getUserIdFromToken(token).intValue(),
-                "Se actualizo el inventario del extracto " + extractoToUpdate.getName()+", su inventario ahora es: " + extractoToUpdate.getQuantity()
+                "Se actualizo el inventario del extracto " + extractoToUpdate.getName()+", su inventario ahora es: " + extractosDTO.getQuantity()
             );
         }
+
 
         extractosRepository.save(extractoToUpdate);
         return new ExtractosDTO(extractoToUpdate);
     }
 
-    public ExtractosDTO changeInventory(ExtractosDTO extractosDTO, String token) {
+    public ExtractosDTO changeInventory(ExtractoRequest extractosDTO, String token) {
         
         if (extractosDTO.getName() == null || extractosDTO.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del extracto no puede estar vacío.");
@@ -169,7 +196,15 @@ public class ExtractosService {
             throw new IllegalArgumentException("No existe un extracto con el nombre: " + extractosDTO.getName());
         }
 
+        Bodega bodega = bodegaService.getBodegaByName(extractosDTO.getBodegaName());
 
+        Optional<BodegaExtractos> bodegaExtractosOpt = bodegaExtractoRepository.findByBodegaAndExtracto(bodega, existingExtracto.get());
+
+        if (!bodegaExtractosOpt.isPresent()) {
+            throw new IllegalArgumentException("El extracto no está asociado a la bodega especificada: " + extractosDTO.getBodegaName());
+        }
+
+        BodegaExtractos bodegaExtractos = bodegaExtractosOpt.get();
 
         if(extractosDTO.getQuantity() == null || extractosDTO.getQuantity() == 0) {
             throw new IllegalArgumentException("La cantidad a reabastecer debe ser especificada.");
@@ -178,28 +213,29 @@ public class ExtractosService {
          Extractos extractoToRestock = existingExtracto.get();
 
         if(extractosDTO.getQuantity() < 0) {
-            extractoToRestock.setQuantity(extractoToRestock.getQuantity() + extractosDTO.getQuantity());
+            bodegaExtractos.setQuantity(bodegaExtractos.getQuantity() + extractosDTO.getQuantity());
+            bodegaExtractoRepository.save(bodegaExtractos);
             inventoryService.newItem(
                 extractoToRestock.getId().longValue(),
                 "extracto",
                 extractosDTO.getQuantity().intValue(),
                 "damage",
                 jwtService.getUserIdFromToken(token).intValue(),
-                "Se ha reportado un daño en el extracto " + extractoToRestock.getName() + ", su inventario ahora es: " + extractoToRestock.getQuantity()
+                "Se ha reportado un daño en el extracto " + extractoToRestock.getName() + ", su inventario ahora es: " + bodegaExtractos.getQuantity()
             );
             return new ExtractosDTO(extractosRepository.save(extractoToRestock));
         }
 
        
-        extractoToRestock.setQuantity(extractoToRestock.getQuantity() + extractosDTO.getQuantity());
-
+        bodegaExtractos.setQuantity(bodegaExtractos.getQuantity() + extractosDTO.getQuantity());
+        bodegaExtractoRepository.save(bodegaExtractos);
         inventoryService.newItem(
             extractoToRestock.getId().longValue(),
             "extracto",
             extractosDTO.getQuantity().intValue(),
             "restock",
             jwtService.getUserIdFromToken(token).intValue(),
-            "hay " + extractosDTO.getQuantity() + " unidades nuevas de " + extractoToRestock.getName() + " en el inventario, en total hay " + extractoToRestock.getQuantity() + " unidades disponibles."
+            "hay " + extractosDTO.getQuantity() + " unidades nuevas de " + extractoToRestock.getName() + " en el inventario, en total hay " + bodegaExtractos.getQuantity() + " unidades disponibles."
         );
 
         return new ExtractosDTO(extractosRepository.save(extractoToRestock));
@@ -271,6 +307,28 @@ public class ExtractosService {
             default:
                 throw new IllegalArgumentException("Tipo de trato de precio no soportado: " + priceSearchRequest.getPriceDeal());
         }
+    }
+
+    public ExtractosDTO addBodegaToExtracto(ExtractoRequest extractoRequest) {
+        Optional<Extractos> existingExtracto = extractosRepository.findByName(extractoRequest.getName().trim().toLowerCase());
+        
+        if(!existingExtracto.isPresent()) {
+            throw new IllegalArgumentException("No existe un extracto con el nombre: " + extractoRequest.getName());
+        }
+
+        Bodega bodega = bodegaService.getBodegaByName(extractoRequest.getBodegaName());
+
+        Optional<BodegaExtractos> bodegaExtractosOpt = bodegaExtractoRepository.findByBodegaAndExtracto(bodega, existingExtracto.get());
+
+        if (bodegaExtractosOpt.isPresent()) {
+            throw new IllegalArgumentException("El extracto ya está asociado a la bodega especificada: " + extractoRequest.getBodegaName());
+        }
+
+        BodegaExtractos bodegaExtractos = new BodegaExtractos(bodega, existingExtracto.get(), extractoRequest.getQuantity() != null ? extractoRequest.getQuantity() : 0);
+        bodegaExtractoRepository.save(bodegaExtractos);
+        existingExtracto.get().getBodegas().add(bodegaExtractos);
+
+        return new ExtractosDTO(extractosRepository.save(existingExtracto.get()));
     }
 
 }

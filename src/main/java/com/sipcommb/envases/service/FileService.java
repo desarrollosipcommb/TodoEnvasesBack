@@ -3,12 +3,11 @@ package com.sipcommb.envases.service;
 
 import com.sipcommb.envases.dto.CapColorRequest;
 import com.sipcommb.envases.dto.CapRequest;
-import com.sipcommb.envases.dto.ExtractosDTO;
+import com.sipcommb.envases.dto.ExtractoRequest;
 import com.sipcommb.envases.dto.FileResponse;
 import com.sipcommb.envases.dto.JarRequestDTO;
 import com.sipcommb.envases.dto.JarTypeDTO;
-import com.sipcommb.envases.dto.QuimicosDTO;
-
+import com.sipcommb.envases.dto.QuimicoRequestDTO;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +39,9 @@ public class FileService {
     @Autowired
     ExtractosService extractosService;
 
+    @Autowired
+    BodegaService bodegaService;
+
 
     public List<FileResponse> readFile(MultipartFile file, String token) {
         token = token.replace("Bearer ", "");
@@ -49,10 +51,11 @@ public class FileService {
 
             Workbook workbook = WorkbookFactory.create(inputStream);
             fileResponses.addAll(readJarType(workbook.getSheetAt(0)));
-            fileResponses.addAll(readCap(workbook.getSheetAt(1), token));
-            fileResponses.addAll(readJar(workbook.getSheetAt(2), token));
-            fileResponses.addAll(readQuimicos(workbook.getSheetAt(3), token));
-            fileResponses.addAll(readExtractos(workbook.getSheetAt(4), token));
+            fileResponses.addAll(readBodegas(workbook.getSheetAt(1)));
+            fileResponses.addAll(readCap(workbook.getSheetAt(2), token));
+            fileResponses.addAll(readJar(workbook.getSheetAt(3), token));
+            fileResponses.addAll(readQuimicos(workbook.getSheetAt(4), token));
+            fileResponses.addAll(readExtractos(workbook.getSheetAt(5), token));
             return fileResponses;
         } catch (Exception e) {
             throw new RuntimeException("Error al leer el archivo: " + e.getMessage());
@@ -65,9 +68,10 @@ public class FileService {
         try {
             InputStream inputStream = file.getInputStream();
             Workbook workbook = WorkbookFactory.create(inputStream);
-            fileResponses.addAll(CapInventory(workbook.getSheetAt(1), token));
-            fileResponses.addAll(JarInventory(workbook.getSheetAt(2), token));
-            fileResponses.addAll(QuimicoInventory(workbook.getSheetAt(3), token));
+            fileResponses.addAll(CapInventory(workbook.getSheetAt(2), token));
+            fileResponses.addAll(JarInventory(workbook.getSheetAt(3), token));
+            fileResponses.addAll(QuimicoInventory(workbook.getSheetAt(4), token));
+            fileResponses.addAll(extractosInventory(workbook.getSheetAt(5), token));
             return fileResponses;
         } catch (Exception e) {
             throw new RuntimeException("Error al leer el archivo: " + e.getMessage());
@@ -105,6 +109,31 @@ public class FileService {
         return fileResponses;
     }
 
+    public List<FileResponse> readBodegas(Sheet sheet) {
+        boolean firstRow = true;
+        List<FileResponse> fileResponses = new ArrayList<>();
+        for (Row row : sheet) {
+            if (firstRow) {
+                firstRow = false;
+                continue;
+            }
+
+            Cell nameCell = row.getCell(0);
+
+            try {
+
+                bodegaService.addBodega(nameCell.getStringCellValue());
+
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Bodega agregada correctamente"));
+
+            } catch (Exception e) {
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+            }
+
+        }
+        return fileResponses;
+    }
+
     public List<FileResponse> readCap(Sheet sheet, String token) {
         boolean firstRow = true;
         List<FileResponse> fileResponses = new ArrayList<>();
@@ -124,6 +153,7 @@ public class FileService {
             Cell unitsInPacaCell = row.getCell(7);
             Cell colorCell = row.getCell(8);
             Cell quantityCell = row.getCell(9);
+            Cell bodegaCell = row.getCell(10);
 
             try {
 
@@ -139,6 +169,14 @@ public class FileService {
                     throw new RuntimeException("el nombre de la tapa es obligatorio");
                 }
 
+                if(bodegaCell != null && !bodegaCell.getStringCellValue().isEmpty()){
+                    if(!bodegaService.bodegaExists( bodegaCell.getStringCellValue())){
+                        throw new RuntimeException("la bodega "+ bodegaCell.getStringCellValue()+" no existe");
+                    }
+                }
+
+                bodegaService.getBodegaByName(bodegaCell.getStringCellValue());
+
                 if(capService.existsByNameAndDiameter(nameCell.getStringCellValue(), getCellAsString(diameterCell))) {
                    capService.addCapColor(new CapColorRequest(
                            nameCell.getStringCellValue(),
@@ -149,7 +187,8 @@ public class FileService {
                            getCellAsNullableDouble(docenaCell),
                            getCellAsNullableDouble(cienCell),
                            getCellAsNullableDouble(pacaCell),
-                           getCellAsNullableDouble(unitsInPacaCell).intValue()
+                           getCellAsNullableDouble(unitsInPacaCell).intValue(),
+                           bodegaCell.getStringCellValue()
                    ), token);
                 }else{
                     capService.addCaps(new CapRequest(
@@ -166,7 +205,8 @@ public class FileService {
                             getCellAsNullableDouble(docenaCell),
                             getCellAsNullableDouble(cienCell),
                             getCellAsNullableDouble(pacaCell),
-                            getCellAsNullableDouble(unitsInPacaCell).intValue()
+                            getCellAsNullableDouble(unitsInPacaCell).intValue(),
+                            bodegaCell.getStringCellValue()
                     ), token);
                 }
 
@@ -190,7 +230,6 @@ public class FileService {
                 continue;
             }
 
-
             Cell nameCell = row.getCell(0);
             Cell descriptionCell = row.getCell(1);
             Cell diameterCell = row.getCell(2);
@@ -200,6 +239,7 @@ public class FileService {
             Cell pacaCell = row.getCell(6);
             Cell unitsInPacaCell = row.getCell(7);
             Cell quantityCell = row.getCell(8);
+            Cell bodegaCell = row.getCell(9);
 
 
             try {
@@ -216,18 +256,21 @@ public class FileService {
                     throw new RuntimeException("el nombre del frasco es obligatorio");
                 }
 
+                bodegaService.getBodegaByName(bodegaCell.getStringCellValue());
+
                 jarService.addJar(new JarRequestDTO(
                         nameCell.getStringCellValue(),
                         getCellAsNullableString(descriptionCell),
                         getCellAsString(diameterCell),
+                        getCellAsString(bodegaCell),
                         (int) quantityCell.getNumericCellValue(),
                         getCellAsNullableDouble(unidadCell),
                         getCellAsNullableDouble(docenaCell),
                         getCellAsNullableDouble(cienCell),
                         getCellAsNullableDouble(pacaCell),
                         getCellAsNullableDouble(unitsInPacaCell).intValue(),
-                        getCaps(row.getCell(10)),
-                        getCaps(row.getCell(9))), token);
+                        getCaps(row.getCell(11)),
+                        getCaps(row.getCell(10))), token);
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Tipo de tapa agregado correctamente"));
 
@@ -251,6 +294,7 @@ public class FileService {
             Cell descriptionCell = row.getCell(1);
             Cell unidadCell = row.getCell(2);
             Cell quantityCell = row.getCell(3);
+            Cell bodegaCell = row.getCell(4);
 
             try {
 
@@ -266,11 +310,15 @@ public class FileService {
                     throw new RuntimeException("el nombre del químico es obligatorio");
                 }
 
-                quimicosService.addQuimico(new QuimicosDTO(
+                bodegaService.getBodegaByName(bodegaCell.getStringCellValue());
+
+                quimicosService.addQuimico(new QuimicoRequestDTO(
                         nameCell.getStringCellValue(),
                         getCellAsNullableString(descriptionCell),
+                        bodegaCell.getStringCellValue(),
                         (int) quantityCell.getNumericCellValue(),
                         unidadCell.getNumericCellValue()
+                        
                 ), token);
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Químico agregado correctamente"));
             } catch (Exception e) {
@@ -298,6 +346,7 @@ public class FileService {
             Cell ml60cell = row.getCell(6);
             Cell ml22cell = row.getCell(7);
             Cell quantityCell = row.getCell(8);
+            Cell bodegaCell = row.getCell(9);
 
             try {
 
@@ -313,9 +362,10 @@ public class FileService {
                     throw new RuntimeException("el nombre del extracto es obligatorio");
                 }
 
-                extractosService.addExtracto(new ExtractosDTO(
+                extractosService.addExtracto(new ExtractoRequest(
                         nameCell.getStringCellValue(),
                         getCellAsNullableString(descriptionCell),
+                        bodegaCell.getStringCellValue(),
                         Integer.valueOf((int) quantityCell.getNumericCellValue()),
                         getCellAsNullableDouble(ml22cell),
                         getCellAsNullableDouble(ml60cell),
@@ -344,6 +394,7 @@ public class FileService {
             }
             Cell nameCell = row.getCell(0);
             Cell quantityCell = row.getCell(8);
+            Cell bodegaCell = row.getCell(9);
             try {
                 if (quantityCell == null || (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
                     throw new RuntimeException("la cantidad del frasco y nombre es obligatorio");
@@ -351,7 +402,9 @@ public class FileService {
 
                 jarService.updateInventoryJar(
                         nameCell.getStringCellValue(),
-                        (int) quantityCell.getNumericCellValue(), token);
+                        (int) quantityCell.getNumericCellValue(),
+                        bodegaCell.getStringCellValue(),
+                        token);
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Inventario del envase actualizado"));
             } catch (Exception e) {
@@ -380,6 +433,7 @@ public class FileService {
             Cell unitsInPacaCell = row.getCell(7);
             Cell colorCell = row.getCell(8);
             Cell quantityCell = row.getCell(9);
+            Cell bodegaCell = row.getCell(10);
             try {
                 if (quantityCell == null || (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
                     throw new RuntimeException("la cantidad de la tapa y nombre es obligatorio");
@@ -397,7 +451,8 @@ public class FileService {
                            getCellAsNullableDouble(docenaCell),
                            getCellAsNullableDouble(cienCell),
                            getCellAsNullableDouble(pacaCell),
-                           getCellAsNullableDouble(unitsInPacaCell).intValue()
+                           getCellAsNullableDouble(unitsInPacaCell).intValue(),
+                           bodegaCell.getStringCellValue()
                    ), token);
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue()+" "+colorCell.getStringCellValue(), "Inventario de la tapa ha sido actualizado"));
@@ -419,6 +474,7 @@ public class FileService {
             }
             Cell nameCell = row.getCell(0);
             Cell quantityCell = row.getCell(3);
+            Cell bodegaCell = row.getCell(4);
             try {
                 if (quantityCell == null || (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
                     throw new RuntimeException("la cantidad del químico y/o nombre es obligatorio");
@@ -426,12 +482,70 @@ public class FileService {
 
                 quimicosService.updateInventoryQuimico(
                         nameCell.getStringCellValue(),
-                        (int) quantityCell.getNumericCellValue(), token);
+                        (int) quantityCell.getNumericCellValue(), 
+                        bodegaCell.getStringCellValue(),
+                        token);
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Inventario del químico actualizado"));
             } catch (Exception e) {
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
             }
+        }
+        return fileResponses;
+    }
+
+    private List<FileResponse> extractosInventory(Sheet sheet, String token) {
+        boolean firstRow = true;
+
+        List<FileResponse> fileResponses = new ArrayList<>();
+        for (Row row : sheet) {
+            if (firstRow) {
+                firstRow = false;
+                continue;
+            }
+
+           Cell nameCell = row.getCell(0);
+            Cell descriptionCell = row.getCell(1);
+            Cell ml1000cell = row.getCell(2);
+            Cell ml500cell = row.getCell(3);
+            Cell ml250cell = row.getCell(4);
+            Cell ml125cell = row.getCell(5);
+            Cell ml60cell = row.getCell(6);
+            Cell ml22cell = row.getCell(7);
+            Cell quantityCell = row.getCell(8);
+            Cell bodegaCell = row.getCell(9);
+
+            try {
+
+                if (quantityCell == null && (nameCell == null || nameCell.getStringCellValue().isEmpty())) {
+                    throw new RuntimeException("la cantidad del extracto y nombre es obligatorio");
+                }
+
+                if (quantityCell == null) {
+                    throw new RuntimeException("la cantidad del extracto es obligatoria");
+                }
+
+                if (nameCell == null || nameCell.getStringCellValue().isEmpty()) {
+                    throw new RuntimeException("el nombre del extracto es obligatorio");
+                }
+
+                extractosService.changeInventory(new ExtractoRequest(
+                        nameCell.getStringCellValue(),
+                        getCellAsNullableString(descriptionCell),
+                        bodegaCell.getStringCellValue(),
+                        Integer.valueOf((int) quantityCell.getNumericCellValue()),
+                        getCellAsNullableDouble(ml22cell),
+                        getCellAsNullableDouble(ml60cell),
+                        getCellAsNullableDouble(ml125cell),
+                        getCellAsNullableDouble(ml250cell),
+                        getCellAsNullableDouble(ml500cell),
+                        getCellAsNullableDouble(ml1000cell)
+                ), token);
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Extracto agregado correctamente"));
+            } catch (Exception e) {
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+            }
+
         }
         return fileResponses;
     }

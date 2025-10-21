@@ -397,4 +397,22 @@ public class JarController {
         }
     }
 
+    @PutMapping("/add/bodega")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Bodega agregada exitosamente al frasco", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al agregar la bodega al frasco")
+    })
+    public ResponseEntity<?> addBodegaToJar(@RequestBody JarRequestDTO jarRequest, @RequestHeader("Authorization") String authHeader) {
+        if(!permissionService.hasPermission(authHeader, "update")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar frascos"));
+        }
+        try{
+            JarDTO response = jarService.addBodega(jarRequest);
+            return ResponseEntity.ok().body(response);
+        }catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+        }
+    }
+
 }

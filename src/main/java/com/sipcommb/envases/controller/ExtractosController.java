@@ -2,6 +2,7 @@ package com.sipcommb.envases.controller;
 
 
 import com.sipcommb.envases.dto.CustomApiResponse;
+import com.sipcommb.envases.dto.ExtractoRequest;
 import com.sipcommb.envases.dto.ExtractosDTO;
 import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.service.ExtractosService;
@@ -39,7 +40,7 @@ public class ExtractosController {
         @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
         @ApiResponse(responseCode = "403", description = "Permiso denegado")
     })
-    public ResponseEntity<?> addExtracto(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractosDTO extractosDTO) {
+    public ResponseEntity<?> addExtracto(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractoRequest extractosDTO) {
         if(!permissionService.hasPermission(authHeader, "create")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear extractos"));
         }
@@ -167,7 +168,7 @@ public class ExtractosController {
         @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
         @ApiResponse(responseCode = "403", description = "Permiso denegado")
     })
-    public ResponseEntity<?> updateExtracto(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractosDTO extractosDTO) {
+    public ResponseEntity<?> updateExtracto(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractoRequest extractosDTO) {
         if(!permissionService.hasPermission(authHeader, "update")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar extractos"));
         }
@@ -224,7 +225,7 @@ public class ExtractosController {
         @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
         @ApiResponse(responseCode = "403", description = "Permiso denegado")
     })
-    public ResponseEntity<?> restockExtracto(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractosDTO extractosDTO) {
+    public ResponseEntity<?> restockExtracto(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractoRequest extractosDTO) {
         if(!permissionService.hasPermission(authHeader, "update")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para reabastecer extractos"));
         }
@@ -260,4 +261,23 @@ public class ExtractosController {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error al obtener los extractos por rango de precio: " + e.getMessage()));
         }
     }
+
+    @PutMapping("/add/bodega")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Extracto asociado a bodega exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado")
+    })
+    public ResponseEntity<?> addExtractoToBodega(@RequestHeader("Authorization") String authHeader, @RequestBody ExtractoRequest extractosDTO) {
+        if(!permissionService.hasPermission(authHeader, "update")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para asociar extractos a bodegas"));
+        }
+        try {
+            ExtractosDTO response = extractosService.addBodegaToExtracto(extractosDTO);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al asociar el extracto a la bodega: " + e.getMessage()));
+        }
+    }
+    
 }
