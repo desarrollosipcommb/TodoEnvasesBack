@@ -58,8 +58,9 @@ public class Combo {
     @JoinColumn(name = "jar_id", nullable = false)
     private Jar jar; // Array of jar IDs in the combo
 
-    @OneToMany(mappedBy = "combo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ComboCap> caps = new ArrayList<>(); // Array of cap IDs in the combo
+    @OneToMany(mappedBy = "combo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ComboCap> caps = new ArrayList<>();
+
 
     public Combo() {
     }
@@ -117,8 +118,16 @@ public class Combo {
     }
 
     public void setCaps(List<ComboCap> caps) {
-        this.caps = caps;
+        this.caps.clear();
+        if (caps != null) {
+            for (ComboCap cap : caps) {
+                cap.setCombo(this); // 👈 Asigna el combo ANTES de persistir
+                this.caps.add(cap);
+            }
+        }
     }
+
+
 
     public void setName(String name) {
         this.name = name;

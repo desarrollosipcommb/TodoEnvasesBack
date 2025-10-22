@@ -4,6 +4,7 @@ import javax.validation.constraints.NotBlank;
 
 public class CapRequest {
 
+    private Long id;
 
     @NotBlank(message = "El nombre es obligatorio")
     private String name;
@@ -17,12 +18,21 @@ public class CapRequest {
     }
 
     public CapRequest(String name, String description, String diameter) {
+
         this.name = name;
         this.description = description;
         this.diameter = diameter;
     }
 
     // Getters and Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getDiameter() {
         return diameter;
@@ -35,6 +45,7 @@ public class CapRequest {
     public String getName() {
         return name;
     }
+
     public void setName(String name) {
         this.name = name;
     }

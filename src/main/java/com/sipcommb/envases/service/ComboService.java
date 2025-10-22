@@ -15,11 +15,17 @@ import com.sipcommb.envases.repository.ComboCapRepository;
 import com.sipcommb.envases.repository.ComboRepository;
 import com.sipcommb.envases.repository.JarCapCompatibilityRepository;
 import com.sipcommb.envases.repository.JarRepository;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.transaction.Transactional;
+import java.util.Set;
+
+
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,60 +55,58 @@ public class ComboService {
 
     public ComboResponse addCombo(ComboRequest comboRequest) {
 
-        if(comboRepository.findByName(comboRequest.getName().trim().toLowerCase()).isPresent()) {
+        if (comboRepository.findByName(comboRequest.getName().trim().toLowerCase()).isPresent()) {
             throw new IllegalArgumentException("Ya existe un combo con el nombre: " + comboRequest.getName() + ".");
         }
 
         Combo combo = new Combo();
         combo.setName(comboRequest.getName().trim());
-       
+
         Optional<Jar> jarOpt = jarRepository.getByName(comboRequest.getJarName().trim());
-        if(!jarOpt.isPresent()) {
+        if (!jarOpt.isPresent()) {
             throw new IllegalArgumentException("No existe un tarro con el nombre: " + comboRequest.getJarName() + ".");
-        }else {
+        } else {
             combo.setJar(jarOpt.get());
         }
 
         List<Cap> caps = new ArrayList<>();
-        for(CapRequest capRequest : comboRequest.getCapRequests()) {
+        for (CapRequest capRequest : comboRequest.getCapRequests()) {
             Optional<Cap> capOpt = capRepository.findByNameAndDiameter(capRequest.getName().trim(), capRequest.getDiameter());
-            if(!capOpt.isPresent()) {
+            if (!capOpt.isPresent()) {
                 throw new IllegalArgumentException("No existe una tapa con el nombre: " + capRequest.getName() + ".");
-            }else {
+            } else {
                 caps.add(capOpt.get());
             }
         }
 
-        if(comboRequest.getUnitPrice() == null || comboRequest.getUnitPrice() <= 0) {
+        if (comboRequest.getUnitPrice() == null || comboRequest.getUnitPrice() <= 0) {
             throw new IllegalArgumentException("El precio unitario no puede ser 0 o negativo.");
         }
 
         combo.setUnitPrice(comboRequest.getUnitPrice());
 
-        if(comboRequest.getDocenaPrice() < 0) {
+        if (comboRequest.getDocenaPrice() < 0) {
             throw new IllegalArgumentException("El precio por docena no puede ser negativo.");
         }
 
         combo.setDocenaPrice(comboRequest.getDocenaPrice() != null ? comboRequest.getDocenaPrice() : 0.00);
 
-        if(comboRequest.getCienPrice() < 0) {
+        if (comboRequest.getCienPrice() < 0) {
             throw new IllegalArgumentException("El precio por cien no puede ser negativo.");
         }
 
-        if(comboRequest.getPacaPrice() < 0) {
+        if (comboRequest.getPacaPrice() < 0) {
             throw new IllegalArgumentException("El precio por paca no puede ser negativo.");
         }
 
-        for(Cap cap : caps) {
+        for (Cap cap : caps) {
             Optional<JarCapCompatibility> compatibilityOpt = jarCapCompatibilityRepository.findByJarAndCap(jarOpt.get().getId(), cap.getId());
-            if(!compatibilityOpt.isPresent()) {
+            if (!compatibilityOpt.isPresent()) {
                 throw new IllegalArgumentException("La tapa: " + cap.getName() + " seleccionada no es compatible con el tarro: " + jarOpt.get().getName() + ".");
-            }else if(!compatibilityOpt.get().isCompatible()) {
+            } else if (!compatibilityOpt.get().isCompatible()) {
                 throw new IllegalArgumentException("La tapa: " + cap.getName() + " no es compatible con el tarro: " + jarOpt.get().getName() + ".");
             }
         }
-
-
 
 
         combo.setCienPrice(comboRequest.getCienPrice() != null ? comboRequest.getCienPrice() : 0.00);
@@ -114,14 +118,14 @@ public class ComboService {
 
         comboRepository.save(combo);
 
-        for(Cap cap : caps) {
+        for (Cap cap : caps) {
             Optional<ComboCap> comboCapOpt = comboCapRepository.findByComboIdAndCapId(combo.getId(), cap.getId());
-            if(!comboCapOpt.isPresent()) {
+            if (!comboCapOpt.isPresent()) {
                 ComboCap comboCap = new ComboCap(combo, cap);
                 comboCapRepository.save(comboCap);
             }
         }
-        
+
         return new ComboResponse(combo);
     }
 
@@ -144,8 +148,8 @@ public class ComboService {
     }
 
     public Page<ComboResponse> getLikeNameActivo(String comboName, Pageable pageable) {
-      Page<Combo> combos = comboRepository.findByNameContainingActive(comboName, pageable);
-      return combos.map(ComboResponse::new);
+        Page<Combo> combos = comboRepository.findByNameContainingActive(comboName, pageable);
+        return combos.map(ComboResponse::new);
     }
 
     public ComboResponse updateCombo(ComboRequest comboRequest) {
@@ -156,38 +160,60 @@ public class ComboService {
 
         Combo existingCombo = existingComboOpt.get();
 
-        if(comboRequest.getUnitPrice() != null && comboRequest.getUnitPrice() > 0) {
+        if (comboRequest.getUnitPrice() != null && comboRequest.getUnitPrice() > 0) {
             existingCombo.setUnitPrice(comboRequest.getUnitPrice());
-        }else if(comboRequest.getUnitPrice() <=0) {
+        } else if (comboRequest.getUnitPrice() <= 0) {
             throw new IllegalArgumentException("El precio unitario no puede ser 0 o negativo.");
         }
 
-        if(comboRequest.getDocenaPrice() != null && comboRequest.getDocenaPrice() > 0) {
+        if (comboRequest.getDocenaPrice() != null && comboRequest.getDocenaPrice() > 0) {
             existingCombo.setDocenaPrice(comboRequest.getDocenaPrice());
-        }else if(comboRequest.getDocenaPrice() < 0) {
+        } else if (comboRequest.getDocenaPrice() < 0) {
             throw new IllegalArgumentException("El precio por docena no puede ser 0 o negativo.");
         }
 
-        if(comboRequest.getCienPrice() != null && comboRequest.getCienPrice() > 0) {
+        if (comboRequest.getCienPrice() != null && comboRequest.getCienPrice() > 0) {
             existingCombo.setCienPrice(comboRequest.getCienPrice());
-        } else if(comboRequest.getCienPrice() < 0) {
+        } else if (comboRequest.getCienPrice() < 0) {
             throw new IllegalArgumentException("El precio por cien no puede ser 0 o negativo.");
         }
 
-        if(comboRequest.getPacaPrice() != null && comboRequest.getPacaPrice() > 0) {
+        if (comboRequest.getPacaPrice() != null && comboRequest.getPacaPrice() > 0) {
             existingCombo.setPacaPrice(comboRequest.getPacaPrice());
-        } else if(comboRequest.getPacaPrice() < 0) {
+        } else if (comboRequest.getPacaPrice() < 0) {
             throw new IllegalArgumentException("El precio por paca no puede ser 0 o negativo.");
         }
 
-        if(comboRequest.getDescription()!=null){
+        Set<Long> idsFront = comboRequest.getCapRequests()
+                .stream().map(CapRequest::getId).collect(Collectors.toSet());
+
+        Set<Long> idsBD = existingCombo.getCaps()
+                .stream().map(cc -> cc.getCap().getId()).collect(Collectors.toSet());
+
+        existingCombo.getCaps().removeIf(cc -> !idsFront.contains(cc.getCap().getId()));
+
+        idsFront.stream()
+                .filter(id -> !idsBD.contains(id)) // solo los nuevos
+                .forEach(newCapId -> {
+                    Cap capEntity = capRepository.findById(newCapId)
+                            .orElseThrow(() -> new RuntimeException("Cap no encontrada con ID: " + newCapId));
+
+                    ComboCap nuevaRelacion = new ComboCap();
+                    nuevaRelacion.setCombo(existingCombo);
+                    nuevaRelacion.setCap(capEntity);
+                    existingCombo.getCaps().add(nuevaRelacion);
+                });
+        comboRepository.save(existingCombo);
+
+
+        if (comboRequest.getDescription() != null) {
             existingCombo.setDescription(comboRequest.getDescription().trim());
         }
 
         existingCombo.setUpdatedAt(LocalDateTime.now());
 
         comboRepository.save(existingCombo);
-        
+
         return new ComboResponse(existingCombo);
     }
 
@@ -202,7 +228,7 @@ public class ComboService {
         existingCombo.setUpdatedAt(LocalDateTime.now());
 
         comboRepository.save(existingCombo);
-        
+
         return new ComboResponse(existingCombo);
     }
 
@@ -217,7 +243,7 @@ public class ComboService {
         existingCombo.setUpdatedAt(LocalDateTime.now());
 
         comboRepository.save(existingCombo);
-        
+
         return new ComboResponse(existingCombo);
     }
 
@@ -234,13 +260,13 @@ public class ComboService {
     public Page<ComboResponse> getCombosByPriceRange(PriceSearchRequest priceSearchRequest, Pageable pageable) {
         boolean exactSearch = priceService.verifyPriceSearchRequest(priceSearchRequest);
 
-        if(priceSearchRequest.getPriceDeal() == PriceDeals.PACA){
+        if (priceSearchRequest.getPriceDeal() == PriceDeals.PACA) {
             throw new IllegalArgumentException("El trato de precio 'PACA' no está implementado para combos.");
         }
 
         switch (priceSearchRequest.getPriceDeal()) {
             case CIEN:
-                
+
                 if (exactSearch) {
                     return comboRepository.findByCienPrice(priceSearchRequest.getExactPrice().doubleValue(), pageable).map(ComboResponse::new);
                 } else {
