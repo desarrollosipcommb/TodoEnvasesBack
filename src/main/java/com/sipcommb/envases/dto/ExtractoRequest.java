@@ -1,17 +1,14 @@
 package com.sipcommb.envases.dto;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import com.sipcommb.envases.entity.Extractos;
-
-public class ExtractosDTO {
-
+public class ExtractoRequest {
+    
     private String name; 
 
     private String description;
 
-    private List<BodegaDTO> quantity; // Stock quantity
+    private String bodegaName;
+    
+    private Integer quantity; // Stock quantity
 
     private Double price22ml; // Price for 22ml
 
@@ -27,25 +24,13 @@ public class ExtractosDTO {
 
     private boolean active; // Indicates if the extracto is active
 
-    public ExtractosDTO() {
+    public ExtractoRequest() {
     }
 
-    public ExtractosDTO(Extractos extracto){
-        this.name = extracto.getName();
-        this.description = extracto.getDescription();
-        this.quantity = extracto.getBodegas().stream().map(BodegaDTO::new).collect(Collectors.toList());
-        this.price22ml = extracto.getPrice22ml().doubleValue();
-        this.price60ml = extracto.getPrice60ml().doubleValue();
-        this.price125ml = extracto.getPrice125ml().doubleValue();
-        this.price250ml = extracto.getPrice250ml().doubleValue();
-        this.price500ml = extracto.getPrice500ml().doubleValue();
-        this.price1000ml = extracto.getPrice1000ml().doubleValue();
-        this.active = extracto.isActive();
-    }
-
-    public ExtractosDTO(String name, String description, List<BodegaDTO> quantity, Double price22ml, Double price60ml, Double price125ml, Double price250ml, Double price500ml, Double price1000ml) {
+    public ExtractoRequest(String name, String description, String bodegaName, Integer quantity, Double price22ml, Double price60ml, Double price125ml, Double price250ml, Double price500ml, Double price1000ml) {
         this.name = name;
         this.description = description;
+        this.bodegaName = bodegaName;
         this.quantity = quantity;
         this.price22ml = price22ml;
         this.price60ml = price60ml;
@@ -53,7 +38,7 @@ public class ExtractosDTO {
         this.price250ml = price250ml;
         this.price500ml = price500ml;
         this.price1000ml = price1000ml;
-        this.active = true; // Por defecto, el extracto está activo al crearse
+
     }
 
     public String getName() {
@@ -72,11 +57,19 @@ public class ExtractosDTO {
         this.description = description;
     }
 
-    public List<BodegaDTO> getQuantity() {
+    public String getBodegaName() {
+        return bodegaName;
+    }
+
+    public void setBodegaName(String bodegaName) {
+        this.bodegaName = bodegaName;
+    }
+
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(List<BodegaDTO> quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
@@ -135,7 +128,4 @@ public class ExtractosDTO {
     public void setActive(boolean active) {
         this.active = active;
     }
-
-    
-    
 }

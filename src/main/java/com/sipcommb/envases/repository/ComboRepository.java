@@ -61,4 +61,8 @@ public interface ComboRepository extends JpaRepository<Combo, Long> {
                                        @Param("maxPrice") Double maxPrice, Pageable pageable);
 
 
+                                       /* 
+    @Query("SELECT c FROM Combo c WHERE c.jar.id = :jarId AND c.cap.id = :capId")
+    Optional<Combo> findByJarAndCap(@Param("jarId") Long jarId, @Param("capId") Long capId);
+    */
 }

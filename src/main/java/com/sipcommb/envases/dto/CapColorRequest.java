@@ -11,11 +11,13 @@ public class CapColorRequest {
     private Double cienPrice; // Price for a hundred jars
     private Double pacaPrice;
     private Integer unitsInPaca;
+    private String bodegaName;
 
     public CapColorRequest() {
     }
 
-    public CapColorRequest(String name, String diameter, String color, Integer quantity, Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, Integer unitsInPaca) {
+    public CapColorRequest(String name, String diameter, String color, 
+            Integer quantity, Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, Integer unitsInPaca, String bodegaName) {
         this.name = name;
         this.diameter = diameter;
         this.color = color;
@@ -25,6 +27,7 @@ public class CapColorRequest {
         this.cienPrice = cienPrice;
         this.pacaPrice = pacaPrice;
         this.unitsInPaca = unitsInPaca;
+        this.bodegaName = bodegaName;
     }
 
     public String getName() {
@@ -99,7 +102,12 @@ public class CapColorRequest {
         this.unitsInPaca = unitsInPaca;
     }
 
-    
+    public String getBodegaName() {
+        return bodegaName;
+    }
 
-    
+    public void setBodegaName(String bodegaName) {
+        this.bodegaName = bodegaName;
+    }
+
 }

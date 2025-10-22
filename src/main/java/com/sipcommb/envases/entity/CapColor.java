@@ -1,5 +1,8 @@
 package com.sipcommb.envases.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -7,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
@@ -23,9 +27,10 @@ public class CapColor {
     @JoinColumn(name = "cap_id", nullable = false)
     private Cap cap;
 
-    private boolean is_active = true;
+    @OneToMany(mappedBy = "capColor", fetch = FetchType.LAZY)
+    private List<BodegaCapColor> bodegas = new ArrayList<>();
 
-    private Integer quantity = 0; // Stock quantity
+    private boolean is_active = true;
 
     private Double unit_price = 0.00;
 
@@ -37,19 +42,21 @@ public class CapColor {
 
     private Integer units_in_paca = 0; // Number of caps in a pack
 
+
+
     CapColor() {
     }
 
-    public CapColor(String color, Cap cap, Integer quantity, Double unit_price, Double docena_price,
-            Double cien_price, Double paca_price, Integer units_in_paca) {
+    public CapColor(String color, Cap cap, Double unit_price, Double docena_price,
+            Double cien_price, Double paca_price, Integer units_in_paca, List<BodegaCapColor> bodegas) {
         this.color = color;
         this.cap = cap;
-        this.quantity = quantity;
         this.unit_price = unit_price;
         this.docena_price = docena_price;
         this.cien_price = cien_price;
         this.paca_price = paca_price;
         this.units_in_paca = units_in_paca;
+        this.bodegas = bodegas;
     }
 
     public Long getId() { return id; }
@@ -63,9 +70,6 @@ public class CapColor {
 
     public boolean getIs_active() { return is_active; }
     public void setIs_active(boolean is_active) { this.is_active = is_active; }
-
-    public Integer getQuantity() { return quantity; }
-    public void setQuantity(Integer quantity) { this.quantity = quantity; }
 
     public Double getUnit_price() { return unit_price; }
     public void setUnit_price(Double unit_price) { this.unit_price = unit_price; }
@@ -81,5 +85,8 @@ public class CapColor {
 
     public Integer getUnits_in_paca() { return units_in_paca; }
     public void setUnits_in_paca(Integer units_in_paca) { this.units_in_paca = units_in_paca; }
+
+    public List<BodegaCapColor> getBodegas() { return bodegas; }
+    public void setBodegas(List<BodegaCapColor> bodegas) { this.bodegas = bodegas; }
 
 }

@@ -1,11 +1,15 @@
 package com.sipcommb.envases.entity;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
@@ -20,8 +24,6 @@ public class Extractos {
     
     private String description;
     
-    private Integer quantity; // Stock quantity
-    
     private BigDecimal price22ml; // Price for 22ml
     
     private BigDecimal price60ml; // Price for 60ml
@@ -33,6 +35,9 @@ public class Extractos {
     private BigDecimal price500ml; // Price for 500ml
     
     private BigDecimal price1000ml; // Price for 1000ml
+
+    @OneToMany(mappedBy = "extracto")
+    private List<BodegaExtractos> bodegas = new ArrayList<>(); // Stock quantity per warehouse
 
     @Column(name = "is_active")
     private boolean active = true; // Default value for active status
@@ -64,14 +69,6 @@ public class Extractos {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
     }
 
     public BigDecimal getPrice22ml() {
@@ -129,18 +126,13 @@ public class Extractos {
     public void setActive(boolean active) {
         this.active = active;
     }
+
+    public List<BodegaExtractos> getBodegas() {
+        return bodegas;
+    }
+
+    public void setBodegas(List<BodegaExtractos> bodegas) {
+        this.bodegas = bodegas;
+    }
     
 }
-
-/*CREATE TABLE extractos (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    quantity INT NOT NULL DEFAULT 0, -- Stock quantity
-    price22ml DECIMAL(10, 2) DEFAULT 0.00 NOT NULL,
-    price60ml DECIMAL(10, 2) DEFAULT 0.00,
-    price125ml DECIMAL(10, 2) DEFAULT 0.00,
-    price250ml DECIMAL(10, 2) DEFAULT 0.00,
-    price500ml DECIMAL(10, 2) DEFAULT 0.00,
-    price1000ml DECIMAL(10, 2) DEFAULT 0.00,
-); */

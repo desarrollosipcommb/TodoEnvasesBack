@@ -1,5 +1,8 @@
 package com.sipcommb.envases.dto;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.sipcommb.envases.entity.CapColor;
 
 public class CapColorDTO {
@@ -7,7 +10,7 @@ public class CapColorDTO {
     private String name;
     private String color;
     private boolean isActive;
-    private Integer quantity;
+    private List<BodegaDTO> quantity;
     private Double unitPrice;
     private Double docenaPrice;
     private Double cienPrice;
@@ -17,7 +20,7 @@ public class CapColorDTO {
     public CapColorDTO() {
     }
 
-    public CapColorDTO(String name, String color, boolean isActive, Integer quantity, Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, Integer unitsInPaca) {
+    public CapColorDTO(String name, String color, boolean isActive, List<BodegaDTO> quantity, Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, Integer unitsInPaca) {
         this.name = name;
         this.color = color;
         this.isActive = isActive;
@@ -32,8 +35,7 @@ public class CapColorDTO {
     public CapColorDTO(CapColor capColor) {
         this.name = capColor.getCap().getName();
         this.color = capColor.getColor();
-        this.isActive = capColor.getIs_active();
-        this.quantity = capColor.getQuantity();
+        this.quantity = capColor.getBodegas().stream().map(BodegaDTO::new).collect(Collectors.toList());
         this.unitPrice = capColor.getUnit_price();
         this.docenaPrice = capColor.getDocena_price();
         this.cienPrice = capColor.getCien_price();
@@ -58,11 +60,11 @@ public class CapColorDTO {
         isActive = active;
     }
 
-    public Integer getQuantity() {
+    public List<BodegaDTO> getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setQuantity(List<BodegaDTO> quantity) {
         this.quantity = quantity;
     }
 

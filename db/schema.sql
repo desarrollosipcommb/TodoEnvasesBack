@@ -265,25 +265,69 @@ CREATE TABLE clientes (
 );
 
 -- ============================================
--- 14. Bodega (Inventory tracking table)
+-- 14. Bodega 
 -- ============================================
 
 CREATE TABLE bodega(
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
-    sale_id INT NOT NULL,
-    jar_id INT NULL, -- If selling jar or combo
-    cap_id INT NULL, -- If selling cap or combo
-    quimico_id INT NULL, -- If selling quimico
-    extracto_id INT NULL, -- If selling extracto
-    quantity INT NULL,
-    FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
-    FOREIGN KEY (jar_id) REFERENCES jars(id) ON DELETE RESTRICT,
-    FOREIGN KEY (cap_id) REFERENCES caps(id) ON DELETE RESTRICT,
-    FOREIGN KEY (quimico_id) REFERENCES quimicos(id) ON DELETE RESTRICT,
-    FOREIGN KEY (extracto_id) REFERENCES extractos(id) ON DELETE RESTRICT
 );
 
+-- ============================================
+-- 15. bodega cap color
+-- ============================================
+
+CREATE TABLE bodega_cap_color (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    bodega_id INT NOT NULL,
+    cap_color_id INT NOT NULL,
+    quantity INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (bodega_id) REFERENCES bodega(id) ON DELETE CASCADE,
+    FOREIGN KEY (cap_color_id) REFERENCES cap_colors(id) ON DELETE CASCADE,
+    UNIQUE (bodega_id, cap_color_id)
+);
+
+-- ============================================
+-- 16. bodega jar
+-- ============================================
+
+CREATE TABLE bodega_jar (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    bodega_id INT NOT NULL,
+    jar_id INT NOT NULL,
+    quantity INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (bodega_id) REFERENCES bodega(id) ON DELETE CASCADE,
+    FOREIGN KEY (jar_id) REFERENCES jars(id) ON DELETE CASCADE,
+    UNIQUE (bodega_id, jar_id)
+);
+
+-- ============================================
+-- 17. bodega quimico
+-- ============================================
+
+CREATE TABLE bodega_quimicos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    bodega_id INT NOT NULL,
+    quimico_id INT NOT NULL,
+    quantity INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (bodega_id) REFERENCES bodega(id) ON DELETE CASCADE,
+    FOREIGN KEY (quimico_id) REFERENCES quimicos(id) ON DELETE CASCADE,
+    UNIQUE (bodega_id, quimico_id)
+);
+
+-- ============================================
+-- 18. bodega extracto
+-- ============================================
+
+CREATE TABLE bodega_extractos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    bodega_id INT NOT NULL,
+    extracto_id INT NOT NULL,
+    quantity INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (bodega_id) REFERENCES bodega(id) ON DELETE CASCADE,
+    FOREIGN KEY (extracto_id) REFERENCES extractos(id) ON DELETE CASCADE,
+    UNIQUE (bodega_id, extracto_id)
+);
 
 -- ============================================
 -- INSERT DEFAULT DATA

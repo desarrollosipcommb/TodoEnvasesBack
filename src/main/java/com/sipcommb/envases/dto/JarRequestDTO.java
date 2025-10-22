@@ -11,6 +11,8 @@ public class JarRequestDTO {
 
     private String diameter;
 
+    private String bodegaName;
+
     private Integer quantity;
 
     private Double unitPrice;
@@ -31,10 +33,11 @@ public class JarRequestDTO {
         // Default constructor
     }
 
-    public JarRequestDTO(String name, String description, String diameter, Integer quantity, Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, Integer unitsInPaca, String[] compatibleCaps, String[] unCompatibleCaps) {
+    public JarRequestDTO(String name, String description, String diameter, String bodegaName, Integer quantity, Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, Integer unitsInPaca, String[] compatibleCaps, String[] unCompatibleCaps) {
         this.name = name;
         this.description = description;
         this.diameter = diameter;
+        this.bodegaName = bodegaName;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.docenaPrice = docenaPrice;
@@ -133,5 +136,12 @@ public class JarRequestDTO {
         this.unCompatibleCaps = unCompatibleCaps;
     }
 
+    public String getBodegaName() {
+        return bodegaName;
+    }
+
+    public void setBodegaName(String bodegaName) {
+        this.bodegaName = bodegaName;
+    }
 
 }

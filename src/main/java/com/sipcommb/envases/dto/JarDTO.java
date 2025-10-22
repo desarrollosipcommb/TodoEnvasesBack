@@ -1,5 +1,8 @@
 package com.sipcommb.envases.dto;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.sipcommb.envases.entity.Jar;
 
 public class JarDTO {
@@ -8,7 +11,7 @@ public class JarDTO {
 
     private String diameter;
 
-    private String quantity;
+    private List<BodegaDTO> quantity;
 
     private String unitPrice;
 
@@ -32,7 +35,7 @@ public class JarDTO {
     public JarDTO(Jar jar) {
         this.name = jar.getName();
         this.diameter = jar.getJarType() != null ? jar.getJarType().getDiameter() : "";
-        this.quantity = String.valueOf(jar.getQuantity());
+        this.quantity = jar.getBodegas().stream().map(BodegaDTO::new).collect(Collectors.toList());
         this.unitPrice = String.valueOf(jar.getUnitPrice());
         this.docenaPrice = String.valueOf(jar.getDocenaPrice());
         this.cienPrice = String.valueOf(jar.getCienPrice());
@@ -58,11 +61,11 @@ public class JarDTO {
         this.diameter = diameter;
     }
 
-    public String getQuantity() {
+    public List<BodegaDTO> getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(String quantity) {
+    public void setQuantity(List<BodegaDTO> quantity) {
         this.quantity = quantity;
     }
 

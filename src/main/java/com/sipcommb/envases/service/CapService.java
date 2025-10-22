@@ -235,6 +235,18 @@ public class CapService {
         return new CapDTO(cap);
     }
 
+    public CapDTO addCapToBodega(CapColorRequest capColorRequest) {
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capColorRequest.getName(), capColorRequest.getDiameter());
+        if (!capOptional.isPresent()) {
+            throw new RuntimeException("No existe una tapa con estas especificaciones.");
+        }
+
+        Cap cap = capOptional.get();
+        capColorService.addCapToBodega(cap, capColorRequest);
+        capRepository.save(cap);
+        return new CapDTO(cap);
+    }
+
 
     public CapDTO changeInventory(CapColorRequest capColorRequest, String token) {
         Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capColorRequest.getName(), capColorRequest.getDiameter());
