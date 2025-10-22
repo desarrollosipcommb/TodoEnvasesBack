@@ -201,7 +201,7 @@ public class JarService {
         Optional<Jar> jarOptional = jarRepository.getByName(jarRequestDTO.getName().trim().toLowerCase());
 
         if (!jarOptional.isPresent()) {
-            throw new IllegalArgumentException("No existe un frasco con ese id.");
+            throw new IllegalArgumentException("No existe un frasco con el nombre: "+jarRequestDTO.getName());
         }
         Jar jar = jarOptional.get();
 

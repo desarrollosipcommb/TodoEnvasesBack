@@ -118,10 +118,9 @@ public class CapColorService {
                 .orElseThrow(
                         () -> new IllegalArgumentException("El color no existe en el tipo de tapa: " + cap.getName()));
 
-        Bodega bodega = bodegaService.getBodegaByName(request.getBodegaName());
-
+        Bodega bodega = bodegaService.getBodegaByName(request.getBodegaName().trim().toLowerCase());
         Optional<BodegaCapColor> bodegaCapColorOpt = bodegaCapColorRepository.findByBodegaIdAndCapColorId(bodega.getId(), capColor.getId());
-
+        
         if (request.getUnitPrice() != null) {
             if (request.getUnitPrice() <= 0) {
                 throw new IllegalArgumentException("El precio unitario no puede ser negativo o cero.");
@@ -157,11 +156,16 @@ public class CapColorService {
             capColor.setUnits_in_paca(request.getUnitsInPaca());
         }
 
-        BodegaCapColor bodegaCapColor = null;
+        if(!bodegaCapColorOpt.isPresent()){
+            throw new IllegalArgumentException("El color " + request.getColor() + " no existe en la bodega " + request.getBodegaName() + ".");
+        }
+
+        BodegaCapColor bodegaCapColor = bodegaCapColorOpt.get();
 
         if(!bodegaCapColorOpt.isPresent()){
             bodegaCapColor = new BodegaCapColor(bodega, capColor, request.getQuantity() != null ? request.getQuantity() : 0);
             bodegaCapColorRepository.save(bodegaCapColor);
+            capColor.getBodegas().add(bodegaCapColor);
         } else {
             bodegaCapColor = bodegaCapColorOpt.get();
             if(request.getQuantity() != null){
@@ -172,7 +176,7 @@ public class CapColorService {
                 bodegaCapColorRepository.save(bodegaCapColor);
             }
         }
-        capColor.getBodegas().add(bodegaCapColor);
+        
         capColorRepository.save(capColor);
 
         return new CapColorDTO(capColor);
@@ -185,7 +189,6 @@ public class CapColorService {
                         () -> new IllegalArgumentException("El color no existe en el tipo de tapa: " + cap.getName()));
 
         Bodega bodega = bodegaService.getBodegaByName(request.getBodegaName());
-
         Optional<BodegaCapColor> bodegaCapColorOpt = bodegaCapColorRepository.findByBodegaIdAndCapColorId(bodega.getId(), capColor.getId());
 
         if(bodegaCapColorOpt.isPresent()){
@@ -223,7 +226,7 @@ public class CapColorService {
         BodegaCapColor bodegaCapColor = bodegaCapColorOpt.get();
 
         if (request.getQuantity() < 0) {
-            bodegaCapColor.setQuantity(Math.max((bodegaCapColor.getQuantity() + request.getQuantity()), 0));
+            bodegaCapColor.setQuantity((request.getQuantity()));
             inventoryService.newItem(cap.getId(), "cap", request.getQuantity(),
                     "damage", jwtService.getUserIdFromToken(token).intValue(),
                     "Se a reportado un daño en el inventario de la tapa: " + cap.getName() + " " + capColor.getColor() +
@@ -231,7 +234,7 @@ public class CapColorService {
             return new CapColorDTO(capColorRepository.save(capColor));
         }
 
-        bodegaCapColor.setQuantity(bodegaCapColor.getQuantity() + request.getQuantity());
+        bodegaCapColor.setQuantity(request.getQuantity());
         inventoryService.newItem(
                 cap.getId(),
                 "cap",
@@ -252,22 +255,18 @@ public class CapColorService {
             throw new IllegalArgumentException("La cantidad debe ser especificada.");
         }
 
-        if (request.getQuantity() < 0) {
-            throw new IllegalArgumentException("La cantidad no puede ser negativa.");
-        }
-
         Bodega bodega = bodegaService.getBodegaByName(request.getBodegaName());
 
         Optional<BodegaCapColor> bodegaCapColorOpt = bodegaCapColorRepository.findByBodegaIdAndCapColorId(bodega.getId(), capColor.getId());
 
         if(!bodegaCapColorOpt.isPresent()){
-            throw new IllegalArgumentException("El color " + request.getColor() + " no existe en la bodega " + request.getBodegaName() + ".");
+            throw new IllegalArgumentException("El color " + request.getColor() + " no existe en la bodega: " + request.getBodegaName() + ".");
         }
 
         BodegaCapColor bodegaCapColor = bodegaCapColorOpt.get();
 
         if (request.getQuantity() <= 0) {
-            bodegaCapColor.setQuantity(Math.max((bodegaCapColor.getQuantity() + request.getQuantity()), 0));
+            bodegaCapColor.setQuantity((bodegaCapColor.getQuantity() + request.getQuantity()));
             inventoryService.newItem(cap.getId(), "cap", request.getQuantity(),
                     "damage", jwtService.getUserIdFromToken(token).intValue(),
                     "Se a reportado un daño en el inventario de la tapa: " + cap.getName() + " " + capColor.getColor() +

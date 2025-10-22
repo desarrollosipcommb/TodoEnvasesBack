@@ -175,7 +175,7 @@ public class CapColorController {
         }
     }
 
-    @PutMapping("/update/quantity")
+    @PutMapping("/change_inventory")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Cantidad de color de tapa actualizada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapColorDTO.class))),
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
