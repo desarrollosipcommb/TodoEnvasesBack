@@ -16,4 +16,11 @@ public class PermissionService {
         Set<String> permissions = jwtService.getAuthoritiesFromToken(token);
         return permissions.contains(permission);
     }
+
+    public String getToken(String authHeader) {
+        if (authHeader == null || authHeader.isEmpty()) {
+            return null;
+        }
+        return authHeader.replace("Bearer ", "").trim();
+    }
 }

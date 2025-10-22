@@ -162,7 +162,6 @@ public class ExtractosService {
             extractoToUpdate.setPrice1000ml(java.math.BigDecimal.valueOf(extractosDTO.getPrice1000ml()));
         }
 
-
         int originalQuantity = bodegaExtractosOpt.get().getQuantity();
         
 
@@ -178,7 +177,6 @@ public class ExtractosService {
                 "Se actualizo el inventario del extracto " + extractoToUpdate.getName()+", su inventario ahora es: " + extractosDTO.getQuantity()
             );
         }
-
 
         extractosRepository.save(extractoToUpdate);
         return new ExtractosDTO(extractoToUpdate);

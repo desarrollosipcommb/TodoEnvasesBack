@@ -142,7 +142,7 @@ public class QuimicosController {
 
         try {
             QuimicosDTO updatedQuimico = quimicosService.updateQuimico(quimicoDTO,
-                    authHeader.trim().replace("Bearer ", ""));
+                    permissionService.getToken(authHeader));
             return ResponseEntity.ok(updatedQuimico);
         } catch (Exception e) {
             return ResponseEntity.badRequest()

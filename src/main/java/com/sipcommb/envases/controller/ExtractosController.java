@@ -173,7 +173,7 @@ public class ExtractosController {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar extractos"));
         }
         try {
-            ExtractosDTO updatedExtracto = extractosService.updateExtracto(extractosDTO, authHeader);
+            ExtractosDTO updatedExtracto = extractosService.updateExtracto(extractosDTO, permissionService.getToken(authHeader));
             return ResponseEntity.ok(updatedExtracto);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error al actualizar el extracto: " + e.getMessage()));
@@ -230,7 +230,7 @@ public class ExtractosController {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para reabastecer extractos"));
         }
         try {
-            ExtractosDTO restockedExtracto = extractosService.changeInventory(extractosDTO, authHeader.trim().replace("Bearer ", ""));
+            ExtractosDTO restockedExtracto = extractosService.changeInventory(extractosDTO, permissionService.getToken(authHeader));
             return ResponseEntity.ok(restockedExtracto);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error al reabastecer el extracto: " + e.getMessage()));
