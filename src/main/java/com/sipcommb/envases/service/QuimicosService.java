@@ -1,5 +1,6 @@
 package com.sipcommb.envases.service;
 
+import com.sipcommb.envases.dto.BodegaMovementDTO;
 import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.dto.QuimicoRequestDTO;
 import com.sipcommb.envases.dto.QuimicosDTO;
@@ -315,6 +316,44 @@ public class QuimicosService {
 
         return new QuimicosDTO(quimico);
 
+    }
+
+    public QuimicosDTO bodegaTranfer(BodegaMovementDTO request) {
+        Quimicos quimico = quimicosRepository.findByName(request.getItemName().trim().toLowerCase())
+                .orElseThrow(() -> new IllegalArgumentException("No existe un quimico con el nombre: " + request.getItemName()));
+        
+        if(request.getBodegaFrom().equalsIgnoreCase(request.getBodegaTo())){
+            throw new IllegalArgumentException("La bodega de origen y destino no pueden ser la misma.");
+        }
+
+        Bodega bodegaFrom = bodegaService.getBodegaByName(request.getBodegaFrom());
+        Bodega bodegaTo = bodegaService.getBodegaByName(request.getBodegaTo());
+
+        BodegaQuimicos bqFrom = bodegaQuimicoRepository.findByBodegaAndQuimico(bodegaFrom, quimico)
+                .orElseThrow(() -> new IllegalArgumentException("El quimico " + quimico.getName() + " no está asociado a la bodega de origen " + request.getBodegaFrom()));
+
+        BodegaQuimicos bqTo = bodegaQuimicoRepository.findByBodegaAndQuimico(bodegaTo, quimico)
+                .orElseThrow(() -> new IllegalArgumentException("El quimico " + quimico.getName() + " no está asociado a la bodega de destino " + request.getBodegaTo()));
+
+        if(bodegaFrom == null){
+            throw new IllegalArgumentException("El quimico " + quimico.getName() + " no está asociado a la bodega de origen " + request.getBodegaFrom());
+        }
+
+        if(bodegaTo == null){
+            throw new IllegalArgumentException("El quimico " + quimico.getName() + " no está asociado a la bodega de destino " + request.getBodegaTo());
+        }
+
+        if(bqFrom.getQuantity() < request.getQuantity()){
+            throw new IllegalArgumentException("No hay suficiente inventario en la bodega de origen. Inventario actual: " + bqFrom.getQuantity());
+        }
+
+        bqFrom.setQuantity(bqFrom.getQuantity() - request.getQuantity());
+        bqTo.setQuantity(bqTo.getQuantity() + request.getQuantity());
+
+        bodegaQuimicoRepository.save(bqFrom);
+        bodegaQuimicoRepository.save(bqTo);
+
+        return new QuimicosDTO(quimico);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.sipcommb.envases.controller;
 
 
+import com.sipcommb.envases.dto.BodegaMovementDTO;
 import com.sipcommb.envases.dto.CapDTO;
 import com.sipcommb.envases.dto.CustomApiResponse;
 import com.sipcommb.envases.dto.JarDTO;
@@ -409,6 +410,24 @@ public class JarController {
         }
         try{
             JarDTO response = jarService.addBodega(jarRequest);
+            return ResponseEntity.ok().body(response);
+        }catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/bodega_transfer")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Transferencia entre bodegas realizada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = JarDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al realizar la transferencia entre bodegas")
+    })
+    public ResponseEntity<?> bodegaTransfer(@RequestBody BodegaMovementDTO request, @RequestHeader("Authorization") String authHeader) {
+        if(!permissionService.hasPermission(authHeader, "update")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar frascos"));
+        }
+        try{
+            JarDTO response = jarService.bodegaTransfer(request);
             return ResponseEntity.ok().body(response);
         }catch (Exception e) {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));

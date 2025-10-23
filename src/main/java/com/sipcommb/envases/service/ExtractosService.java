@@ -1,5 +1,6 @@
 package com.sipcommb.envases.service;
 
+import com.sipcommb.envases.dto.BodegaMovementDTO;
 import com.sipcommb.envases.dto.ExtractoRequest;
 import com.sipcommb.envases.dto.ExtractosDTO;
 import com.sipcommb.envases.dto.PriceSearchRequest;
@@ -327,6 +328,46 @@ public class ExtractosService {
         existingExtracto.get().getBodegas().add(bodegaExtractos);
 
         return new ExtractosDTO(extractosRepository.save(existingExtracto.get()));
+    }
+
+    public ExtractosDTO bodegaTransfer(BodegaMovementDTO request) {
+        Extractos extracto = extractosRepository.findByName(request.getItemName().trim().toLowerCase())
+                 .orElseThrow(
+                         () -> new IllegalArgumentException("El extracto no existe: " + request.getItemName()));
+ 
+        if(request.getBodegaFrom().equalsIgnoreCase(request.getBodegaTo())){
+            throw new IllegalArgumentException("Las bodegas de origen y destino no pueden ser las mismas.");
+        }
+
+        Bodega fromBodega = bodegaService.getBodegaByName(request.getBodegaFrom());
+        Bodega toBodega = bodegaService.getBodegaByName(request.getBodegaTo());
+
+        BodegaExtractos fromBodegaExtracto = bodegaExtractoRepository.findByBodegaAndExtracto(fromBodega, extracto)
+                 .orElseThrow(
+                         () -> new IllegalArgumentException("El extracto no existe en la bodega de origen: " + request.getBodegaFrom()));
+                         
+        BodegaExtractos toBodegaExtracto = bodegaExtractoRepository.findByBodegaAndExtracto(toBodega, extracto)
+                 .orElseThrow(
+                         () -> new IllegalArgumentException("El extracto no existe en la bodega de destino: " + request.getBodegaTo()));
+
+        if(fromBodegaExtracto == null){
+            throw new IllegalArgumentException("El extracto no existe en la bodega de origen: " + request.getBodegaFrom());
+        }
+ 
+        if(toBodegaExtracto == null){
+            throw new IllegalArgumentException("El extracto no existe en la bodega de destino: " + request.getBodegaTo());
+        }
+ 
+        if(fromBodegaExtracto.getQuantity() < request.getQuantity()){
+            throw new IllegalArgumentException("No hay suficiente inventario en la bodega de origen para transferir la cantidad solicitada.");
+        }
+ 
+        fromBodegaExtracto.setQuantity(fromBodegaExtracto.getQuantity() - request.getQuantity());
+        toBodegaExtracto.setQuantity(toBodegaExtracto.getQuantity() + request.getQuantity());
+        bodegaExtractoRepository.save(fromBodegaExtracto);
+        bodegaExtractoRepository.save(toBodegaExtracto);
+        extractosRepository.save(extracto);
+        return new ExtractosDTO(extracto);
     }
 
 }

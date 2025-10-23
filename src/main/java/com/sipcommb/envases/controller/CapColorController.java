@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.sipcommb.envases.service.CapColorService;
+import com.sipcommb.envases.dto.BodegaMovementDTO;
 import com.sipcommb.envases.dto.CapColorDTO;
 import com.sipcommb.envases.dto.CapColorRequest;
 import com.sipcommb.envases.dto.CapDTO;
@@ -192,6 +193,28 @@ public class CapColorController {
             authHeader = authHeader.replace("Bearer ", "").trim();
             CapDTO capDTO = capService.changeInventory(capColorRequest, authHeader);
             return ResponseEntity.ok(capDTO);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/bodega_transfer")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Transferencia de inventario entre bodegas realizada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapColorDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al realizar la transferencia de inventario")
+    })
+    public ResponseEntity<?> transferInventoryBetweenBodegas(
+        @RequestBody BodegaMovementDTO bodegaMovementDTO,
+        @RequestHeader("Authorization") String authHeader
+    ) {
+        if(!permissionService.hasPermission(authHeader, "update")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para transferir inventario entre bodegas"));
+        }
+        try {
+            authHeader = authHeader.replace("Bearer ", "").trim();
+            CapColorDTO capColorDTO = capColorService.BodegaTransfer(bodegaMovementDTO);
+            return ResponseEntity.ok(capColorDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }

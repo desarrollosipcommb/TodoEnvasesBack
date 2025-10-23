@@ -37,7 +37,7 @@ public interface CapColorRepository extends JpaRepository<CapColor, Long> {
     @Query("SELECT cc FROM CapColor cc WHERE cc.cap = :cap AND cc.color LIKE %:color%")
     Page<CapColor> findAllByCapAndColor(@Param("cap") Cap cap, @Param("color") String color, Pageable pageable);
 
-    @Query("SELECT cc FROM CapColor cc WHERE cc.cap.isActive = 1 AND cc.cap = :cap AND cc.color = :color")
+    @Query("SELECT cc FROM CapColor cc WHERE cc.cap.isActive = 1 AND cc.cap = :cap AND cc.color LIKE :color")
     Page<CapColor> findAllByCapActiveAndColor(@Param("cap") Cap cap, @Param("color") String color, Pageable pageable);
 
     @Query("SELECT cc FROM CapColor cc WHERE cc.cap.isActive = 1 AND cc.cien_price = :exactPrice")

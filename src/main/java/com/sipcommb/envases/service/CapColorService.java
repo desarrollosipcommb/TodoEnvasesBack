@@ -10,6 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.sipcommb.envases.dto.BodegaMovementDTO;
 import com.sipcommb.envases.dto.CapColorDTO;
 import com.sipcommb.envases.dto.CapColorRequest;
 import com.sipcommb.envases.dto.PriceSearchRequest;
@@ -362,6 +364,44 @@ public class CapColorService {
                         () -> new IllegalArgumentException("El color no existe o ya está activo en el tipo de tapa: " + request.getName()));
         capColor.setIs_active(true);
         return new CapColorDTO(capColorRepository.save(capColor));
+    }
+
+    public CapColorDTO BodegaTransfer(BodegaMovementDTO request) {
+       CapColor capColor = capColorRepository.findByNameAndColor(request.getItemName(), request.getCapColor())
+                .orElseThrow(
+                        () -> new IllegalArgumentException("El color no existe en el tipo de tapa: " + request.getItemName()));
+
+        if(request.getBodegaFrom().equalsIgnoreCase(request.getBodegaTo())){
+            throw new IllegalArgumentException("Las bodegas de origen y destino no pueden ser las mismas.");
+        }
+
+        Bodega fromBodega = bodegaService.getBodegaByName(request.getBodegaFrom());
+        Bodega toBodega = bodegaService.getBodegaByName(request.getBodegaTo());
+
+        BodegaCapColor fromBodegaCapColor = bodegaCapColorRepository.findByBodegaIdAndCapColorId(fromBodega.getId(), capColor.getId())
+            .orElseThrow(() -> new IllegalArgumentException("La tapa " + request.getItemName() + " de color " + request.getCapColor() + " no existe en la bodega: " + request.getBodegaFrom() + "."));
+        BodegaCapColor toBodegaCapColor = bodegaCapColorRepository.findByBodegaIdAndCapColorId(toBodega.getId(), capColor.getId())
+            .orElseThrow(() -> new IllegalArgumentException("La tapa " + request.getItemName() + " de color " + request.getCapColor() + " no existe en la bodega: " + request.getBodegaTo() + "."));
+
+        if(fromBodegaCapColor == null){
+            throw new IllegalArgumentException("La tapa " + request.getItemName() + " de color " + request.getCapColor() + " no existe en la bodega: " + request.getBodegaFrom() + ".");
+        }
+
+        if(toBodegaCapColor == null){
+            throw new IllegalArgumentException("La tapa " + request.getItemName() + " de color " + request.getCapColor() + " no existe en la bodega: " + request.getBodegaTo() + ".");
+        }
+
+        if(fromBodegaCapColor != null && fromBodegaCapColor.getQuantity() < request.getQuantity()){
+            throw new IllegalArgumentException("No hay suficiente inventario para transferir. Inventario actual en " + request.getBodegaFrom() + ": " + fromBodegaCapColor.getQuantity() + ".");
+        }
+
+        fromBodegaCapColor.setQuantity(fromBodegaCapColor.getQuantity() - request.getQuantity());
+        toBodegaCapColor.setQuantity(toBodegaCapColor.getQuantity() + request.getQuantity());
+        bodegaCapColorRepository.save(fromBodegaCapColor);
+        bodegaCapColorRepository.save(toBodegaCapColor);
+        capColorRepository.save(capColor);
+        return new CapColorDTO(capColor);
+        
     }
 
 }

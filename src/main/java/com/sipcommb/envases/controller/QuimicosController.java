@@ -1,5 +1,6 @@
 package com.sipcommb.envases.controller;
 
+import com.sipcommb.envases.dto.BodegaMovementDTO;
 import com.sipcommb.envases.dto.CustomApiResponse;
 import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.dto.QuimicoRequestDTO;
@@ -313,4 +314,26 @@ public class QuimicosController {
                     .body(new CustomApiResponse("Error al asociar el quimico a la bodega: " + e.getMessage()));
         }
     }
+
+    @PutMapping("bodega_transfer")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Transferencia de bodega exitosa", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = QuimicosDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado")
+    })
+    public ResponseEntity<?> bodegaTransfer(@RequestHeader("Authorization") String authHeader,
+            @RequestBody BodegaMovementDTO request) {
+        if (!permissionService.hasPermission(authHeader, "update")) {
+            return ResponseEntity.status(403)
+                    .body(new CustomApiResponse("Este usuario no tiene permiso para transferir inventario entre bodegas"));
+        }
+        try {
+            QuimicosDTO result = quimicosService.bodegaTranfer(request);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new CustomApiResponse("Error al transferir inventario entre bodegas: " + e.getMessage()));
+        }   
+    }
+    
 }

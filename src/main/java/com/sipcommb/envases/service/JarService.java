@@ -1,5 +1,6 @@
 package com.sipcommb.envases.service;
 
+import com.sipcommb.envases.dto.BodegaMovementDTO;
 import com.sipcommb.envases.dto.CapDTO;
 import com.sipcommb.envases.dto.JarDTO;
 import com.sipcommb.envases.dto.JarRequestDTO;
@@ -508,6 +509,40 @@ public class JarService {
 
         BodegaJar bodegaJar = new BodegaJar(bodega, jar, jarRequestDTO.getQuantity() == null ? 0 : jarRequestDTO.getQuantity());
         bodegaJarRepository.save(bodegaJar);
+
+        return new JarDTO(jarRepository.save(jar));
+    }
+
+    public JarDTO bodegaTransfer(BodegaMovementDTO request) {
+        Optional<Jar> jarOptional = jarRepository.getByName(request.getItemName().trim().toLowerCase());
+
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        Jar jar = jarOptional.get();
+
+        if(request.getBodegaFrom().equalsIgnoreCase(request.getBodegaTo())) {
+            throw new IllegalArgumentException("La bodega de origen y destino no pueden ser la misma.");
+        }
+
+        Bodega fromBodega = bodegaService.getBodegaByName(request.getBodegaFrom());
+        Bodega toBodega = bodegaService.getBodegaByName(request.getBodegaTo());
+
+        BodegaJar fromBodegaJar = bodegaJarRepository.findByBodegaAndJar(fromBodega, jar)
+                .orElseThrow(() -> new IllegalArgumentException("El frasco no está asociado a la bodega de origen especificada."));
+
+        BodegaJar toBodegaJar = bodegaJarRepository.findByBodegaAndJar(toBodega, jar)
+                .orElseThrow(() -> new IllegalArgumentException("El frasco no está asociado a la bodega de destino especificada."));
+
+        if (fromBodegaJar.getQuantity() < request.getQuantity()) {
+            throw new IllegalArgumentException("No hay suficiente inventario en la bodega de origen para completar la transferencia.");
+        }
+
+        fromBodegaJar.setQuantity(fromBodegaJar.getQuantity() - request.getQuantity());
+        toBodegaJar.setQuantity(toBodegaJar.getQuantity() + request.getQuantity());
+
+        bodegaJarRepository.save(fromBodegaJar);
+        bodegaJarRepository.save(toBodegaJar);
 
         return new JarDTO(jarRepository.save(jar));
     }

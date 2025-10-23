@@ -1,6 +1,7 @@
 package com.sipcommb.envases.controller;
 
 
+import com.sipcommb.envases.dto.BodegaMovementDTO;
 import com.sipcommb.envases.dto.CustomApiResponse;
 import com.sipcommb.envases.dto.ExtractoRequest;
 import com.sipcommb.envases.dto.ExtractosDTO;
@@ -277,6 +278,24 @@ public class ExtractosController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error al asociar el extracto a la bodega: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/bodega_transfer")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Movimiento de bodega realizado exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ExtractosDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Error en la solicitud"),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado")
+    })
+    public ResponseEntity<?> transferExtractoBodega(@RequestHeader("Authorization") String authHeader, @RequestBody BodegaMovementDTO request) {
+        if(!permissionService.hasPermission(authHeader, "update")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para transferir extractos entre bodegas"));
+        }
+        try {
+            ExtractosDTO response = extractosService.bodegaTransfer(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error al transferir el extracto entre bodegas: " + e.getMessage()));
         }
     }
     
