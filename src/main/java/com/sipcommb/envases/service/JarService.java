@@ -332,6 +332,7 @@ public class JarService {
         return new JarDTO(jarOptional.get());
     }
 
+     
     public JarDTO updateInventoryJar(String nameJar, Integer quantityJar, String bodegaName, String token) {
         Optional<Jar> jarOptional = jarRepository.getByName(nameJar.trim().toLowerCase());
 
@@ -371,6 +372,8 @@ public class JarService {
         return new JarDTO(jarRepository.save(jar));
     }
 
+    
+
 
     public JarDTO changeInventory(JarRequestDTO jarRequestDTO, String token) {
         Optional<Jar> jarOptional = jarRepository.getByName(jarRequestDTO.getName().trim().toLowerCase());
@@ -388,11 +391,12 @@ public class JarService {
 
         Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository.findByBodegaAndJar(bodega, jar);
 
+         BodegaJar bodegaJar = null;
         if(!bodegaJarOpt.isPresent()) {
-            throw new IllegalArgumentException("El frasco no está asociado a la bodega especificada.");
+            bodegaJar = bodegaJarRepository.save(new BodegaJar(bodega, jar, 0));
+        }else{
+            bodegaJar = bodegaJarOpt.get();
         }
-
-        BodegaJar bodegaJar = bodegaJarOpt.get();
 
         if (jarRequestDTO.getQuantity() < 0) {
             bodegaJar.setQuantity(bodegaJar.getQuantity() + jarRequestDTO.getQuantity());

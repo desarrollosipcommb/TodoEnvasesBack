@@ -199,17 +199,21 @@ public class ExtractosService {
 
         Optional<BodegaExtractos> bodegaExtractosOpt = bodegaExtractoRepository.findByBodegaAndExtracto(bodega, existingExtracto.get());
 
-        if (!bodegaExtractosOpt.isPresent()) {
-            throw new IllegalArgumentException("El extracto no está asociado a la bodega especificada: " + extractosDTO.getBodegaName());
-        }
-
-        BodegaExtractos bodegaExtractos = bodegaExtractosOpt.get();
+        
 
         if(extractosDTO.getQuantity() == null || extractosDTO.getQuantity() == 0) {
             throw new IllegalArgumentException("La cantidad a reabastecer debe ser especificada.");
         }
 
-         Extractos extractoToRestock = existingExtracto.get();
+        BodegaExtractos bodegaExtractos = null;
+
+        if (!bodegaExtractosOpt.isPresent()) {
+            bodegaExtractos = new BodegaExtractos(bodega, existingExtracto.get(), 0);
+        } else {
+            bodegaExtractos = bodegaExtractosOpt.get();
+        }
+
+        Extractos extractoToRestock = existingExtracto.get();
 
         if(extractosDTO.getQuantity() < 0) {
             bodegaExtractos.setQuantity(bodegaExtractos.getQuantity() + extractosDTO.getQuantity());
