@@ -169,6 +169,10 @@ public class FileService {
                     throw new RuntimeException("el nombre de la tapa es obligatorio");
                 }
 
+                if(bodegaCell == null){
+                    throw new RuntimeException("El nombre de la bodega es obligatorio");
+                }
+
                 if(bodegaCell != null && !bodegaCell.getStringCellValue().isEmpty()){
                     if(!bodegaService.bodegaExists( bodegaCell.getStringCellValue())){
                         throw new RuntimeException("la bodega "+ bodegaCell.getStringCellValue()+" no existe");
