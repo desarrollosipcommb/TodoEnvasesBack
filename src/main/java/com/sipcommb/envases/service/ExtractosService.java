@@ -268,6 +268,69 @@ public class ExtractosService {
         return new ExtractosDTO(extractosRepository.save(extractoToRestock));
     }
 
+    //el que se usa para excel
+    public ExtractosDTO updateExtractoInventorys(ExtractoRequest extractosDTO, String token) {
+
+        if (extractosDTO.getName() == null || extractosDTO.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del extracto no puede estar vacío.");
+        }
+
+        Optional<Extractos> existingExtracto = extractosRepository
+                .findByName(extractosDTO.getName().trim().toLowerCase());
+
+        if (!existingExtracto.isPresent()) {
+            throw new IllegalArgumentException("No existe un extracto con el nombre: " + extractosDTO.getName());
+        }
+
+        Extractos extractoToRestock = existingExtracto.get();
+
+        for (BodegaDTO bodegaDTO : extractosDTO.getBodega()) {
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
+
+            Optional<BodegaExtractos> bodegaExtractosOpt = bodegaExtractoRepository.findByBodegaAndExtracto(bodega,
+                    existingExtracto.get());
+
+            BodegaExtractos bodegaExtractos = null;
+            if (!bodegaExtractosOpt.isPresent()) {
+                bodegaExtractos = new BodegaExtractos(bodega, existingExtracto.get(), 0);
+            } else {
+                bodegaExtractos = bodegaExtractosOpt.get();
+            }
+
+            if (bodegaDTO.getQuantity() == null || bodegaDTO.getQuantity() == 0) {
+                throw new IllegalArgumentException("La cantidad a reabastecer debe ser especificada.");
+            }
+
+            if (bodegaDTO.getQuantity() < 0) {
+                bodegaExtractos.setQuantity(bodegaDTO.getQuantity());
+                bodegaExtractoRepository.save(bodegaExtractos);
+                inventoryService.newItem(
+                        extractoToRestock.getId().longValue(),
+                        "extracto",
+                        bodegaDTO.getQuantity().intValue(),
+                        "damage",
+                        jwtService.getUserIdFromToken(token).intValue(),
+                        "Se ha reportado un daño en el extracto " + extractoToRestock.getName()
+                                + ", su inventario ahora es: " + bodegaExtractos.getQuantity());
+                continue;
+            }
+
+            bodegaExtractos.setQuantity(bodegaDTO.getQuantity());
+            bodegaExtractoRepository.save(bodegaExtractos);
+            inventoryService.newItem(
+                    extractoToRestock.getId().longValue(),
+                    "extracto",
+                    bodegaDTO.getQuantity().intValue(),
+                    "restock",
+                    jwtService.getUserIdFromToken(token).intValue(),
+                    "hay " + bodegaDTO.getQuantity() + " unidades nuevas de " + extractoToRestock.getName()
+                            + " en el inventario, en total hay " + bodegaExtractos.getQuantity()
+                            + " unidades disponibles.");
+        }
+
+        return new ExtractosDTO(extractosRepository.save(extractoToRestock));
+    }
+
     public ExtractosDTO deactivateExtracto(String name) {
         Optional<Extractos> existingExtracto = extractosRepository.findByName(name.trim().toLowerCase());
 

@@ -207,7 +207,7 @@ public class CapColorService {
         return new CapColorDTO(capColor);
     }
 
-    /* CREO QUE ESTO NO SE USA
+    
     public CapColorDTO updateCapColorInventory(Cap cap, CapColorRequest request, String token) {
 
         CapColor capColor = capColorRepository.findByCapAndColor(cap, request.getColor())
@@ -255,7 +255,6 @@ public class CapColorService {
         return new CapColorDTO(capColorRepository.save(capColor));
     }
 
-     */
 
     public void changeInventory(Cap cap, CapColorRequest request, String token) {
         CapColor capColor = capColorRepository.findByCapAndColor(cap, request.getColor())

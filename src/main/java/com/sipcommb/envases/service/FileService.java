@@ -455,7 +455,7 @@ public class FileService {
 
                 List<BodegaDTO> bodegaDTOs = generateBodegas(bodegaCell, quantityCell);
 
-                capService.changeInventory(new CapColorRequest(
+                capService.updateCapInventory(new CapColorRequest(
                         nameCell.getStringCellValue(),
                         getCellAsString(diameterCell),
                         colorCell.getStringCellValue(),
@@ -554,7 +554,7 @@ public class FileService {
 
                 List<BodegaDTO> bodegaDTOs = generateBodegas(bodegaCell, quantityCell);
 
-                extractosService.changeInventory(new ExtractoRequest(
+                extractosService.updateExtractoInventorys(new ExtractoRequest(
                         nameCell.getStringCellValue(),
                         getCellAsNullableString(descriptionCell),
                         bodegaDTOs,

@@ -222,7 +222,7 @@ public class CapService {
         return new CapDTO(cap);
     }
 
-    /* Creo que tampoco se usa
+    
     public CapDTO updateCapInventory(CapColorRequest capColorRequest, String token) {
         Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capColorRequest.getName(), capColorRequest.getDiameter());
         if (!capOptional.isPresent()) {
@@ -230,12 +230,12 @@ public class CapService {
         }
         Cap cap = capOptional.get();
 
-        capColorService.changeInventory(cap, capColorRequest, token);
+        capColorService.updateCapColorInventory(cap, capColorRequest, token);
         capRepository.save(cap);
 
         return new CapDTO(cap);
     }
-    */
+    
 
     public CapDTO addCapToBodega(CapColorRequest capColorRequest) {
         Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capColorRequest.getName(), capColorRequest.getDiameter());
