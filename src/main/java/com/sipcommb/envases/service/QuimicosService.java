@@ -1,5 +1,6 @@
 package com.sipcommb.envases.service;
 
+import com.sipcommb.envases.dto.BodegaDTO;
 import com.sipcommb.envases.dto.BodegaMovementDTO;
 import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.dto.QuimicoRequestDTO;
@@ -10,6 +11,7 @@ import com.sipcommb.envases.entity.Quimicos;
 import com.sipcommb.envases.repository.BodegaQuimicoRepository;
 import com.sipcommb.envases.repository.QuimicosRepository;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -51,10 +53,13 @@ public class QuimicosService {
             throw new IllegalArgumentException("El precio unitario no puede ser negativo o cero.");
         }
 
-        Bodega bodega = bodegaService.getBodegaByName(quimicoDTO.getBodegaName());
-
-        if (quimicoDTO.getQuantity() == null) {
-            quimicoDTO.setQuantity(0); // Default quantity if not provided
+        for (BodegaDTO bodegaDTO : quimicoDTO.getBodegaName()) {
+            if (bodegaDTO.getName() == null || bodegaDTO.getName().trim().isEmpty()) {
+                throw new IllegalArgumentException("El nombre de la bodega no puede estar vacío.");
+            }
+            if (bodegaDTO.getQuantity() == null) {
+                throw new IllegalArgumentException("La cantidad en la bodega " + bodegaDTO.getName() + " nula.");
+            }
         }
 
         if (quimicoDTO.getDescription().isEmpty()) {
@@ -68,11 +73,21 @@ public class QuimicosService {
 
         quimicosRepository.save(quimico);
 
-        bodegaQuimicoRepository.save(new BodegaQuimicos(bodega, quimico, quimicoDTO.getQuantity()));
+        for (BodegaDTO bodegaDTO : quimicoDTO.getBodegaName()) {
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
+            BodegaQuimicos bodegaQuimicos = new BodegaQuimicos(bodega, quimico, bodegaDTO.getQuantity());
+            bodegaQuimicoRepository.save(bodegaQuimicos);
+
+            inventoryService.newItem(
+                    quimico.getId().longValue(),
+                    "quimico",
+                    bodegaDTO.getQuantity().intValue(),
+                    "restock",
+                    jwtService.getUserIdFromToken(token).intValue(),
+                    "Se creo el quimico " + quimico.getName());
+        }
 
         quimicosRepository.save(quimico);
-
-        inventoryService.newItem(quimico.getId().longValue(), "quimico", quimicoDTO.getQuantity().intValue(), "restock", jwtService.getUserIdFromToken(token).intValue(), "Se creo el quimico " + quimico.getName());
 
         return new QuimicosDTO(quimico);
     }
@@ -88,7 +103,8 @@ public class QuimicosService {
     }
 
     public Page<QuimicosDTO> getAllQuimicosByNameActive(String searchName, Pageable pageable) {
-        Page<Quimicos> quimicosPage = quimicosRepository.findByNameContainingIgnoreCaseAndActiveTrue(searchName, pageable);
+        Page<Quimicos> quimicosPage = quimicosRepository.findByNameContainingIgnoreCaseAndActiveTrue(searchName,
+                pageable);
         return quimicosPage.map(QuimicosDTO::new);
     }
 
@@ -115,24 +131,8 @@ public class QuimicosService {
 
         Quimicos quimico = quimicoOpt.get();
 
-        Bodega bodega = bodegaService.getBodegaByName(quimicoDTO.getBodegaName());
-
-        Optional<BodegaQuimicos> bodegaQuimicosOpt = bodegaQuimicoRepository.findByBodegaAndQuimico(bodega, quimico);
-
-        if(!bodegaQuimicosOpt.isPresent()) {
-            throw new IllegalArgumentException("El quimico " + quimico.getName() + " no está asociado a la bodega " + bodega.getName());
-        }
-
-        BodegaQuimicos bodegaQuimicos = bodegaQuimicosOpt.get();
-
         if (quimicoDTO.getDescription() != null) {
             quimico.setDescription(quimicoDTO.getDescription());
-        }
-
-        if (quimicoDTO.getQuantity() != null && quimicoDTO.getQuantity() != bodegaQuimicos.getQuantity()) {
-            bodegaQuimicos.setQuantity(quimicoDTO.getQuantity());
-            bodegaQuimicoRepository.save(bodegaQuimicos);
-            inventoryService.newItem(quimico.getId().longValue(), "quimico", bodegaQuimicos.getQuantity().intValue(), "adjustment", jwtService.getUserIdFromToken(token).intValue(), "Se actualizo el inventario del quimico " + quimico.getName());
         }
 
         if (quimicoDTO.getUnitPrice() != null && quimicoDTO.getUnitPrice() <= 0) {
@@ -143,53 +143,108 @@ public class QuimicosService {
             quimico.setUnitPrice(BigDecimal.valueOf(quimicoDTO.getUnitPrice()));
         }
 
+        for (BodegaDTO bodegaDTO : quimicoDTO.getBodegaName()) {
+            if (bodegaDTO.getName() == null || bodegaDTO.getName().trim().isEmpty()) {
+                throw new IllegalArgumentException("El nombre de la bodega no puede estar vacío.");
+            }
+            if (bodegaDTO.getQuantity() == null) {
+                throw new IllegalArgumentException("La cantidad en la bodega " + bodegaDTO.getName() + " nula.");
+            }
+
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
+            Optional<BodegaQuimicos> bodegaQuimicosOpt = bodegaQuimicoRepository.findByBodegaAndQuimico(bodega,
+                    quimico);
+
+            if (!bodegaQuimicosOpt.isPresent()) {
+                throw new IllegalArgumentException(
+                        "El quimico " + quimico.getName() + " no está asociado a la bodega " + bodega.getName());
+            }
+        }
+
+        for (BodegaDTO bodegaDTO : quimicoDTO.getBodegaName()) {
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
+            Optional<BodegaQuimicos> bodegaQuimicosOpt = bodegaQuimicoRepository.findByBodegaAndQuimico(bodega,
+                    quimico);
+            BodegaQuimicos bodegaQuimicos = bodegaQuimicosOpt.get();
+
+            if (bodegaDTO.getQuantity() != null && bodegaDTO.getQuantity() != bodegaQuimicos.getQuantity()) {
+                bodegaQuimicos.setQuantity(bodegaDTO.getQuantity());
+                bodegaQuimicoRepository.save(bodegaQuimicos);
+                inventoryService.newItem(
+                        quimico.getId().longValue(),
+                        "quimico",
+                        bodegaQuimicos.getQuantity().intValue(),
+                        "adjustment",
+                        jwtService.getUserIdFromToken(token).intValue(),
+                        "Se actualizo el inventario del quimico " + quimico.getName());
+            }
+        }
+
         quimicosRepository.save(quimico);
 
         return new QuimicosDTO(quimico);
+
     }
 
-     
-    public QuimicosDTO updateInventoryQuimico(String nameJar, Integer quantityQuimico,  String bodegaName, String token) {
+    public QuimicosDTO updateInventoryQuimico(String nameJar, List<BodegaDTO> bodegaDTOs, String token) {
+
         Optional<Quimicos> quimicoOpt = quimicosRepository.findByName(nameJar.trim().toLowerCase());
 
         if (!quimicoOpt.isPresent()) {
             throw new IllegalArgumentException("No existe un químico con ese nombre.");
         }
-        
+
         Quimicos quimico = quimicoOpt.get();
 
-        Bodega bodega = bodegaService.getBodegaByName(bodegaName);
+        for (BodegaDTO bodegaDTO : bodegaDTOs) {
+            if (bodegaDTO.getName() == null || bodegaDTO.getName().trim().isEmpty()) {
+                throw new IllegalArgumentException("El nombre de la bodega no puede estar vacío.");
+            }
+            if (bodegaDTO.getQuantity() == null) {
+                throw new IllegalArgumentException("La cantidad en la bodega " + bodegaDTO.getName() + " nula.");
+            }
 
-        Optional<BodegaQuimicos> bodegaQuimicosOpt = bodegaQuimicoRepository.findByBodegaAndQuimico(bodega, quimico);
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
+            Optional<BodegaQuimicos> bodegaQuimicosOpt = bodegaQuimicoRepository.findByBodegaAndQuimico(bodega,
+                    quimico);
 
-        if(!bodegaQuimicosOpt.isPresent()) {
-            throw new IllegalArgumentException("El quimico " + quimico.getName() + " no está asociado a la bodega " + bodega.getName());
+            if (!bodegaQuimicosOpt.isPresent()) {
+                bodegaQuimicoRepository.save(
+                        new BodegaQuimicos(bodega, quimico, 0));
+            }
         }
 
-        BodegaQuimicos bodegaQuimicos = bodegaQuimicosOpt.get();
+        for (BodegaDTO bodegaDTO : bodegaDTOs) {
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
+            Optional<BodegaQuimicos> bodegaQuimicosOpt = bodegaQuimicoRepository.findByBodegaAndQuimico(bodega,
+                    quimico);
+            BodegaQuimicos bodegaQuimicos = bodegaQuimicosOpt.get();
 
-        if (quantityQuimico == null) {
-            throw new IllegalArgumentException("La cantidad no puede ser nula.");
+            if (bodegaDTO.getQuantity() < 0) {
+                bodegaQuimicos.setQuantity(bodegaDTO.getQuantity());
+                bodegaQuimicoRepository.save(bodegaQuimicos);
+                inventoryService.newItem(
+                        quimico.getId().longValue(),
+                        "quimico",
+                        bodegaQuimicos.getQuantity().intValue(),
+                        "damage",
+                        jwtService.getUserIdFromToken(token).intValue(),
+                        "Se actualizo el inventario del quimico " + quimico.getName());
+            } else {
+                bodegaQuimicos.setQuantity(bodegaDTO.getQuantity());
+                bodegaQuimicoRepository.save(bodegaQuimicos);
+                inventoryService.newItem(
+                        quimico.getId().longValue(),
+                        "quimico",
+                        bodegaQuimicos.getQuantity().intValue(),
+                        "restock",
+                        jwtService.getUserIdFromToken(token).intValue(),
+                        "Se actualizo el inventario del quimico " + quimico.getName());
+            }
         }
-
-        if (quantityQuimico < 0) {
-            bodegaQuimicos.setQuantity(Math.max((bodegaQuimicos.getQuantity() + quantityQuimico), 0));
-            bodegaQuimicoRepository.save(bodegaQuimicos);
-            inventoryService.newItem(quimico.getId().longValue(), "quimico", bodegaQuimicos.getQuantity(),
-                    "damage", jwtService.getUserIdFromToken(token).intValue(), "Se reporto un daño en "
-                            + quimico.getName() + " su inventario ahora es: " + bodegaQuimicos.getQuantity());
-            return new QuimicosDTO(quimicosRepository.save(quimico));
-        }
-
-        bodegaQuimicos.setQuantity(quantityQuimico);
-        bodegaQuimicoRepository.save(bodegaQuimicos);
-        inventoryService.newItem(quimico.getId().longValue(), "quimico", bodegaQuimicos.getQuantity(), "restock",
-                jwtService.getUserIdFromToken(token).intValue(), "Se actualizo " + quimico.getName()
-                        + " su inventario ahora es: " + bodegaQuimicos.getQuantity());
 
         return new QuimicosDTO(quimicosRepository.save(quimico));
     }
-        
 
     public QuimicosDTO changeInventory(QuimicoRequestDTO quimicoDTO, String token) {
         if (quimicoDTO.getName() == null || quimicoDTO.getName().trim().isEmpty()) {
@@ -204,50 +259,61 @@ public class QuimicosService {
 
         Quimicos quimico = quimicoOpt.get();
 
-        Bodega bodega = bodegaService.getBodegaByName(quimicoDTO.getBodegaName());
+        for (BodegaDTO bodegaDTO : quimicoDTO.getBodegaName()) {
+            if (bodegaDTO.getName() == null || bodegaDTO.getName().trim().isEmpty()) {
+                throw new IllegalArgumentException("El nombre de la bodega no puede estar vacío.");
+            }
+            if (bodegaDTO.getQuantity() == null) {
+                throw new IllegalArgumentException("La cantidad en la bodega " + bodegaDTO.getName() + " nula.");
+            }
 
-        Optional<BodegaQuimicos> bodegaQuimicosOpt = bodegaQuimicoRepository.findByBodegaAndQuimico(bodega, quimico);
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
+            Optional<BodegaQuimicos> bodegaQuimicosOpt = bodegaQuimicoRepository.findByBodegaAndQuimico(bodega,
+                    quimico);
 
-
-        if (quimicoDTO.getQuantity() == null) {
-            throw new IllegalArgumentException("La cantidad a reabastecer debe ser especificada.");
+            if (!bodegaQuimicosOpt.isPresent()) {
+                bodegaQuimicoRepository.save(
+                        new BodegaQuimicos(bodega, quimico, 0));
+            }
         }
 
+        for (BodegaDTO bodegaDTO : quimicoDTO.getBodegaName()) {
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
+            Optional<BodegaQuimicos> bodegaQuimicosOpt = bodegaQuimicoRepository.findByBodegaAndQuimico(bodega,
+                    quimico);
+            BodegaQuimicos bodegaQuimicos = bodegaQuimicosOpt.get();
 
-        BodegaQuimicos bodegaQuimicos = null;
-        if(!bodegaQuimicosOpt.isPresent()) {
-            bodegaQuimicos = new BodegaQuimicos(bodega, quimico, 0);
-        }else {
-            bodegaQuimicos = bodegaQuimicosOpt.get();
-        }
+            if (bodegaDTO.getQuantity() == null) {
+                throw new IllegalArgumentException("La cantidad a reabastecer debe ser especificada.");
+            }
 
-        if (quimicoDTO.getQuantity() < 0) {
-            bodegaQuimicos.setQuantity(bodegaQuimicos.getQuantity() + quimicoDTO.getQuantity());
+            if (bodegaDTO.getQuantity() < 0) {
+                bodegaQuimicos.setQuantity(bodegaQuimicos.getQuantity() + bodegaDTO.getQuantity());
+                bodegaQuimicoRepository.save(bodegaQuimicos);
+                inventoryService.newItem(
+                        quimico.getId().longValue(),
+                        "quimico",
+                        bodegaDTO.getQuantity().intValue(),
+                        "damage",
+                        jwtService.getUserIdFromToken(token).intValue(),
+                        "Se reportó un daño en el inventario del quimico " + quimico.getName()
+                                + ", su inventario ahora es: " + bodegaQuimicos.getQuantity());
+                continue;
+            }
+
+            bodegaQuimicos.setQuantity(bodegaQuimicos.getQuantity() + bodegaDTO.getQuantity());
             bodegaQuimicoRepository.save(bodegaQuimicos);
             inventoryService.newItem(
                     quimico.getId().longValue(),
                     "quimico",
-                    quimicoDTO.getQuantity(),
-                    "damage",
+                    bodegaDTO.getQuantity().intValue(),
+                    "restock",
                     jwtService.getUserIdFromToken(token).intValue(),
-                    "Se reportó un daño en el inventario del quimico " + quimico.getName() + ", su inventario ahora es: " + bodegaQuimicos.getQuantity()
-            );
-            return new QuimicosDTO(quimicosRepository.save(quimico));
+                    "Se reabasteció el inventario del quimico " + quimico.getName());
         }
 
-        bodegaQuimicos.setQuantity(bodegaQuimicos.getQuantity() + quimicoDTO.getQuantity());
-        bodegaQuimicoRepository.save(bodegaQuimicos);
-        inventoryService.newItem(
-                quimico.getId().longValue(),
-                "quimico",
-                quimicoDTO.getQuantity(),
-                "restock",
-                jwtService.getUserIdFromToken(token).intValue(),
-                "Se reabasteció el inventario del quimico " + quimico.getName()
-        );
         return new QuimicosDTO(quimicosRepository.save(quimico));
     }
-
 
     public QuimicosDTO activateQuimico(QuimicosDTO quimicoDTO) {
         if (quimicoDTO.getName() == null || quimicoDTO.getName().trim().isEmpty()) {
@@ -287,11 +353,13 @@ public class QuimicosService {
         boolean exactSearch = priceService.verifyPriceSearchRequest(priceSearchRequest);
 
         if (exactSearch) {
-            return quimicosRepository.findByExactPrice(priceSearchRequest.getExactPrice(), pageable).map(QuimicosDTO::new);
+            return quimicosRepository.findByExactPrice(priceSearchRequest.getExactPrice(), pageable)
+                    .map(QuimicosDTO::new);
         } else {
-            return quimicosRepository.findByPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable).map(QuimicosDTO::new);
+            return quimicosRepository
+                    .findByPriceBetween(priceSearchRequest.getMinPrice(), priceSearchRequest.getMaxPrice(), pageable)
+                    .map(QuimicosDTO::new);
         }
-
 
     }
 
@@ -308,16 +376,31 @@ public class QuimicosService {
 
         Quimicos quimico = quimicoOpt.get();
 
-        Bodega bodega = bodegaService.getBodegaByName(quimicoDTO.getBodegaName());
+        for (BodegaDTO bodegaDTO : quimicoDTO.getBodegaName()) {
+            if (bodegaDTO.getName() == null || bodegaDTO.getName().trim().isEmpty()) {
+                throw new IllegalArgumentException("El nombre de la bodega no puede estar vacío.");
+            }
+            if (bodegaDTO.getQuantity() == null) {
+                throw new IllegalArgumentException("La cantidad en la bodega " + bodegaDTO.getName() + " nula.");
+            }
 
-        Optional<BodegaQuimicos> bodegaQuimicosOpt = bodegaQuimicoRepository.findByBodegaAndQuimico(bodega, quimico);
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
 
-        if(bodegaQuimicosOpt.isPresent()) {
-            throw new IllegalArgumentException("El quimico " + quimico.getName() + " ya está asociado a la bodega " + bodega.getName());
+            Optional<BodegaQuimicos> bodegaQuimicosOpt = bodegaQuimicoRepository.findByBodegaAndQuimico(bodega,
+                    quimico);
+
+            if (bodegaQuimicosOpt.isPresent()) {
+                throw new IllegalArgumentException(
+                        "El quimico " + quimico.getName() + " ya está asociado a la bodega " + bodega.getName());
+            }
         }
 
-        BodegaQuimicos bodegaQuimicos = new BodegaQuimicos(bodega, quimico, quimicoDTO.getQuantity() != null ? quimicoDTO.getQuantity() : 0);
-        bodegaQuimicoRepository.save(bodegaQuimicos);
+        for( BodegaDTO bodegaDTO : quimicoDTO.getBodegaName()) {
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
+
+            BodegaQuimicos bodegaQuimicos = new BodegaQuimicos(bodega, quimico, bodegaDTO.getQuantity() != null ? bodegaDTO.getQuantity() : 0);
+            bodegaQuimicoRepository.save(bodegaQuimicos);
+        }
 
         return new QuimicosDTO(quimico);
 
@@ -325,9 +408,10 @@ public class QuimicosService {
 
     public QuimicosDTO bodegaTranfer(BodegaMovementDTO request) {
         Quimicos quimico = quimicosRepository.findByName(request.getItemName().trim().toLowerCase())
-                .orElseThrow(() -> new IllegalArgumentException("No existe un quimico con el nombre: " + request.getItemName()));
-        
-        if(request.getBodegaFrom().equalsIgnoreCase(request.getBodegaTo())){
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existe un quimico con el nombre: " + request.getItemName()));
+
+        if (request.getBodegaFrom().equalsIgnoreCase(request.getBodegaTo())) {
             throw new IllegalArgumentException("La bodega de origen y destino no pueden ser la misma.");
         }
 
@@ -335,21 +419,26 @@ public class QuimicosService {
         Bodega bodegaTo = bodegaService.getBodegaByName(request.getBodegaTo());
 
         BodegaQuimicos bqFrom = bodegaQuimicoRepository.findByBodegaAndQuimico(bodegaFrom, quimico)
-                .orElseThrow(() -> new IllegalArgumentException("El quimico " + quimico.getName() + " no está asociado a la bodega de origen " + request.getBodegaFrom()));
+                .orElseThrow(() -> new IllegalArgumentException("El quimico " + quimico.getName()
+                        + " no está asociado a la bodega de origen " + request.getBodegaFrom()));
 
         BodegaQuimicos bqTo = bodegaQuimicoRepository.findByBodegaAndQuimico(bodegaTo, quimico)
-                .orElseThrow(() -> new IllegalArgumentException("El quimico " + quimico.getName() + " no está asociado a la bodega de destino " + request.getBodegaTo()));
+                .orElseThrow(() -> new IllegalArgumentException("El quimico " + quimico.getName()
+                        + " no está asociado a la bodega de destino " + request.getBodegaTo()));
 
-        if(bodegaFrom == null){
-            throw new IllegalArgumentException("El quimico " + quimico.getName() + " no está asociado a la bodega de origen " + request.getBodegaFrom());
+        if (bodegaFrom == null) {
+            throw new IllegalArgumentException("El quimico " + quimico.getName()
+                    + " no está asociado a la bodega de origen " + request.getBodegaFrom());
         }
 
-        if(bodegaTo == null){
-            throw new IllegalArgumentException("El quimico " + quimico.getName() + " no está asociado a la bodega de destino " + request.getBodegaTo());
+        if (bodegaTo == null) {
+            throw new IllegalArgumentException("El quimico " + quimico.getName()
+                    + " no está asociado a la bodega de destino " + request.getBodegaTo());
         }
 
-        if(bqFrom.getQuantity() < request.getQuantity()){
-            throw new IllegalArgumentException("No hay suficiente inventario en la bodega de origen. Inventario actual: " + bqFrom.getQuantity());
+        if (bqFrom.getQuantity() < request.getQuantity()) {
+            throw new IllegalArgumentException(
+                    "No hay suficiente inventario en la bodega de origen. Inventario actual: " + bqFrom.getQuantity());
         }
 
         bqFrom.setQuantity(bqFrom.getQuantity() - request.getQuantity());

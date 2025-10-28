@@ -1,14 +1,14 @@
 package com.sipcommb.envases.dto;
 
+import java.util.List;
+
 public class ExtractoRequest {
     
     private String name; 
 
     private String description;
-
-    private String bodegaName;
     
-    private Integer quantity; // Stock quantity
+    private List<BodegaDTO> bodega;
 
     private Double price22ml; // Price for 22ml
 
@@ -27,11 +27,10 @@ public class ExtractoRequest {
     public ExtractoRequest() {
     }
 
-    public ExtractoRequest(String name, String description, String bodegaName, Integer quantity, Double price22ml, Double price60ml, Double price125ml, Double price250ml, Double price500ml, Double price1000ml) {
+    public ExtractoRequest(String name, String description, List<BodegaDTO> bodega, Double price22ml, Double price60ml, Double price125ml, Double price250ml, Double price500ml, Double price1000ml) {
         this.name = name;
         this.description = description;
-        this.bodegaName = bodegaName;
-        this.quantity = quantity;
+        this.bodega = bodega;
         this.price22ml = price22ml;
         this.price60ml = price60ml;
         this.price125ml = price125ml;
@@ -57,20 +56,12 @@ public class ExtractoRequest {
         this.description = description;
     }
 
-    public String getBodegaName() {
-        return bodegaName;
+    public List<BodegaDTO> getBodega() {
+        return bodega;
     }
 
-    public void setBodegaName(String bodegaName) {
-        this.bodegaName = bodegaName;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
+    public void setBodega(List<BodegaDTO> bodega) {
+        this.bodega = bodega;
     }
 
     public Double getPrice22ml() {

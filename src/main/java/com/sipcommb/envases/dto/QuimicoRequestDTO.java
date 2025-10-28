@@ -1,14 +1,14 @@
 package com.sipcommb.envases.dto;
 
+import java.util.List;
+
 public class QuimicoRequestDTO {
 
     private String name;
 
     private String description;
 
-    private String bodegaName;
-
-    private Integer quantity;
+    private List<BodegaDTO> quantity;
 
     private Double unitPrice;
 
@@ -17,10 +17,9 @@ public class QuimicoRequestDTO {
     public QuimicoRequestDTO() {
     }
 
-    public QuimicoRequestDTO(String name, String description, String bodegaName, Integer quantity, Double unitPrice) {
+    public QuimicoRequestDTO(String name, String description, List<BodegaDTO> quantity, Double unitPrice) {
         this.name = name;
         this.description = description;
-        this.bodegaName = bodegaName;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
        
@@ -42,19 +41,11 @@ public class QuimicoRequestDTO {
         this.description = description;
     }
 
-    public String getBodegaName() {
-        return bodegaName;
-    }
-
-    public void setBodegaName(String bodegaName) {
-        this.bodegaName = bodegaName;
-    }
-
-    public Integer getQuantity() {
+    public List<BodegaDTO> getBodegaName() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setBodegaName(List<BodegaDTO> quantity) {
         this.quantity = quantity;
     }
 

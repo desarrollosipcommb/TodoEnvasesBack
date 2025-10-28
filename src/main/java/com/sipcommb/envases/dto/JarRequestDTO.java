@@ -1,5 +1,7 @@
 package com.sipcommb.envases.dto;
 
+import java.util.List;
+
 import javax.validation.constraints.NotBlank;
 
 public class JarRequestDTO {
@@ -11,9 +13,7 @@ public class JarRequestDTO {
 
     private String diameter;
 
-    private String bodegaName;
-
-    private Integer quantity;
+    private List<BodegaDTO> quantity;
 
     private Double unitPrice;
 
@@ -33,11 +33,10 @@ public class JarRequestDTO {
         // Default constructor
     }
 
-    public JarRequestDTO(String name, String description, String diameter, String bodegaName, Integer quantity, Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, Integer unitsInPaca, String[] compatibleCaps, String[] unCompatibleCaps) {
+    public JarRequestDTO(String name, String description, String diameter, List<BodegaDTO> quantity, Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, Integer unitsInPaca, String[] compatibleCaps, String[] unCompatibleCaps) {
         this.name = name;
         this.description = description;
         this.diameter = diameter;
-        this.bodegaName = bodegaName;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.docenaPrice = docenaPrice;
@@ -70,14 +69,6 @@ public class JarRequestDTO {
 
     public void setDiameter(String diameter) {
         this.diameter = diameter;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
     }
 
     public Double getUnitPrice() {
@@ -136,12 +127,12 @@ public class JarRequestDTO {
         this.unCompatibleCaps = unCompatibleCaps;
     }
 
-    public String getBodegaName() {
-        return bodegaName;
+    public List<BodegaDTO> getBodega() {
+        return quantity;
     }
 
-    public void setBodegaName(String bodegaName) {
-        this.bodegaName = bodegaName;
+    public void setBodega(List<BodegaDTO> quantity) {
+        this.quantity = quantity;
     }
 
 }

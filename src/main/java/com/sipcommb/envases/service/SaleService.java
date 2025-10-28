@@ -64,9 +64,6 @@ public class SaleService {
     private UserRepository userRepository;
 
     @Autowired
-    private InventoryService inventoryService;
-
-    @Autowired
     private QuimicosRepository quimicosRepository;
 
     @Autowired
