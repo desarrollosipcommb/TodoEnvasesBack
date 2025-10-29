@@ -3,6 +3,7 @@ package com.sipcommb.envases.service;
 import com.sipcommb.envases.dto.BodegaDTO;
 import com.sipcommb.envases.dto.CapColorRequest;
 import com.sipcommb.envases.dto.CapRequest;
+import com.sipcommb.envases.dto.ComboRequest;
 import com.sipcommb.envases.dto.ExtractoRequest;
 import com.sipcommb.envases.dto.FileResponse;
 import com.sipcommb.envases.dto.JarRequestDTO;
@@ -40,6 +41,9 @@ public class FileService {
     ExtractosService extractosService;
 
     @Autowired
+    ComboService combosService;
+
+    @Autowired
     BodegaService bodegaService;
 
     public List<FileResponse> readFile(MultipartFile file, String token) {
@@ -55,6 +59,7 @@ public class FileService {
             fileResponses.addAll(readJar(workbook.getSheetAt(3), token));
             fileResponses.addAll(readQuimicos(workbook.getSheetAt(4), token));
             fileResponses.addAll(readExtractos(workbook.getSheetAt(5), token));
+            fileResponses.addAll(readCombos(workbook.getSheetAt(6), token));
             return fileResponses;
         } catch (Exception e) {
             throw new RuntimeException("Error al leer el archivo: " + e.getMessage());
@@ -380,6 +385,78 @@ public class FileService {
         return fileResponses;
     }
 
+    private List<FileResponse> readCombos(Sheet sheet, String token){
+        boolean firstRow = true;
+        List<FileResponse> fileResponses = new ArrayList<>();
+        for (Row row : sheet) {
+            if (firstRow) {
+                firstRow = false;
+                continue;
+            }
+
+            Cell nameCell = row.getCell(0);
+            Cell descriptionCell = row.getCell(1);
+            Cell diametroTapaCell = row.getCell(2);
+            Cell envase = row.getCell(3);
+            Cell tapa = row.getCell(4);
+            Cell unitPrice = row.getCell(5);
+            Cell docenaPrice = row.getCell(6);
+            Cell cienPrice = row.getCell(7);
+            Cell pacaPrice = row.getCell(8);
+
+            try{
+                System.out.println("se llamo combos");
+                if(nameCell == null || nameCell.getStringCellValue().isEmpty()){
+                    throw new RuntimeException("el nombre del combo es obligatorio");
+                }
+
+                if(tapa == null || tapa.getStringCellValue().isEmpty()){
+                    throw new RuntimeException("la tapa del combo es obligatoria");
+                }
+
+                if(envase == null || envase.getStringCellValue().isEmpty()){
+                    throw new RuntimeException("debe haber al menos un frasco en el combo");
+                }
+
+                if(unitPrice == null){
+                    throw new RuntimeException("el precio unitario del combo es obligatorio");
+                }
+
+                if(docenaPrice == null){
+                    throw new RuntimeException("el precio por docena del combo es obligatorio");
+                }
+
+                if(cienPrice == null){
+                    throw new RuntimeException("el precio por cien del combo es obligatorio");
+                }
+
+                if (pacaPrice == null) {
+                    throw new RuntimeException("el precio por paca del combo es obligatorio");
+                }
+
+                List<CapRequest> capRequests = generateCapRequests(tapa, diametroTapaCell);
+
+                combosService.addCombo(
+                    new ComboRequest(
+                        getCellAsString(nameCell),
+                        getCellAsString(envase),
+                        capRequests,
+                        unitPrice.getNumericCellValue(),
+                        docenaPrice.getNumericCellValue(),
+                        cienPrice.getNumericCellValue(),
+                        pacaPrice.getNumericCellValue(),
+                        getCellAsNullableString(descriptionCell)
+                    )
+                );
+
+                fileResponses.add(new FileResponse(getCellAsString(nameCell), "Combo agregado correctamente"));
+            }catch (Exception e){
+                fileResponses.add(new FileResponse(getCellAsString(nameCell), "Error, " + e.getMessage()));
+            }
+        }
+        return fileResponses;
+    }
+
     private List<FileResponse> JarInventory(Sheet sheet, String token) {
         boolean firstRow = true;
         List<FileResponse> fileResponses = new ArrayList<>();
@@ -597,6 +674,14 @@ public class FileService {
         String[] bodegaNames;
         String[] quantities;
 
+        if(bodegaCell == null){
+            throw new RuntimeException("Al menos una bodega es obligatoria");
+        }
+
+        if(quantityCell == null){
+            throw new RuntimeException("Al menos una cantidad es obligatoria");
+        }
+
         if (bodegaCell.getStringCellValue().contains(",")) {
             bodegaNames = bodegaCell.getStringCellValue().split(",");
         } else {
@@ -623,6 +708,31 @@ public class FileService {
             bodegaDTOs.add(new BodegaDTO(bodegaNames[i].trim(), quantity));
         }
         return bodegaDTOs;
+    }
+
+    private List<CapRequest> generateCapRequests(Cell tapa, Cell diameter) {
+        
+        List<CapRequest> capRequests = new ArrayList<>();
+
+        if(tapa == null || tapa.getStringCellValue().isEmpty()){
+            throw new RuntimeException("El combo debe tener al menos una tapa");
+        }
+
+        if(diameter == null || getCellAsString(diameter).isEmpty()){
+            throw new RuntimeException("El combo debe tener al menos un diámetro de tapa");
+        }
+
+        String[] tapaNames;
+
+        if(tapa.getStringCellValue().contains(",")){
+            tapaNames = tapa.getStringCellValue().split(",");
+        }else{
+            tapaNames = new String[]{tapa.getStringCellValue()};
+        }
+        for (String tapaName : tapaNames) {
+            capRequests.add(new CapRequest(tapaName.trim(),"",getCellAsString(diameter).trim()));
+        }
+        return capRequests;
     }
 
     private String getCellAsNullableString(Cell cell) {

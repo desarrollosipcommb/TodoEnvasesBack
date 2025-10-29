@@ -25,8 +25,8 @@ public class ComboRequest {
 
     public ComboRequest() {}
 
-    public ComboRequest(String name, String jarName, List<CapRequest> capRequests, String color, 
-            Integer quantity, Double unitPrice, Double docenaPrice, Double cienPrice, String description) {
+    public ComboRequest(String name, String jarName, List<CapRequest> capRequests, 
+            Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, String description) {
 
         this.name = name;
         this.jarName = jarName;
@@ -34,6 +34,7 @@ public class ComboRequest {
         this.unitPrice = unitPrice;
         this.docenaPrice = docenaPrice;
         this.cienPrice = cienPrice;
+        this.pacaPrice = pacaPrice;
         this.description = description;
     }
 
