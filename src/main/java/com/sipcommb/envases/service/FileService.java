@@ -106,7 +106,8 @@ public class FileService {
                         .add(new FileResponse(nameCell.getStringCellValue(), "Tipo de envase agregado correctamente"));
 
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+                fileResponses.add(new FileResponse("Diametro: " + nameCell.getStringCellValue(),
+                        "Error al crear diametro en la fila " + row.getRowNum() + ", " + e.getMessage()));
             }
 
         }
@@ -131,7 +132,8 @@ public class FileService {
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Bodega agregada correctamente"));
 
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+                fileResponses.add(new FileResponse("Bodega: " + nameCell.getStringCellValue(),
+                        "Error al crear bodega en la fila " + row.getRowNum() + ", " + e.getMessage()));
             }
 
         }
@@ -169,7 +171,7 @@ public class FileService {
                     throw new RuntimeException("la cantidad de la tapa es obligatoria");
                 }
 
-                if(getCellAsString(descriptionCell).equals("")){
+                if (getCellAsString(descriptionCell).equals("")) {
                     throw new RuntimeException("la descripción de la tapa es obligatoria");
                 }
 
@@ -215,8 +217,9 @@ public class FileService {
                         "Tipo de tapa agregado correctamente"));
 
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(getCellAsString(nameCell) + " " + getCellAsString(colorCell),
-                        "Error, " + e.getMessage()));
+                fileResponses
+                        .add(new FileResponse("Tapa: " + getCellAsString(nameCell) + " " + getCellAsString(colorCell),
+                                "Error en la fila " + row.getRowNum() + ", " + e.getMessage()));
             }
 
         }
@@ -279,7 +282,8 @@ public class FileService {
                         .add(new FileResponse(nameCell.getStringCellValue(), "Tipo de tapa agregado correctamente"));
 
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+                fileResponses.add(new FileResponse("Envase: " + nameCell.getStringCellValue(),
+                        "Error en la fila " + row.getRowNum() + ", " + e.getMessage()));
             }
         }
         return fileResponses;
@@ -325,7 +329,8 @@ public class FileService {
                 ), token);
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Químico agregado correctamente"));
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+                fileResponses.add(new FileResponse("Químico: " + nameCell.getStringCellValue(),
+                        "Error en la fila " + row.getRowNum() + ", " + e.getMessage()));
             }
         }
         return fileResponses;
@@ -379,13 +384,14 @@ public class FileService {
                         getCellAsNullableDouble(ml1000cell)), token);
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Extracto agregado correctamente"));
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+                fileResponses.add(new FileResponse("Extracto: " + nameCell.getStringCellValue(),
+                        "Error en la fila " + row.getRowNum() + ", " + e.getMessage()));
             }
         }
         return fileResponses;
     }
 
-    private List<FileResponse> readCombos(Sheet sheet, String token){
+    private List<FileResponse> readCombos(Sheet sheet, String token) {
         boolean firstRow = true;
         List<FileResponse> fileResponses = new ArrayList<>();
         for (Row row : sheet) {
@@ -404,29 +410,29 @@ public class FileService {
             Cell cienPrice = row.getCell(7);
             Cell pacaPrice = row.getCell(8);
 
-            try{
-                System.out.println("se llamo combos");
-                if(nameCell == null || nameCell.getStringCellValue().isEmpty()){
+            try {
+
+                if (nameCell == null || nameCell.getStringCellValue().isEmpty()) {
                     throw new RuntimeException("el nombre del combo es obligatorio");
                 }
 
-                if(tapa == null || tapa.getStringCellValue().isEmpty()){
+                if (tapa == null || tapa.getStringCellValue().isEmpty()) {
                     throw new RuntimeException("la tapa del combo es obligatoria");
                 }
 
-                if(envase == null || envase.getStringCellValue().isEmpty()){
+                if (envase == null || envase.getStringCellValue().isEmpty()) {
                     throw new RuntimeException("debe haber al menos un frasco en el combo");
                 }
 
-                if(unitPrice == null){
+                if (unitPrice == null) {
                     throw new RuntimeException("el precio unitario del combo es obligatorio");
                 }
 
-                if(docenaPrice == null){
+                if (docenaPrice == null) {
                     throw new RuntimeException("el precio por docena del combo es obligatorio");
                 }
 
-                if(cienPrice == null){
+                if (cienPrice == null) {
                     throw new RuntimeException("el precio por cien del combo es obligatorio");
                 }
 
@@ -437,21 +443,20 @@ public class FileService {
                 List<CapRequest> capRequests = generateCapRequests(tapa, diametroTapaCell);
 
                 combosService.addCombo(
-                    new ComboRequest(
-                        getCellAsString(nameCell),
-                        getCellAsString(envase),
-                        capRequests,
-                        unitPrice.getNumericCellValue(),
-                        docenaPrice.getNumericCellValue(),
-                        cienPrice.getNumericCellValue(),
-                        pacaPrice.getNumericCellValue(),
-                        getCellAsNullableString(descriptionCell)
-                    )
-                );
+                        new ComboRequest(
+                                getCellAsString(nameCell),
+                                getCellAsString(envase),
+                                capRequests,
+                                unitPrice.getNumericCellValue(),
+                                docenaPrice.getNumericCellValue(),
+                                cienPrice.getNumericCellValue(),
+                                pacaPrice.getNumericCellValue(),
+                                getCellAsNullableString(descriptionCell)));
 
                 fileResponses.add(new FileResponse(getCellAsString(nameCell), "Combo agregado correctamente"));
-            }catch (Exception e){
-                fileResponses.add(new FileResponse(getCellAsString(nameCell), "Error, " + e.getMessage()));
+            } catch (Exception e) {
+                fileResponses.add(new FileResponse("Combo: " + getCellAsString(nameCell),
+                        "Error en la fila " + row.getRowNum() + ", " + e.getMessage()));
             }
         }
         return fileResponses;
@@ -487,7 +492,7 @@ public class FileService {
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Inventario del envase actualizado"));
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(getCellAsString(nameCell), "Error, " + e.getMessage()));
+                fileResponses.add(new FileResponse("Envase: " + getCellAsString(nameCell), "Error, " + e.getMessage()));
                 e.printStackTrace();
             }
         }
@@ -524,8 +529,6 @@ public class FileService {
                     throw new RuntimeException("la cantidad de la tapa y nombre es obligatorio");
                 }
 
-                
-
                 if (getCellAsString(diameterCell).equals("")) {
                     throw new RuntimeException("el diametro de la tapa es obligatorio");
                 }
@@ -546,9 +549,9 @@ public class FileService {
                 fileResponses.add(new FileResponse(getCellAsString(nameCell) + " " + getCellAsString(colorCell),
                         "Inventario de la tapa ha sido actualizado"));
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(getCellAsString(nameCell) + " " + getCellAsString(colorCell),
-                        "Error al crear, " + e.getMessage()));
-                e.printStackTrace();
+                fileResponses
+                        .add(new FileResponse("Tapa: " + getCellAsString(nameCell) + " " + getCellAsString(colorCell),
+                                "Error en la fila " + row.getRowNum() + ", " + e.getMessage()));
             }
         }
         return fileResponses;
@@ -583,7 +586,8 @@ public class FileService {
                 fileResponses
                         .add(new FileResponse(nameCell.getStringCellValue(), "Inventario del químico actualizado"));
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(getCellAsString(nameCell), "Error, " + e.getMessage()));
+                fileResponses.add(new FileResponse("Químico: " + getCellAsString(nameCell),
+                        "Error en la fila " + row.getRowNum() + ", " + e.getMessage()));
             }
         }
         return fileResponses;
@@ -614,7 +618,6 @@ public class FileService {
             Cell quantityCell = row.getCell(8);
             Cell bodegaCell = row.getCell(9);
 
-
             try {
 
                 if (nameCell == null) {
@@ -641,10 +644,11 @@ public class FileService {
                         getCellAsNullableDouble(ml250cell),
                         getCellAsNullableDouble(ml500cell),
                         getCellAsNullableDouble(ml1000cell)), token);
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Extracto agregado correctamente"));
+                fileResponses
+                        .add(new FileResponse(nameCell.getStringCellValue(), "Inventario del extracto actualizado"));
             } catch (Exception e) {
-
-                fileResponses.add(new FileResponse(getCellAsString(nameCell), "Error, " + e.getMessage()));
+                fileResponses.add(new FileResponse("Extracto " + getCellAsString(nameCell),
+                        "Error en la fila " + row.getRowNum() + ", " + e.getMessage()));
             }
 
         }
@@ -674,11 +678,11 @@ public class FileService {
         String[] bodegaNames;
         String[] quantities;
 
-        if(bodegaCell == null){
+        if (bodegaCell == null) {
             throw new RuntimeException("Al menos una bodega es obligatoria");
         }
 
-        if(quantityCell == null){
+        if (quantityCell == null) {
             throw new RuntimeException("Al menos una cantidad es obligatoria");
         }
 
@@ -711,26 +715,26 @@ public class FileService {
     }
 
     private List<CapRequest> generateCapRequests(Cell tapa, Cell diameter) {
-        
+
         List<CapRequest> capRequests = new ArrayList<>();
 
-        if(tapa == null || tapa.getStringCellValue().isEmpty()){
+        if (tapa == null || tapa.getStringCellValue().isEmpty()) {
             throw new RuntimeException("El combo debe tener al menos una tapa");
         }
 
-        if(diameter == null || getCellAsString(diameter).isEmpty()){
+        if (diameter == null || getCellAsString(diameter).isEmpty()) {
             throw new RuntimeException("El combo debe tener al menos un diámetro de tapa");
         }
 
         String[] tapaNames;
 
-        if(tapa.getStringCellValue().contains(",")){
+        if (tapa.getStringCellValue().contains(",")) {
             tapaNames = tapa.getStringCellValue().split(",");
-        }else{
-            tapaNames = new String[]{tapa.getStringCellValue()};
+        } else {
+            tapaNames = new String[] { tapa.getStringCellValue() };
         }
         for (String tapaName : tapaNames) {
-            capRequests.add(new CapRequest(tapaName.trim(),"",getCellAsString(diameter).trim()));
+            capRequests.add(new CapRequest(tapaName.trim(), "", getCellAsString(diameter).trim()));
         }
         return capRequests;
     }

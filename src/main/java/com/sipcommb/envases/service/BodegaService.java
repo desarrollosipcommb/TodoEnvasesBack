@@ -44,7 +44,7 @@ public class BodegaService {
 
         Optional<Bodega> existingBodega = bodegaRepository.findByName(name);
         if (existingBodega.isPresent()) {
-            return "Bodega con el nombre " + name + " ya existe.";
+            throw new IllegalArgumentException("La bodega con nombre " + name + " ya existe.");
         }
 
         Bodega newBodega = new Bodega();
