@@ -19,9 +19,10 @@ public interface BodegaRepository extends JpaRepository<Bodega, Long> {
     @Query("SELECT b.name FROM Bodega b")
     List<String> findAllBodegasNames();
 
+    @Query("SELECT b.name FROM Bodega b WHERE b.name LIKE %:nameFilter%")
+    List<String> findBodegasByNameFilter(@Param("nameFilter") String nameFilter);
+
     @Query("SELECT b.name FROM Bodega b")
     Page<String> findAllBodegasNames(Pageable pageable);
-
-    
 
 }

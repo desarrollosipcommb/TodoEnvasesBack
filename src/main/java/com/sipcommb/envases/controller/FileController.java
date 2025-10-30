@@ -3,6 +3,10 @@ package com.sipcommb.envases.controller;
 import com.sipcommb.envases.dto.CustomApiResponse;
 import com.sipcommb.envases.service.FileService;
 import com.sipcommb.envases.service.PermissionService;
+
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -25,6 +29,12 @@ public class FileController {
     private FileService fileService;
 
     @PostMapping("/upload-excel")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Archivo subido y procesado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Solicitud incorrecta, por ejemplo, archivo no proporcionado"),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado, el usuario no tiene permiso"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor al procesar el archivo")
+    })
     public ResponseEntity<?> uploadExcel(
             @RequestParam("file") MultipartFile file,
             @RequestHeader("Authorization") String authHeader
@@ -43,6 +53,12 @@ public class FileController {
     }
 
     @PostMapping("/update-inventory-excel")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Archivo subido y procesado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Solicitud incorrecta, por ejemplo, archivo no proporcionado"),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado, el usuario no tiene permiso"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor al procesar el archivo")
+    })
     public ResponseEntity<?> updateInventoryByExcel(
             @RequestParam("file") MultipartFile file,
             @RequestHeader("Authorization") String authHeader

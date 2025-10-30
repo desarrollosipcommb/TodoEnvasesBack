@@ -18,4 +18,8 @@ public interface BodegaCapColorRepository extends JpaRepository<BodegaCapColor, 
 
     @Query("SELECT bc.bodega.name, bc.capColor.cap.name, bc.capColor.color, bc.quantity FROM BodegaCapColor bc")
     List<Object[]> getGroupedByBodega();
+
+    @Query("SELECT bc FROM BodegaCapColor bc WHERE bc.bodega.name LIKE %:bodegaName% AND bc.capColor.cap.name LIKE %:itemName%")
+    List<BodegaCapColor> findByBodegaNameContaining(@Param("bodegaName") String bodegaName, @Param("itemName") String itemName);
+
 }
