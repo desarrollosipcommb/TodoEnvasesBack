@@ -11,6 +11,7 @@ import com.sipcommb.envases.entity.BodegaJar;
 import com.sipcommb.envases.entity.BodegaQuimicos;
 import com.sipcommb.envases.entity.Cap;
 import com.sipcommb.envases.entity.CapColor;
+import com.sipcommb.envases.entity.Client;
 import com.sipcommb.envases.entity.Combo;
 import com.sipcommb.envases.entity.Extractos;
 import com.sipcommb.envases.entity.ItemType;
@@ -78,6 +79,9 @@ public class SaleService {
     private ExtractosService extractosService;
 
     @Autowired
+    private ClientService clientService;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -92,6 +96,16 @@ public class SaleService {
     @Autowired
     private PriceService priceService;
 
+    /**
+     * Planea o añade un venta en el sistema, dependiendo del parámetro saveSale.
+     * 
+     * @param saleRequest DTO que contiene los detalles de la venta
+     * @param token       Token de autenticación del usuario que realiza la venta,
+     *                    se usa para obtener el vendedor
+     * @param saveSale    Indica si la venta debe ser guardada en la base de datos
+     *                    (true) o solo validada (false)
+     * @return SaleDTO que representa la venta.
+     */
     public SaleDTO addSale(SaleRequest saleRequest, String token, boolean saveSale) {
         Sale sale = new Sale();
 
@@ -105,9 +119,8 @@ public class SaleService {
             throw new IllegalArgumentException("Problema al establecer el método de pago: " + e.getMessage());
         }
 
-        sale.setClientName(saleRequest.getClientName());
-        sale.setClientEmail(saleRequest.getClientEmail());
-        sale.setClientPhone(saleRequest.getClientPhone());
+        Client client = clientService.getClientByName(saleRequest.getClientName());
+        sale.setClient(client);
         Optional<User> userOpt = userRepository.findById(jwtService.getUserIdFromToken(token));
 
         if (!userOpt.isPresent()) {
@@ -115,48 +128,72 @@ public class SaleService {
         }
 
         sale.setSeller(userOpt.get());
-        sale.setNotes(saleRequest.getDescripion() != null ? saleRequest.getDescripion() : "");
+        sale.setNotes(saleRequest.getDescription() != null ? saleRequest.getDescription() : "");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         java.time.LocalDate saleDate = java.time.LocalDate.parse(saleRequest.getSaleDate(), formatter);
         sale.setSaleDate(saleDate);
-
         List<SaleItemRequest> saleItems = saleRequest.getItems();
-
         List<SaleItem> saleItemList = new ArrayList<>();
         List<SaleItemDTO> saleItemDTOList = new ArrayList<>();
         sale.setTotalAmount(BigDecimal.ZERO);
 
-        if (saveSale){
+        if (saveSale) {
             saleRepository.save(sale);
         }
-            
-        for (SaleItemRequest saleItemRequest : saleItems) {
-            SaleItem saleItem = checkSaleItems(saleItemRequest);
 
-            saleItem.setSale(sale);
-            saleItemList.add(saleItem);
+        // crea los sale items usando la lista de saleItemRequests
+        // Además, va creado la lista de SaleItemDTOs para el retorno
+        for (SaleItemRequest saleItemRequest : saleItems) {
+            SaleItem saleItem = checkSaleItems(saleItemRequest, saleItemList);
+            int index = checkSaleItemList(saleItemList, saleItem);
+
+            if (index != -1) {
+                SaleItem existingItem = saleItemList.get(index);
+                existingItem.setQuantity(existingItem.getQuantity() + saleItem.getQuantity());
+                existingItem.setSubtotal(
+                        existingItem.getUnitPrice().multiply(BigDecimal.valueOf(existingItem.getQuantity())));
+                saleItem = existingItem;
+                SaleItemDTO existingDTO = saleItemDTOList.get(index);
+                existingDTO.setQuantity(saleItem.getQuantity());
+                existingDTO.setSubtotal(saleItem.getSubtotal());
+                existingDTO.setUnitPrice(saleItem.getUnitPrice());
+
+            } else {
+                saleItem.setSale(sale);
+                saleItemList.add(saleItem);
+
+                if (saleItem.getItemType() == ItemType.COMBO) {
+                    saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getComboName(), saleItem));
+                } else if (saleItem.getItemType() == ItemType.JAR) {
+                    saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getJarName(), saleItem));
+                } else if (saleItem.getItemType() == ItemType.CAP) {
+                    saleItemDTOList.add(new SaleItemDTO(
+                            saleItemRequest.getCapName() + ' ' + saleItemRequest.getCapColor(), saleItem));
+                } else if (saleItem.getItemType() == ItemType.QUIMICO) {
+                    saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getQuimicoName(), saleItem));
+                } else if (saleItem.getItemType() == ItemType.EXTRACTO) {
+                    saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getExtractoName(), saleItem));
+                }
+
+            }
+
+        }
+
+        // modifica o verifica el invenvtario, se aprovecha para ir sumando el total de
+        // la venta
+        for (SaleItem saleItem : saleItemList) {
+
+            if (saveSale) {
+                modifyInventory(saleItem, userOpt.get().getId().intValue());
+            } else {
+                validateInventory(saleItem);
+            }
+
             sale.addPrice(saleItem.getSubtotal());
 
-            if (saleItem.getItemType() == ItemType.COMBO) {
-                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getComboName(), saleItem));
-            } else if (saleItem.getItemType() == ItemType.JAR) {
-                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getJarName(), saleItem));
-            } else if (saleItem.getItemType() == ItemType.CAP) {
-                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getCapName() + ' ' + saleItemRequest.getCapColor(), saleItem));
-            } else if (saleItem.getItemType() == ItemType.QUIMICO) {
-                System.out.println("Adding quimico to saleItemDTOList: " + saleItemRequest.getQuimicoName());
-                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getQuimicoName(), saleItem));
-            } else if (saleItem.getItemType() == ItemType.EXTRACTO) {
-                System.out.println("Adding extracto to saleItemDTOList: " + saleItemRequest.getExtractoName());
-                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getExtractoName(), saleItem));
-            }
         }
 
-       
-        for (SaleItem saleItem : saleItemList) {
-            modifyInventory(saleItem, userOpt.get().getId().intValue(), saveSale);
-        }
-
+        // crea la venta y añade a la base de datos si es necesario
         if (saveSale) {
             sale.setCreatedAt(LocalDateTime.now());
             sale.setUpdatedAt(LocalDateTime.now());
@@ -167,7 +204,17 @@ public class SaleService {
         return new SaleDTO(sale, saleItemDTOList);
     }
 
-    private SaleItem checkSaleItems(SaleItemRequest saleItemRequest) {
+    /**
+     * Verifica un saleItemRequest y crea un SaleItem correspondiente
+     * Un saleItemRequest representa un item de venta y la cantidad solicitada, por
+     * ejemplo un el envase A y 5 unidades
+     * 
+     * @param existingItems   la lista de items ya procesados en la venta actual
+     * @param saleItemRequest el DTO de saleItem
+     * @return SaleItem el item final que se va a añadir al la base de datos junto a
+     *         la venta
+     */
+    private SaleItem checkSaleItems(SaleItemRequest saleItemRequest, List<SaleItem> existingItems) {
 
         if (saleItemRequest.getQuantity() <= 0) {
             throw new IllegalArgumentException("La cantidad de venta no puede ser negativa o cero");
@@ -230,6 +277,15 @@ public class SaleService {
 
     }
 
+    /**
+     * TODO
+     * Crea un SaleItem de tipo Combo basado en el Combo y el SaleItemRequest
+     * proporcionados.
+     * 
+     * @param combo           el Combo del cual se creará el SaleItem
+     * @param saleItemRequest el DTO que contiene los detalles del item de venta
+     * @return el SaleItem creado
+     */
     private SaleItem createSaleItem(Combo combo, SaleItemRequest saleItemRequest) {
         SaleItem saleItem = new SaleItem();
         saleItem.setJar(combo.getJar());
@@ -238,9 +294,10 @@ public class SaleService {
                 .orElseThrow(() -> new IllegalArgumentException("Tapa no encontrada: " + saleItemRequest.getCapName()));
 
         CapColor capColor = capColorRepository.findByCapAndColor(cap, saleItemRequest.getCapColor())
-                .orElseThrow(() -> new IllegalArgumentException("El color no existe en el tipo de tapa: " + cap.getName()));
+                .orElseThrow(
+                        () -> new IllegalArgumentException("El color no existe en el tipo de tapa: " + cap.getName()));
 
-        saleItem.setCapColor(capColor);       
+        saleItem.setCapColor(capColor);
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(BigDecimal.valueOf(determinePrice(combo, saleItemRequest)));
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(BigDecimal.valueOf(saleItemRequest.getQuantity())));
@@ -249,6 +306,14 @@ public class SaleService {
         return saleItem;
     }
 
+    /**
+     * Crea un SaleItem de tipo Jar basado en el Jar y el SaleItemRequest
+     * proporcionados.
+     * 
+     * @param jar             el envase del cual se creará el SaleItem
+     * @param saleItemRequest el DTO que contiene los detalles del item de venta
+     * @return el SaleItem creado
+     */
     private SaleItem createSaleItem(Jar jar, SaleItemRequest saleItemRequest) {
         SaleItem saleItem = new SaleItem();
         saleItem.setJar(jar);
@@ -261,12 +326,20 @@ public class SaleService {
         return saleItem;
     }
 
+    /**
+     * Gestiona la validación y obtención de una tapa por su nombre y diámetro.
+     * 
+     * @param cap             la tapa con la cual se crea el SaleItem
+     * @param saleItemRequest el DTO que contiene los detalles del item de venta
+     * @return el SaleItem creado
+     */
     private SaleItem createSaleItem(Cap cap, SaleItemRequest saleItemRequest) {
         SaleItem saleItem = new SaleItem();
         saleItem.setJar(null);
 
         CapColor capColor = capColorRepository.findByCapAndColor(cap, saleItemRequest.getCapColor())
-                .orElseThrow(() -> new IllegalArgumentException("El color no existe en el tipo de tapa: " + cap.getName()));
+                .orElseThrow(
+                        () -> new IllegalArgumentException("El color no existe en el tipo de tapa: " + cap.getName()));
 
         saleItem.setCapColor(capColor);
         saleItem.setQuantity(saleItemRequest.getQuantity());
@@ -278,6 +351,14 @@ public class SaleService {
         return saleItem;
     }
 
+    /**
+     * Crea un SaleItem de tipo Quimico basado en el Quimico y el SaleItemRequest
+     * proporcionados.
+     * 
+     * @param quimico         el Quimico del cual se creará el SaleItem
+     * @param saleItemRequest el DTO que contiene los detalles del item de venta
+     * @return el SaleItem creado
+     */
     private SaleItem createSaleItem(Quimicos quimico, SaleItemRequest saleItemRequest) {
         SaleItem saleItem = new SaleItem();
         saleItem.setJar(null);
@@ -291,6 +372,14 @@ public class SaleService {
         return saleItem;
     }
 
+    /**
+     * Crea un SaleItem de tipo Extracto basado en el Extracto y el SaleItemRequest
+     * proporcionados.
+     * 
+     * @param extracto        el Extracto del cual se creará el SaleItem
+     * @param saleItemRequest el DTO que contiene los detalles del item de venta
+     * @return el SaleItem creado
+     */
     private SaleItem createSaleItem(Extractos extracto, SaleItemRequest saleItemRequest) {
         SaleItem saleItem = new SaleItem();
         saleItem.setJar(null);
@@ -304,6 +393,56 @@ public class SaleService {
         return saleItem;
     }
 
+    /**
+     * Verifica si un SaleItem ya existe en la lista de items de venta existentes.
+     * Si existe, devuelve el índice del item existente; de lo contrario, devuelve
+     * -1
+     * 
+     * @param existingItems Lista de SaleItem ya existentes
+     * @param newItem       Nuevo SaleItem a verificar
+     * @return Índice del item existente o -1 si no existe
+     */
+    private int checkSaleItemList(List<SaleItem> existingItems, SaleItem newItem) {
+        for (int i = 0; i < existingItems.size(); i++) {
+            SaleItem existingItem = existingItems.get(i);
+            if (existingItem.getItemType() == newItem.getItemType()) {
+                if (existingItem.getItemType() == ItemType.COMBO) {
+                    /*
+                     * TODO, dado que aun ni idea como hacer esto bien, lo dejo comentado por ahora
+                     * if (existingItem.getJar().getId().equals(newItem.getJar().getId())
+                     * && existingItem.getCapColor().getId().equals(newItem.getCapColor().getId()))
+                     * {
+                     * return i;
+                     * }
+                     */
+                } else if (existingItem.getItemType() == ItemType.JAR) {
+                    if (existingItem.getJar().getId().equals(newItem.getJar().getId())) {
+                        return i;
+                    }
+                } else if (existingItem.getItemType() == ItemType.CAP) {
+                    if (existingItem.getCapColor().getId().equals(newItem.getCapColor().getId())) {
+                        return i;
+                    }
+                } else if (existingItem.getItemType() == ItemType.QUIMICO) {
+                    if (existingItem.getQuimico().getId().equals(newItem.getQuimico().getId())) {
+                        return i;
+                    }
+                } else if (existingItem.getItemType() == ItemType.EXTRACTO) {
+                    if (existingItem.getExtracto().getId().equals(newItem.getExtracto().getId())) {
+                        return i;
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Gestiona la validación y obtención de un combo por su nombre.
+     * 
+     * @param comboName
+     * @return Combo válido
+     */
     private Combo manageCombo(String comboName) {
         Optional<Combo> comboOpt = comboRepository.findByName(comboName);
         if (!comboOpt.isPresent()) {
@@ -319,6 +458,12 @@ public class SaleService {
         return combo;
     }
 
+    /**
+     * Gestiona la validación y obtención de un tarro por su nombre.
+     * 
+     * @param jarName
+     * @return Jar válido
+     */
     private Jar manageJar(String jarName) {
         Optional<Jar> jarOpt = jarRepository.getByName(jarName);
         if (!jarOpt.isPresent()) {
@@ -334,6 +479,13 @@ public class SaleService {
         return jar;
     }
 
+    /**
+     * Gestiona la validación y obtención de una tapa por su nombre y diámetro.
+     * 
+     * @param capName
+     * @param diameter
+     * @return Cap válido
+     */
     private Cap manageCap(String capName, String diameter) {
         Optional<Cap> capOpt = capRepository.findByNameAndDiameter(capName, diameter);
         if (!capOpt.isPresent()) {
@@ -350,6 +502,14 @@ public class SaleService {
         return cap;
     }
 
+    /**
+     * Determina el precio unitario basado en la cantidad y los precios disponibles
+     * del combo.
+     * 
+     * @param combo           el combo del cual se va a determinar el precio
+     * @param saleItemRequest el DTO que contiene los detalles del item de venta
+     * @return el precio unitario determinado
+     */
     private double determinePrice(Combo combo, SaleItemRequest saleItemRequest) {
         if (combo.getCienPrice() != null && combo.getCienPrice() > 0 && saleItemRequest.getQuantity() >= 100) {
             return combo.getCienPrice();
@@ -364,6 +524,14 @@ public class SaleService {
 
     }
 
+    /**
+     * Determina el precio unitario basado en la cantidad y los precios disponibles
+     * del tarro.
+     * 
+     * @param jar             el tarro del cual se va a determinar el precio
+     * @param saleItemRequest el DTO que contiene los detalles del item a vender
+     * @return el precio unitario determinado
+     */
     private BigDecimal determinePrice(Jar jar, SaleItemRequest saleItemRequest) {
         if (saleItemRequest.getQuantity() == jar.getUnitsInPaca()
                 && (jar.getPacaPrice() != null && jar.getPacaPrice().compareTo(
@@ -385,10 +553,19 @@ public class SaleService {
 
     }
 
+    /**
+     * Determina el precio unitario basado en la cantidad y los precios disponibles
+     * de la tapa.
+     * 
+     * @param cap             la tapa del cual se va a determinar el precio
+     * @param saleItemRequest el DTO que contiene los detalles del item a vender
+     * @return el precio unitario determinado
+     */
     private BigDecimal determinePrice(Cap cap, SaleItemRequest saleItemRequest) {
         CapColor capColor = capColorRepository.findByCapAndColor(cap, saleItemRequest.getCapColor())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "El color " + saleItemRequest.getCapColor() + " no existe en el tipo de tapa: " + cap.getName()));
+                        "El color " + saleItemRequest.getCapColor() + " no existe en el tipo de tapa: "
+                                + cap.getName()));
 
         if (saleItemRequest.getQuantity() == capColor.getUnits_in_paca()) {
             return BigDecimal.valueOf(capColor.getPaca_price());
@@ -408,6 +585,14 @@ public class SaleService {
 
     }
 
+    /**
+     * Determina el precio unitario basado en la cantidad y los precios disponibles
+     * del extracto.
+     * 
+     * @param extracto        el extracto del cual se va a determinar el precio
+     * @param saleItemRequest el DTO que contiene los detalles del item a vender
+     * @return el precio unitario determinado
+     */
     private BigDecimal determinePrice(Extractos extracto, SaleItemRequest saleItemRequest) {
         int quantity = saleItemRequest.getQuantity();
 
@@ -450,25 +635,23 @@ public class SaleService {
 
     }
 
-    private void modifyInventory(SaleItem saleItem, int userId, boolean saveSale) {
-
-        /*
-         * te explico mi problema, necesito la opcion de planear venta (se hace todo más no se vende el objeto, es decir no se descuenta la cantidad de la base de datos), y la opcion de vender, que si se descuenta. En la opción de vender es facil calcular cuando tengo inventario o no, dado que si al final no hay pues lanzo un error para que no se salven los cambios en la base de 
-         * 
-         * 
-         */
-
-
-        //TODO, no se como resolver el tema de bodegas aun
+    /**
+     * Se usa para planear la venta, hace la validación del inventario sin
+     * modificarlo
+     * 
+     * @param saleItem el item de venta a validar
+     */
+    private void validateInventory(SaleItem saleItem) {
+        // TODO , no se como resolver el tema de bodegas aun
         if (saleItem.getItemType() == ItemType.COMBO) {
-            
+
         } else if (saleItem.getItemType() == ItemType.JAR) {
             Jar jar = saleItem.getJar();
             List<BodegaJar> bodegaJar = jarService.sortBodegaJar(jar.getBodegas());
 
             int quantityToDeduct = saleItem.getQuantity();
 
-            for(BodegaJar bj : bodegaJar) {
+            for (BodegaJar bj : bodegaJar) {
                 if (quantityToDeduct <= 0) {
                     break;
                 }
@@ -479,14 +662,12 @@ public class SaleService {
                 }
 
                 int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
-                if(saveSale) {
-                    bj.setQuantity(availableInBodega - deductQuantity);
-                }
                 quantityToDeduct -= deductQuantity;
             }
 
-            if(quantityToDeduct > 0) {
-                throw new IllegalArgumentException("No hay suficiente inventario para el tarro: " + jar.getName()+ ", se necesitan " + quantityToDeduct + " unidades más.");
+            if (quantityToDeduct > 0) {
+                throw new IllegalArgumentException("No hay suficiente inventario para el tarro: " + jar.getName()
+                        + ", se necesitan " + quantityToDeduct + " unidades más.");
             }
 
         } else if (saleItem.getItemType() == ItemType.CAP) {
@@ -495,7 +676,124 @@ public class SaleService {
 
             int quantityToDeduct = saleItem.getQuantity();
 
-            for(BodegaCapColor bodegaCapColor : bodegaCapColors) {
+            for (BodegaCapColor bodegaCapColor : bodegaCapColors) {
+                if (quantityToDeduct <= 0) {
+                    break;
+                }
+
+                int availableInBodega = bodegaCapColor.getQuantity();
+                if (availableInBodega <= 0) {
+                    continue;
+                }
+
+                int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
+                quantityToDeduct -= deductQuantity;
+            }
+
+            if (quantityToDeduct > 0) {
+                throw new IllegalArgumentException(
+                        "No hay suficiente inventario para la tapa: " + capColor.getCap().getName() + " color "
+                                + capColor.getColor() + ", se necesitan " + quantityToDeduct + " unidades más.");
+            }
+
+        } else if (saleItem.getItemType() == ItemType.QUIMICO) {
+            Quimicos quimico = saleItem.getQuimico();
+            List<BodegaQuimicos> bodegaQuimicos = quimicosService.sortBodegaQuimicos(quimico.getBodegas());
+            int quantityToDeduct = saleItem.getQuantity();
+
+            for (BodegaQuimicos bq : bodegaQuimicos) {
+                if (quantityToDeduct <= 0) {
+                    break;
+                }
+
+                int availableInBodega = bq.getQuantity();
+                if (availableInBodega <= 0) {
+                    continue;
+                }
+
+                int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
+                quantityToDeduct -= deductQuantity;
+            }
+
+            if (quantityToDeduct > 0) {
+                throw new IllegalArgumentException("No hay suficiente inventario para el químico: " + quimico.getName()
+                        + ", se necesitan " + quantityToDeduct + " unidades más.");
+            }
+
+        } else if (saleItem.getItemType() == ItemType.EXTRACTO) {
+
+            Extractos extracto = saleItem.getExtracto();
+            List<BodegaExtractos> bodegaExtractos = extractosService.sortBodegaExtractos(extracto.getBodegas());
+
+            int quantityToDeduct = saleItem.getQuantity();
+
+            for (BodegaExtractos be : bodegaExtractos) {
+                if (quantityToDeduct <= 0) {
+                    break;
+                }
+
+                int availableInBodega = be.getQuantity();
+                if (availableInBodega <= 0) {
+                    continue;
+                }
+
+                int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
+                quantityToDeduct -= deductQuantity;
+            }
+
+            if (quantityToDeduct > 0) {
+                throw new IllegalArgumentException("No hay suficiente inventario para el extracto: "
+                        + extracto.getName() + ", se necesitan " + quantityToDeduct + " unidades más.");
+            }
+
+        } else {
+            throw new IllegalArgumentException("Tipo de item de venta no reconocido: " + saleItem.getItemType());
+        }
+    }
+
+    /**
+     * Modifica el inventario restando las cantidades vendidas.
+     * 
+     * @param saleItem el item de venta que se va a procesar
+     * @param userId   el ID del usuario que realiza la venta
+     */
+    private void modifyInventory(SaleItem saleItem, int userId) {
+        // TODO, no se como resolver el tema de bodegas aun
+        if (saleItem.getItemType() == ItemType.COMBO) {
+
+        } else if (saleItem.getItemType() == ItemType.JAR) {
+            Jar jar = saleItem.getJar();
+            List<BodegaJar> bodegaJar = jarService.sortBodegaJar(jar.getBodegas());
+
+            int quantityToDeduct = saleItem.getQuantity();
+
+            for (BodegaJar bj : bodegaJar) {
+                if (quantityToDeduct <= 0) {
+                    break;
+                }
+
+                int availableInBodega = bj.getQuantity();
+                if (availableInBodega <= 0) {
+                    continue;
+                }
+
+                int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
+                bj.setQuantity(availableInBodega - deductQuantity);
+                quantityToDeduct -= deductQuantity;
+            }
+
+            if (quantityToDeduct > 0) {
+                throw new IllegalArgumentException("No hay suficiente inventario para el tarro: " + jar.getName()
+                        + ", se necesitan " + quantityToDeduct + " unidades más.");
+            }
+
+        } else if (saleItem.getItemType() == ItemType.CAP) {
+            CapColor capColor = saleItem.getCapColor();
+            List<BodegaCapColor> bodegaCapColors = capColorService.sortBodegas(capColor.getBodegas());
+
+            int quantityToDeduct = saleItem.getQuantity();
+
+            for (BodegaCapColor bodegaCapColor : bodegaCapColors) {
                 if (quantityToDeduct <= 0) {
                     break;
                 }
@@ -510,8 +808,10 @@ public class SaleService {
                 quantityToDeduct -= deductQuantity;
             }
 
-            if(quantityToDeduct > 0) {
-                throw new IllegalArgumentException("No hay suficiente inventario para la tapa: " + capColor.getCap().getName() + " color " + capColor.getColor() + ", se necesitan " + quantityToDeduct + " unidades más.");
+            if (quantityToDeduct > 0) {
+                throw new IllegalArgumentException(
+                        "No hay suficiente inventario para la tapa: " + capColor.getCap().getName() + " color "
+                                + capColor.getColor() + ", se necesitan " + quantityToDeduct + " unidades más.");
             }
 
         } else if (saleItem.getItemType() == ItemType.QUIMICO) {
@@ -519,7 +819,7 @@ public class SaleService {
             List<BodegaQuimicos> bodegaQuimicos = quimicosService.sortBodegaQuimicos(quimico.getBodegas());
             int quantityToDeduct = saleItem.getQuantity();
 
-            for(BodegaQuimicos bq : bodegaQuimicos) {
+            for (BodegaQuimicos bq : bodegaQuimicos) {
                 if (quantityToDeduct <= 0) {
                     break;
                 }
@@ -534,18 +834,19 @@ public class SaleService {
                 quantityToDeduct -= deductQuantity;
             }
 
-            if(quantityToDeduct > 0) {
-                throw new IllegalArgumentException("No hay suficiente inventario para el químico: " + quimico.getName()+ ", se necesitan " + quantityToDeduct + " unidades más.");
+            if (quantityToDeduct > 0) {
+                throw new IllegalArgumentException("No hay suficiente inventario para el químico: " + quimico.getName()
+                        + ", se necesitan " + quantityToDeduct + " unidades más.");
             }
 
         } else if (saleItem.getItemType() == ItemType.EXTRACTO) {
-            
+
             Extractos extracto = saleItem.getExtracto();
             List<BodegaExtractos> bodegaExtractos = extractosService.sortBodegaExtractos(extracto.getBodegas());
 
             int quantityToDeduct = saleItem.getQuantity();
 
-            for(BodegaExtractos be : bodegaExtractos) {
+            for (BodegaExtractos be : bodegaExtractos) {
                 if (quantityToDeduct <= 0) {
                     break;
                 }
@@ -560,16 +861,23 @@ public class SaleService {
                 quantityToDeduct -= deductQuantity;
             }
 
-            if(quantityToDeduct > 0) {
-                throw new IllegalArgumentException("No hay suficiente inventario para el extracto: " + extracto.getName()+ ", se necesitan " + quantityToDeduct + " unidades más.");
+            if (quantityToDeduct > 0) {
+                throw new IllegalArgumentException("No hay suficiente inventario para el extracto: "
+                        + extracto.getName() + ", se necesitan " + quantityToDeduct + " unidades más.");
             }
 
         } else {
             throw new IllegalArgumentException("Tipo de item de venta no reconocido: " + saleItem.getItemType());
         }
-            
+
     }
 
+    /**
+     * Obtiene todas las ventas en formato paginado.
+     * 
+     * @param pageable la información de paginación
+     * @return una página de SaleDTO que representa las ventas
+     */
     public Page<SaleDTO> getAllSales(Pageable pageable) {
 
         Page<Sale> sales = saleRepository.findAll(pageable);
@@ -581,6 +889,16 @@ public class SaleService {
         return new PageImpl<>(saleDTOs, pageable, sales.getTotalElements());
     }
 
+    /**
+     * Obtiene las ventas filtradas por rango de fechas y nombre de vendedor en
+     * formato paginado.
+     * 
+     * @param fechaInicioStr la fecha de inicio en formato "yyyy-MM-dd"
+     * @param fechaFinStr    la fecha de fin en formato "yyyy-MM-dd"
+     * @param nombreUsuario  el nombre del vendedor
+     * @param pageable       la información de paginación
+     * @return una página de SaleDTO que representa las ventas filtradas
+     */
     public Page<SaleDTO> getFindByFechaAndVendedor(String fechaInicioStr, String fechaFinStr, String nombreUsuario,
             Pageable pageable) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -596,6 +914,15 @@ public class SaleService {
         return new PageImpl<>(saleDTOs, pageable, sales.getTotalElements());
     }
 
+    /**
+     * Obtiene el monto total de ventas filtradas por rango de fechas y nombre de
+     * vendedor.
+     * 
+     * @param fechaInicioStr la fecha de inicio en formato "yyyy-MM-dd"
+     * @param fechaFinStr    la fecha de fin en formato "yyyy-MM-dd"
+     * @param nombreUsuario  el nombre del vendedor
+     * @return el monto total de ventas como BigDecimal
+     */
     public BigDecimal getTotalAmountByFechaAndVendedor(String fechaInicioStr, String fechaFinStr,
             String nombreUsuario) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -607,7 +934,14 @@ public class SaleService {
         return totalAmount != null ? totalAmount : BigDecimal.ZERO;
     }
 
-
+    /**
+     * Obtiene las ventas realizadas por un usuario específico, identificado por su
+     * correo electrónico, en formato paginado.
+     * 
+     * @param email    el correo electrónico del usuario
+     * @param pageable la información de paginación
+     * @return una página de SaleDTO que representa las ventas del usuario
+     */
     public Page<SaleDTO> getSalesByEmail(String email, Pageable pageable) {
         Optional<User> userOpt = userRepository.findByEmail(email.trim());
         if (!userOpt.isPresent()) {
@@ -623,6 +957,14 @@ public class SaleService {
         return new PageImpl<>(saleDTOs, pageable, sales.size());
     }
 
+    /**
+     * Obtiene las ventas realizadas por un usuario específico, identificado por su
+     * nombre de usuario, en formato paginado.
+     * 
+     * @param username el nombre de usuario del usuario
+     * @param pageable la información de paginación
+     * @return una página de SaleDTO que representa las ventas del usuario
+     */
     public Page<SaleDTO> getSalesByUsername(String username, Pageable pageable) {
         Optional<User> userOpt = userRepository.findByUsername(username.trim());
         if (!userOpt.isPresent()) {
@@ -638,22 +980,31 @@ public class SaleService {
         return new PageImpl<>(saleDTOs, pageable, sales.size());
     }
 
+    /**
+     * Convierte una entidad Sale en un DTO SaleDTO, incluyendo sus items de venta.
+     * 
+     * @param sale la entidad Sale a convertir
+     * @return el DTO SaleDTO correspondiente
+     */
     private SaleDTO toSaleDTO(Sale sale) {
         List<SaleItem> saleItems = saleItemRepository.findBySale(sale.getId());
         List<SaleItemDTO> saleItemDTOs = new ArrayList<>();
         for (SaleItem saleItem : saleItems) {
             if (saleItem.getItemType() == ItemType.COMBO) {
-                /*TODO no funiona 
-                saleItemDTOs.add(new SaleItemDTO(comboRepository
-                        .findByJarAndCap(saleItem.getJar().getId(), saleItem.getCapColor().getId()).orElse(null).getName(),
-                        saleItem));
-                        */
+                /*
+                 * TODO no funiona
+                 * saleItemDTOs.add(new SaleItemDTO(comboRepository
+                 * .findByJarAndCap(saleItem.getJar().getId(),
+                 * saleItem.getCapColor().getId()).orElse(null).getName(),
+                 * saleItem));
+                 */
             } else if (saleItem.getItemType() == ItemType.JAR) {
                 saleItemDTOs.add(new SaleItemDTO(
                         jarRepository.findById(saleItem.getJar().getId()).orElse(null).getName(), saleItem));
             } else if (saleItem.getItemType() == ItemType.CAP) {
                 saleItemDTOs.add(new SaleItemDTO(
-                        capColorRepository.findById(saleItem.getCapColor().getId()).orElse(null).getCap().getName(), saleItem, saleItem.getCapColor().getColor()));
+                        capColorRepository.findById(saleItem.getCapColor().getId()).orElse(null).getCap().getName(),
+                        saleItem, saleItem.getCapColor().getColor()));
             } else if (saleItem.getItemType() == ItemType.QUIMICO) {
                 saleItemDTOs.add(new SaleItemDTO(
                         quimicosRepository.findById(saleItem.getQuimico().getId()).orElse(null).getName(), saleItem));
@@ -666,6 +1017,14 @@ public class SaleService {
         return saleDTO;
     }
 
+    /**
+     * Obtiene las ventas filtradas por rango de precios en formato paginado.
+     * 
+     * @param priceRangeRequest el DTO que contiene los detalles del rango de
+     *                          precios
+     * @param pageable          la información de paginación
+     * @return una página de SaleDTO que representa las ventas filtradas por precio
+     */
     public Page<SaleDTO> getPriceRange(PriceSearchRequest priceRangeRequest, Pageable pageable) {
         boolean exactSearch = priceService.verifyPriceSearchRequest(priceRangeRequest);
 

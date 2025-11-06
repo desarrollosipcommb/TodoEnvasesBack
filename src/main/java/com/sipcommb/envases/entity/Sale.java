@@ -17,7 +17,7 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.Size;
+
 
 @Entity
 @Table(name = "sales")
@@ -31,17 +31,9 @@ public class Sale {
     @JoinColumn(name = "user_id", nullable = false)
     private User seller;
 
-    @Size(max = 100)
-    @Column(name = "client_name")
-    private String clientName;
-
-    @Size(max = 20)
-    @Column(name = "client_phone")
-    private String clientPhone;
-
-    @Size(max = 100)
-    @Column(name = "client_email")
-    private String clientEmail;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id", nullable = false) // Relación con la entidad Client
+    private Client client;
 
     @DecimalMin("0.0")
     @Column(name = "total_amount", precision = 10, scale = 2, nullable = false)
@@ -73,9 +65,9 @@ public class Sale {
     // Constructors
     public Sale() {}
 
-    public Sale(User seller, String clientName, BigDecimal totalAmount, PaymentMethod paymentMethod) {
+    public Sale(User seller, Client client, BigDecimal totalAmount, PaymentMethod paymentMethod) {
         this.seller = seller;
-        this.clientName = clientName;
+        this.client = client;
         this.totalAmount = totalAmount;
         this.paymentMethod = paymentMethod;
         this.saleDate = LocalDate.now();
@@ -103,14 +95,8 @@ public class Sale {
     public User getSeller() { return seller; }
     public void setSeller(User seller) { this.seller = seller; }
 
-    public String getClientName() { return clientName; }
-    public void setClientName(String clientName) { this.clientName = clientName; }
-
-    public String getClientPhone() { return clientPhone; }
-    public void setClientPhone(String clientPhone) { this.clientPhone = clientPhone; }
-
-    public String getClientEmail() { return clientEmail; }
-    public void setClientEmail(String clientEmail) { this.clientEmail = clientEmail; }
+    public Client getClient() { return client; }
+    public void setClient(Client client) { this.client = client; }
 
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }

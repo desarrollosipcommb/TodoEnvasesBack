@@ -29,8 +29,8 @@ public class SaleDTO {
     }
 
     public SaleDTO(Sale sale, List<SaleItemDTO> saleItems) {
-        this.clientName = sale.getClientName();
-        this.clientPhone = sale.getClientPhone();
+        this.clientName = sale.getClient().getName();
+        this.clientPhone = sale.getClient().getPhone();
         this.totalPrice = sale.getTotalAmount();
         this.saleDate = sale.getSaleDate().toString();
         this.sellerName = sale.getSeller() != null ? sale.getSeller().getFirstName() + " " + sale.getSeller().getLastName() : "N/A";

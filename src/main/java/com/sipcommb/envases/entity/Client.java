@@ -1,9 +1,14 @@
 package com.sipcommb.envases.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
@@ -23,6 +28,10 @@ public class Client {
     private String description; 
 
     private Boolean is_active = true;
+
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Sale> sales = new ArrayList<>();
+
 
     public Client() { }
 
@@ -50,6 +59,9 @@ public class Client {
 
     public Boolean getIs_active() { return is_active; }
     public void setIs_active(Boolean is_active) { this.is_active = is_active; }
+
+    public List<Sale> getSales() { return sales; }
+    public void setSales(List<Sale> sales) { this.sales = sales; }
 
     
 }

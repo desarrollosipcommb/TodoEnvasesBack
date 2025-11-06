@@ -75,7 +75,6 @@ public class ClientService{
         return clientRepository.findAll(pageable).map(ClientDTO::new);
     }
 
-    
     public Page<ClientDTO> getAllClientsActive(Pageable pageable){
         return clientRepository.findAllActive(pageable, true).map(ClientDTO::new);
     }
@@ -86,6 +85,11 @@ public class ClientService{
 
     public Page<ClientDTO> getClientsLikeName(Pageable pageable, String name){
         return clientRepository.findLikeName(pageable, name).map(ClientDTO::new);
+    }
+
+    public Client getClientByName(String name){
+        return clientRepository.findByName(name.toLowerCase().trim())
+                .orElseThrow(() -> new IllegalArgumentException("El cliente "+ name +" no existe"));
     }
 
 }
