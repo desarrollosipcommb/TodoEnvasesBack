@@ -5,6 +5,10 @@ import com.sipcommb.envases.dto.SaleDTO;
 import com.sipcommb.envases.dto.SaleItemDTO;
 import com.sipcommb.envases.dto.SaleItemRequest;
 import com.sipcommb.envases.dto.SaleRequest;
+import com.sipcommb.envases.entity.BodegaCapColor;
+import com.sipcommb.envases.entity.BodegaExtractos;
+import com.sipcommb.envases.entity.BodegaJar;
+import com.sipcommb.envases.entity.BodegaQuimicos;
 import com.sipcommb.envases.entity.Cap;
 import com.sipcommb.envases.entity.CapColor;
 import com.sipcommb.envases.entity.Combo;
@@ -31,6 +35,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -61,6 +66,18 @@ public class SaleService {
     private JwtService jwtService;
 
     @Autowired
+    private JarService jarService;
+
+    @Autowired
+    private CapColorService capColorService;
+
+    @Autowired
+    private QuimicosService quimicosService;
+
+    @Autowired
+    private ExtractosService extractosService;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -75,11 +92,7 @@ public class SaleService {
     @Autowired
     private PriceService priceService;
 
-    // Lo mismo que addSale pero no guarda la venta en la base de datos, solo crea
-    // el objeto SaleDTO
-    // maybe se podria crear un metodo para no duplicar codigo, pero no se me ocurre
-    // como hacerlo :(
-    public SaleDTO planSale(SaleRequest saleRequest, String token) {
+    public SaleDTO addSale(SaleRequest saleRequest, String token, boolean saveSale) {
         Sale sale = new Sale();
 
         if (saleRequest.getItems() == null || saleRequest.getItems().size() == 0 || saleRequest.getItems().isEmpty()) {
@@ -103,64 +116,6 @@ public class SaleService {
 
         sale.setSeller(userOpt.get());
         sale.setNotes(saleRequest.getDescripion() != null ? saleRequest.getDescripion() : "");
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        java.time.LocalDate saleDate = java.time.LocalDate.parse(saleRequest.getSaleDate(), formatter);
-        sale.setSaleDate(saleDate);
-
-        List<SaleItemRequest> saleItems = saleRequest.getItems();
-
-        List<SaleItem> saleItemList = new ArrayList<>();
-        List<SaleItemDTO> saleItemDTOList = new ArrayList<>();
-        for (SaleItemRequest saleItemRequest : saleItems) {
-            SaleItem saleItem = checkSaleItems(saleItemRequest);
-
-            saleItem.setSale(sale);
-            saleItemList.add(saleItem);
-            sale.addPrice(saleItem.getSubtotal());
-
-            if (saleItem.getItemType() == ItemType.COMBO) {
-                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getComboName(), saleItem));
-            } else if (saleItem.getItemType() == ItemType.JAR) {
-                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getJarName(), saleItem));
-            } else if (saleItem.getItemType() == ItemType.CAP) {
-                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getCapName() + ' ' + saleItemRequest.getCapColor(), saleItem));
-            } else if (saleItem.getItemType() == ItemType.QUIMICO) {
-                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getQuimicoName(), saleItem));
-            } else if (saleItem.getItemType() == ItemType.EXTRACTO) {
-                saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getExtractoName(), saleItem));
-            }
-
-        }
-
-        return new SaleDTO(sale, saleItemDTOList);
-
-    }
-
-    public SaleDTO addSale(SaleRequest saleRequest, String token) {
-        Sale sale = new Sale();
-
-        if (saleRequest.getItems() == null || saleRequest.getItems().size() == 0 || saleRequest.getItems().isEmpty()) {
-            throw new IllegalArgumentException("Debe especificar al menos un item de venta");
-        }
-
-        try {
-            sale.setPaymentMethod(Sale.PaymentMethod.valueOf(saleRequest.getPaymentMethod().toUpperCase()));
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Problema al establecer el método de pago: " + e.getMessage());
-        }
-
-        sale.setClientName(saleRequest.getClientName());
-        sale.setClientEmail(saleRequest.getClientEmail());
-        sale.setClientPhone(saleRequest.getClientPhone());
-        Optional<User> userOpt = userRepository.findById(jwtService.getUserIdFromToken(token));
-
-        if (!userOpt.isPresent()) {
-            throw new IllegalArgumentException("Usuario no encontrado");
-        }
-
-        sale.setSeller(userOpt.get());
-        sale.setNotes(saleRequest.getDescripion() != null ? saleRequest.getDescripion() : "");
-
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         java.time.LocalDate saleDate = java.time.LocalDate.parse(saleRequest.getSaleDate(), formatter);
         sale.setSaleDate(saleDate);
@@ -170,15 +125,18 @@ public class SaleService {
         List<SaleItem> saleItemList = new ArrayList<>();
         List<SaleItemDTO> saleItemDTOList = new ArrayList<>();
         sale.setTotalAmount(BigDecimal.ZERO);
-        saleRepository.save(sale);
 
+        if (saveSale){
+            saleRepository.save(sale);
+        }
+            
         for (SaleItemRequest saleItemRequest : saleItems) {
             SaleItem saleItem = checkSaleItems(saleItemRequest);
 
             saleItem.setSale(sale);
             saleItemList.add(saleItem);
-           
             sale.addPrice(saleItem.getSubtotal());
+
             if (saleItem.getItemType() == ItemType.COMBO) {
                 saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getComboName(), saleItem));
             } else if (saleItem.getItemType() == ItemType.JAR) {
@@ -194,17 +152,19 @@ public class SaleService {
             }
         }
 
+       
         for (SaleItem saleItem : saleItemList) {
-            modifyInventory(saleItem, userOpt.get().getId().intValue());
+            modifyInventory(saleItem, userOpt.get().getId().intValue(), saveSale);
         }
 
-        sale.setCreatedAt(LocalDateTime.now());
-        sale.setUpdatedAt(LocalDateTime.now());
-        saleRepository.save(sale);
-        saleItemRepository.saveAll(saleItemList);
+        if (saveSale) {
+            sale.setCreatedAt(LocalDateTime.now());
+            sale.setUpdatedAt(LocalDateTime.now());
+            saleRepository.save(sale);
+            saleItemRepository.saveAll(saleItemList);
+        }
 
         return new SaleDTO(sale, saleItemDTOList);
-
     }
 
     private SaleItem checkSaleItems(SaleItemRequest saleItemRequest) {
@@ -276,8 +236,6 @@ public class SaleService {
 
         Cap cap = capRepository.findByNameAndDiameter(saleItemRequest.getCapName(), saleItemRequest.getDiameter())
                 .orElseThrow(() -> new IllegalArgumentException("Tapa no encontrada: " + saleItemRequest.getCapName()));
-
-        //TODO test
 
         CapColor capColor = capColorRepository.findByCapAndColor(cap, saleItemRequest.getCapColor())
                 .orElseThrow(() -> new IllegalArgumentException("El color no existe en el tipo de tapa: " + cap.getName()));
@@ -492,59 +450,124 @@ public class SaleService {
 
     }
 
-    private void modifyInventory(SaleItem saleItem, int userId) {
-        /* TODO, no se como resolver el tema de bodegas aun
+    private void modifyInventory(SaleItem saleItem, int userId, boolean saveSale) {
+
+        /*
+         * te explico mi problema, necesito la opcion de planear venta (se hace todo más no se vende el objeto, es decir no se descuenta la cantidad de la base de datos), y la opcion de vender, que si se descuenta. En la opción de vender es facil calcular cuando tengo inventario o no, dado que si al final no hay pues lanzo un error para que no se salven los cambios en la base de 
+         * 
+         * 
+         */
+
+
+        //TODO, no se como resolver el tema de bodegas aun
         if (saleItem.getItemType() == ItemType.COMBO) {
-            Jar jar = saleItem.getJar();
-            CapColor capColor = saleItem.getCapColor();
-            jar.setQuantity(jar.getQuantity() - saleItem.getQuantity());
-            capColor.setQuantity(capColor.getQuantity() - saleItem.getQuantity());
-            jar.setUpdatedAt(LocalDateTime.now());
-            jarRepository.save(jar);
-            capColorRepository.save(capColor);
-            inventoryService.newItem(jar.getId(), "jar", saleItem.getQuantity(), "sale", userId,
-                    "Se vendieron " + saleItem.getQuantity() + " del envase en combo: " + jar.getName());
-            inventoryService.newItem(capColor.getId(), "cap", saleItem.getQuantity(), "sale", userId,
-                    "Se vendieron " + saleItem.getQuantity() + " de tapa en combo: " + capColor.getCap().getName());
+            
         } else if (saleItem.getItemType() == ItemType.JAR) {
             Jar jar = saleItem.getJar();
-            jar.setQuantity(jar.getQuantity() - saleItem.getQuantity());
-            jar.setUpdatedAt(LocalDateTime.now());
-            jarRepository.save(jar);
-            inventoryService.newItem(jar.getId(), "jar", saleItem.getQuantity(), "sale", userId,
-                    "Se vendieron " + saleItem.getQuantity() + " de tarro: " + jar.getName());
+            List<BodegaJar> bodegaJar = jarService.sortBodegaJar(jar.getBodegas());
+
+            int quantityToDeduct = saleItem.getQuantity();
+
+            for(BodegaJar bj : bodegaJar) {
+                if (quantityToDeduct <= 0) {
+                    break;
+                }
+
+                int availableInBodega = bj.getQuantity();
+                if (availableInBodega <= 0) {
+                    continue;
+                }
+
+                int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
+                if(saveSale) {
+                    bj.setQuantity(availableInBodega - deductQuantity);
+                }
+                quantityToDeduct -= deductQuantity;
+            }
+
+            if(quantityToDeduct > 0) {
+                throw new IllegalArgumentException("No hay suficiente inventario para el tarro: " + jar.getName()+ ", se necesitan " + quantityToDeduct + " unidades más.");
+            }
+
         } else if (saleItem.getItemType() == ItemType.CAP) {
             CapColor capColor = saleItem.getCapColor();
-            capColor.setQuantity(capColor.getQuantity() - saleItem.getQuantity());
-            capColorRepository.save(capColor);
-            inventoryService.newItem(capColor.getId(), "cap", saleItem.getQuantity(), "sale", userId,
-                    "Se vendieron " + saleItem.getQuantity() + " de tapa: " + capColor.getCap().getName());
+            List<BodegaCapColor> bodegaCapColors = capColorService.sortBodegas(capColor.getBodegas());
+
+            int quantityToDeduct = saleItem.getQuantity();
+
+            for(BodegaCapColor bodegaCapColor : bodegaCapColors) {
+                if (quantityToDeduct <= 0) {
+                    break;
+                }
+
+                int availableInBodega = bodegaCapColor.getQuantity();
+                if (availableInBodega <= 0) {
+                    continue;
+                }
+
+                int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
+                bodegaCapColor.setQuantity(availableInBodega - deductQuantity);
+                quantityToDeduct -= deductQuantity;
+            }
+
+            if(quantityToDeduct > 0) {
+                throw new IllegalArgumentException("No hay suficiente inventario para la tapa: " + capColor.getCap().getName() + " color " + capColor.getColor() + ", se necesitan " + quantityToDeduct + " unidades más.");
+            }
+
         } else if (saleItem.getItemType() == ItemType.QUIMICO) {
             Quimicos quimico = saleItem.getQuimico();
-            quimico.setQuantity(quimico.getQuantity() - saleItem.getQuantity());
-            quimicosRepository.save(quimico);
-            inventoryService.newItem(
-                    quimico.getId().longValue(),
-                    "quimico",
-                    saleItem.getQuantity(),
-                    "sale",
-                    userId,
-                    "Se vendieron " + saleItem.getQuantity() + " de químico: " + quimico.getName());
+            List<BodegaQuimicos> bodegaQuimicos = quimicosService.sortBodegaQuimicos(quimico.getBodegas());
+            int quantityToDeduct = saleItem.getQuantity();
+
+            for(BodegaQuimicos bq : bodegaQuimicos) {
+                if (quantityToDeduct <= 0) {
+                    break;
+                }
+
+                int availableInBodega = bq.getQuantity();
+                if (availableInBodega <= 0) {
+                    continue;
+                }
+
+                int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
+                bq.setQuantity(availableInBodega - deductQuantity);
+                quantityToDeduct -= deductQuantity;
+            }
+
+            if(quantityToDeduct > 0) {
+                throw new IllegalArgumentException("No hay suficiente inventario para el químico: " + quimico.getName()+ ", se necesitan " + quantityToDeduct + " unidades más.");
+            }
+
         } else if (saleItem.getItemType() == ItemType.EXTRACTO) {
+            
             Extractos extracto = saleItem.getExtracto();
-            extracto.setQuantity(extracto.getQuantity() - saleItem.getQuantity());
-            extractosRepository.save(extracto);
-            inventoryService.newItem(
-                    extracto.getId().longValue(),
-                    "extracto",
-                    saleItem.getQuantity(),
-                    "sale",
-                    userId,
-                    "Se vendieron " + saleItem.getQuantity() + " de extracto: " + extracto.getName());
+            List<BodegaExtractos> bodegaExtractos = extractosService.sortBodegaExtractos(extracto.getBodegas());
+
+            int quantityToDeduct = saleItem.getQuantity();
+
+            for(BodegaExtractos be : bodegaExtractos) {
+                if (quantityToDeduct <= 0) {
+                    break;
+                }
+
+                int availableInBodega = be.getQuantity();
+                if (availableInBodega <= 0) {
+                    continue;
+                }
+
+                int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
+                be.setQuantity(availableInBodega - deductQuantity);
+                quantityToDeduct -= deductQuantity;
+            }
+
+            if(quantityToDeduct > 0) {
+                throw new IllegalArgumentException("No hay suficiente inventario para el extracto: " + extracto.getName()+ ", se necesitan " + quantityToDeduct + " unidades más.");
+            }
+
         } else {
             throw new IllegalArgumentException("Tipo de item de venta no reconocido: " + saleItem.getItemType());
         }
-            */
+            
     }
 
     public Page<SaleDTO> getAllSales(Pageable pageable) {

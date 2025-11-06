@@ -1,8 +1,10 @@
 package com.sipcommb.envases.service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -432,6 +434,19 @@ public class CapColorService {
         capColorRepository.save(capColor);
         return new CapColorDTO(capColor);
 
+    }
+
+    public List<BodegaCapColor> sortBodegas(List<BodegaCapColor> bodegasCapColor) {
+        try{
+         return bodegasCapColor.stream()
+                .filter(bcc -> bcc.getBodega() != null && bcc.getBodega().getPriority() != null && bcc.getBodega().getPriority() > 0)
+                .sorted(Comparator.comparing(
+                        bcc -> bcc.getBodega() != null ? bcc.getBodega().getPriority() : null,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
+                .collect(Collectors.toList());
+       } catch (Exception e) {
+              throw new RuntimeException("Error al ordenar las bodegas por prioridad: " + e.getMessage());
+       }
     }
 
 }

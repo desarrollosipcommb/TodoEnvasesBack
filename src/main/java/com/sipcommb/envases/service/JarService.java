@@ -20,6 +20,7 @@ import com.sipcommb.envases.repository.JarTypeRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -613,6 +614,19 @@ public class JarService {
         bodegaJarRepository.save(toBodegaJar);
 
         return new JarDTO(jarRepository.save(jar));
+    }
+
+    public List<BodegaJar> sortBodegaJar(List<BodegaJar> bodegaJars) {
+       try{
+         return bodegaJars.stream()
+                .filter(bj -> bj.getBodega() != null && bj.getBodega().getPriority() != null && bj.getBodega().getPriority() > 0)
+                .sorted(Comparator.comparing(
+                        bj -> bj.getBodega() != null ? bj.getBodega().getPriority() : null,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
+                .collect(Collectors.toList());
+       } catch (Exception e) {
+              throw new RuntimeException("Error al ordenar las bodegas por prioridad: " + e.getMessage());
+       }
     }
 
 }

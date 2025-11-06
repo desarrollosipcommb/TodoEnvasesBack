@@ -118,10 +118,11 @@ public class FileService {
             }
 
             Cell nameCell = row.getCell(0);
+            Cell priorityCell = row.getCell(1);
 
             try {
 
-                bodegaService.addBodega(nameCell.getStringCellValue());
+                bodegaService.addBodega(nameCell.getStringCellValue(), (long) priorityCell.getNumericCellValue());
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Bodega agregada correctamente"));
 

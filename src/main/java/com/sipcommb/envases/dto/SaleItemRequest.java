@@ -1,5 +1,7 @@
 package com.sipcommb.envases.dto;
 
+import java.util.List;
+
 public class SaleItemRequest {
 
     private String comboName;
@@ -18,10 +20,13 @@ public class SaleItemRequest {
 
     private String extractoName;
 
+    private List<SaleItemBodegaRequest> bodegas;
+
     public SaleItemRequest() {
     }
 
-    public SaleItemRequest(String comboName, String jarName, String capName, String capColor, String diameter, Integer quantity, String quimicoName, String extractoName) {
+    public SaleItemRequest(String comboName, String jarName, String capName, String capColor, 
+    String diameter, Integer quantity, String quimicoName, String extractoName, List<SaleItemBodegaRequest> bodegas) {
         this.comboName = comboName;
         this.jarName = jarName;
         this.capName = capName;
@@ -31,6 +36,7 @@ public class SaleItemRequest {
         this.quimicoName = quimicoName;
         this.extractoName = extractoName;
         this.quantity = quantity;
+        this.bodegas = bodegas;
     }
 
     public String getComboName() {
@@ -96,5 +102,12 @@ public class SaleItemRequest {
         this.extractoName = extractoName;
     }
 
-    
+    public List<SaleItemBodegaRequest> getBodegas() {
+        return bodegas;
+    }
+
+    public void setBodegas(List<SaleItemBodegaRequest> bodegas) {
+        this.bodegas = bodegas;
+    }
+
 }
