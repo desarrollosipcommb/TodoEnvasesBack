@@ -42,8 +42,6 @@ public interface CapRepository extends JpaRepository<Cap, Long> {
         @Query("SELECT c FROM Cap c WHERE c.isActive = 0")
         List<Cap> findAllByIsActiveFalse();
 
-        @NonNull Page<Cap> findAll(@NonNull Pageable pageable);
-
         Page<Cap> findAllByIsActiveTrue(Pageable pageable);
 
         Page<Cap> findAllByIsActiveFalse(Pageable pageable);

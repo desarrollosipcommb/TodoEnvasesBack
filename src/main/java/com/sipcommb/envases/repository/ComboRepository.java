@@ -37,8 +37,6 @@ public interface ComboRepository extends JpaRepository<Combo, Long> {
     @Query("SELECT c FROM Combo c WHERE c.name LIKE %:name% AND c.active = 1")
     Page<Combo> findByNameContainingActive(@Param("name") String name, Pageable pageable);
 
-    @NonNull Page<Combo> findAll(@NonNull Pageable pageable);
-
     @Query("SELECT c FROM Combo c WHERE c.active = 1 AND c.cienPrice = :exactPrice")
     Page<Combo> findByCienPrice(@Param("exactPrice") Double exactPrice, Pageable pageable);
 

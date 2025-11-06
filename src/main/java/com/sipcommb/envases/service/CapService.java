@@ -222,6 +222,7 @@ public class CapService {
         return new CapDTO(cap);
     }
 
+    
     public CapDTO updateCapInventory(CapColorRequest capColorRequest, String token) {
         Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capColorRequest.getName(), capColorRequest.getDiameter());
         if (!capOptional.isPresent()) {
@@ -234,6 +235,7 @@ public class CapService {
 
         return new CapDTO(cap);
     }
+    
 
     public CapDTO addCapToBodega(CapColorRequest capColorRequest) {
         Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capColorRequest.getName(), capColorRequest.getDiameter());

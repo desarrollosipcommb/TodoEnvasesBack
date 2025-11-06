@@ -56,7 +56,7 @@ public class SaleController {
         }
 
     try{
-        SaleDTO saleDTO = saleService.addSale(sale, authHeader.trim().replace("Bearer ", ""));
+        SaleDTO saleDTO = saleService.addSale(sale, authHeader.trim().replace("Bearer ", ""), true);
         return ResponseEntity.ok(saleDTO);
     }catch (Exception e) {
         
@@ -82,7 +82,7 @@ public class SaleController {
         }
 
         try{
-            SaleDTO saleDTO = saleService.planSale(sale, authHeader.trim().replace("Bearer ", ""));
+            SaleDTO saleDTO = saleService.addSale(sale, authHeader.trim().replace("Bearer ", ""), false);
             return ResponseEntity.ok(saleDTO);
         }catch (Exception e) {
             Throwable cause = e;

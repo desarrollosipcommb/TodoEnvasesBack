@@ -18,8 +18,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface InventoryRepository extends JpaRepository<Transaction, Long>{
 
-    @NonNull Page<Transaction> findAll(@NonNull Pageable pageable);
-
     Page<Transaction> findByItemType(ItemType itemType, Pageable pageable);
 
     Page<Transaction> findByTransactionType(TransactionType transactionType, Pageable pageable);

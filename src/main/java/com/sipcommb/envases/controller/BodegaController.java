@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -76,7 +77,6 @@ public class BodegaController {
         }
     }
 
-
     @PostMapping("/add")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Bodega añadida exitosamente"),
@@ -85,15 +85,59 @@ public class BodegaController {
     })
     public ResponseEntity<?> addBodega(
         @RequestHeader("Authorization") String authHeader,
-        @RequestParam String name
+        @RequestParam String name,
+        @RequestParam Long priority
     ) {
         if(!permissionService.hasPermission(authHeader, "create")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para añadir bodegas"));
         }
         try {
-            return ResponseEntity.ok(bodegaService.addBodega(name));
+            return ResponseEntity.ok(bodegaService.addBodega(name, priority));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
+
+    @PutMapping("/change-priority")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Prioridad cambiada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Error al cambiar la prioridad"),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado")
+    })
+    public ResponseEntity<?> changeBodegaPriority(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam String name,
+        @RequestParam Long newPriority
+    ) {
+        if(!permissionService.hasPermission(authHeader, "update")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para cambiar la prioridad de las bodegas"));
+        }
+        try {
+            return ResponseEntity.ok(bodegaService.changePriority(name, newPriority));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/change-name")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Nombre cambiado exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Error al cambiar el nombre"),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado")
+    })
+    public ResponseEntity<?> changeBodegaName(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam String oldName,
+        @RequestParam String newName
+    ) {
+        if(!permissionService.hasPermission(authHeader, "update")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para cambiar el nombre de las bodegas"));
+        }
+        try {
+            return ResponseEntity.ok(bodegaService.ChangeName(oldName, newName));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+        }
+    }
+
 }

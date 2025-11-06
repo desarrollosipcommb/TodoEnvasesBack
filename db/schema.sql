@@ -270,6 +270,7 @@ CREATE TABLE clientes (
 
 CREATE TABLE bodega(
     id INT PRIMARY KEY AUTO_INCREMENT,
+    priority INT NOT NULL,
     name VARCHAR(100) NOT NULL,
 );
 

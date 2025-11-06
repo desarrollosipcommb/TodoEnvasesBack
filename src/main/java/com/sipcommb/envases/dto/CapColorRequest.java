@@ -1,33 +1,33 @@
 package com.sipcommb.envases.dto;
 
+import java.util.List;
+
 public class CapColorRequest {
 
     private String name;
     private String diameter;
     private String color;
-    private Integer quantity; // Stock quantity
     private Double unitPrice;
     private Double docenaPrice; // Price for a dozen jars
     private Double cienPrice; // Price for a hundred jars
     private Double pacaPrice;
     private Integer unitsInPaca;
-    private String bodegaName;
+    private List<BodegaDTO> quantity;
 
     public CapColorRequest() {
     }
 
-    public CapColorRequest(String name, String diameter, String color, 
-            Integer quantity, Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, Integer unitsInPaca, String bodegaName) {
+    public CapColorRequest(String name, String diameter, String color,
+            Double unitPrice, Double docenaPrice, Double cienPrice, Double pacaPrice, Integer unitsInPaca, List<BodegaDTO> quantity) {
         this.name = name;
         this.diameter = diameter;
         this.color = color;
-        this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.docenaPrice = docenaPrice;
         this.cienPrice = cienPrice;
         this.pacaPrice = pacaPrice;
         this.unitsInPaca = unitsInPaca;
-        this.bodegaName = bodegaName;
+        this.quantity = quantity;
     }
 
     public String getName() {
@@ -52,14 +52,6 @@ public class CapColorRequest {
 
     public void setColor(String color) {
         this.color = color;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
     }
 
     public Double getUnitPrice() {
@@ -102,12 +94,12 @@ public class CapColorRequest {
         this.unitsInPaca = unitsInPaca;
     }
 
-    public String getBodegaName() {
-        return bodegaName;
+    public List<BodegaDTO> getBodega() {
+        return quantity;
     }
 
-    public void setBodegaName(String bodegaName) {
-        this.bodegaName = bodegaName;
+    public void setBodega(List<BodegaDTO> quantity) {
+        this.quantity = quantity;
     }
 
 }
