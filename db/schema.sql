@@ -131,6 +131,7 @@ CREATE TABLE sale_items (
     cap_id INT NULL, -- If selling cap or combo
     quimico_id INT NULL, -- If selling quimico
     extracto_id INT NULL, -- If selling extracto
+    combo_id INT NULL, -- If selling combo
     quantity_jar INT NOT NULL,
     quantity_cap INT NOT NULL,
     quantity_quimico INT NOT NULL,
@@ -143,6 +144,7 @@ CREATE TABLE sale_items (
     FOREIGN KEY (cap_color_id) REFERENCES cap_colors(id) ON DELETE RESTRICT,,
     FOREIGN KEY (quimico_id) REFERENCES quimicos(id) ON DELETE RESTRICT,
     FOREIGN KEY (extracto_id) REFERENCES extractos(id) ON DELETE RESTRICT,
+    FOREIGN KEY (combo_id) REFERENCES combos(id) ON DELETE RESTRICT
     -- Ensure at least one item is specified based on type
     CHECK (
         (item_type = 'jar' AND jar_id IS NOT NULL AND cap_id IS NULL) OR

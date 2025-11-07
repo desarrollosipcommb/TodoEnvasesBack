@@ -20,13 +20,13 @@ public class SaleItemRequest {
 
     private String extractoName;
 
-    private List<SaleItemBodegaRequest> bodegas;
+    private List<SaleItemComboCapRequest> bodegas;
 
     public SaleItemRequest() {
     }
 
     public SaleItemRequest(String comboName, String jarName, String capName, String capColor, 
-    String diameter, Integer quantity, String quimicoName, String extractoName, List<SaleItemBodegaRequest> bodegas) {
+    String diameter, Integer quantity, String quimicoName, String extractoName, List<SaleItemComboCapRequest> bodegas) {
         this.comboName = comboName;
         this.jarName = jarName;
         this.capName = capName;
@@ -102,11 +102,11 @@ public class SaleItemRequest {
         this.extractoName = extractoName;
     }
 
-    public List<SaleItemBodegaRequest> getBodegas() {
+    public List<SaleItemComboCapRequest> getBodegas() {
         return bodegas;
     }
 
-    public void setBodegas(List<SaleItemBodegaRequest> bodegas) {
+    public void setBodegas(List<SaleItemComboCapRequest> bodegas) {
         this.bodegas = bodegas;
     }
 

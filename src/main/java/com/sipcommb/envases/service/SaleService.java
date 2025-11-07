@@ -137,33 +137,49 @@ public class SaleService {
         List<SaleItemDTO> saleItemDTOList = new ArrayList<>();
         sale.setTotalAmount(BigDecimal.ZERO);
 
-        if (saveSale) {
-            saleRepository.save(sale);
-        }
-
         // crea los sale items usando la lista de saleItemRequests
         // Además, va creado la lista de SaleItemDTOs para el retorno
         for (SaleItemRequest saleItemRequest : saleItems) {
-            SaleItem saleItem = checkSaleItems(saleItemRequest, saleItemList);
+            SaleItem saleItem = checkSaleItems(saleItemRequest);
             int index = checkSaleItemList(saleItemList, saleItem);
 
             if (index != -1) {
+                // si el item ya existe, sacamos el existente de la lista
                 SaleItem existingItem = saleItemList.get(index);
+
+                //aca sumamos las cantidades
                 existingItem.setQuantity(existingItem.getQuantity() + saleItem.getQuantity());
-                existingItem.setSubtotal(
-                        existingItem.getUnitPrice().multiply(BigDecimal.valueOf(existingItem.getQuantity())));
+
+                //añadimos la cantidad del request para recalcular el subtotal
+                saleItemRequest.setQuantity(existingItem.getQuantity());
+
+                //llamamos este metodo de nuevo, porque este es el que nos dice que precio unitario usar 
+                SaleItem modifiedItem = checkSaleItems(saleItemRequest);
+
+                //sacamos el precio unitario y subtotal recalculados
+                existingItem.setUnitPrice(modifiedItem.getUnitPrice());
+                existingItem.setSubtotal(modifiedItem.getSubtotal());
+
+                //reemplazamos el saleItem por el existente modificado
                 saleItem = existingItem;
+
+                //creamos el DTO correspondiente, que va a ser lo que vamos a devolver
                 SaleItemDTO existingDTO = saleItemDTOList.get(index);
+
                 existingDTO.setQuantity(saleItem.getQuantity());
                 existingDTO.setSubtotal(saleItem.getSubtotal());
                 existingDTO.setUnitPrice(saleItem.getUnitPrice());
 
             } else {
+                if(saleItem.getItemType() == ItemType.COMBO) {
+                    checkComboSaleItemList(saleItemList, saleItem, saleItemDTOList);
+                }
+
                 saleItem.setSale(sale);
                 saleItemList.add(saleItem);
 
                 if (saleItem.getItemType() == ItemType.COMBO) {
-                    saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getComboName(), saleItem));
+                    saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getComboName(), saleItem, saleItemRequest.getCapColor()));
                 } else if (saleItem.getItemType() == ItemType.JAR) {
                     saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getJarName(), saleItem));
                 } else if (saleItem.getItemType() == ItemType.CAP) {
@@ -186,7 +202,7 @@ public class SaleService {
             if (saveSale) {
                 modifyInventory(saleItem, userOpt.get().getId().intValue());
             } else {
-                validateInventory(saleItem);
+                validateInventory(saleItem, saleItemList);
             }
 
             sale.addPrice(saleItem.getSubtotal());
@@ -209,12 +225,11 @@ public class SaleService {
      * Un saleItemRequest representa un item de venta y la cantidad solicitada, por
      * ejemplo un el envase A y 5 unidades
      * 
-     * @param existingItems   la lista de items ya procesados en la venta actual
      * @param saleItemRequest el DTO de saleItem
      * @return SaleItem el item final que se va a añadir al la base de datos junto a
      *         la venta
      */
-    private SaleItem checkSaleItems(SaleItemRequest saleItemRequest, List<SaleItem> existingItems) {
+    private SaleItem checkSaleItems(SaleItemRequest saleItemRequest) {
 
         if (saleItemRequest.getQuantity() <= 0) {
             throw new IllegalArgumentException("La cantidad de venta no puede ser negativa o cero");
@@ -288,16 +303,8 @@ public class SaleService {
      */
     private SaleItem createSaleItem(Combo combo, SaleItemRequest saleItemRequest) {
         SaleItem saleItem = new SaleItem();
-        saleItem.setJar(combo.getJar());
 
-        Cap cap = capRepository.findByNameAndDiameter(saleItemRequest.getCapName(), saleItemRequest.getDiameter())
-                .orElseThrow(() -> new IllegalArgumentException("Tapa no encontrada: " + saleItemRequest.getCapName()));
-
-        CapColor capColor = capColorRepository.findByCapAndColor(cap, saleItemRequest.getCapColor())
-                .orElseThrow(
-                        () -> new IllegalArgumentException("El color no existe en el tipo de tapa: " + cap.getName()));
-
-        saleItem.setCapColor(capColor);
+        saleItem.setCombo(combo);
         saleItem.setQuantity(saleItemRequest.getQuantity());
         saleItem.setUnitPrice(BigDecimal.valueOf(determinePrice(combo, saleItemRequest)));
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(BigDecimal.valueOf(saleItemRequest.getQuantity())));
@@ -407,14 +414,7 @@ public class SaleService {
             SaleItem existingItem = existingItems.get(i);
             if (existingItem.getItemType() == newItem.getItemType()) {
                 if (existingItem.getItemType() == ItemType.COMBO) {
-                    /*
-                     * TODO, dado que aun ni idea como hacer esto bien, lo dejo comentado por ahora
-                     * if (existingItem.getJar().getId().equals(newItem.getJar().getId())
-                     * && existingItem.getCapColor().getId().equals(newItem.getCapColor().getId()))
-                     * {
-                     * return i;
-                     * }
-                     */
+                    break;
                 } else if (existingItem.getItemType() == ItemType.JAR) {
                     if (existingItem.getJar().getId().equals(newItem.getJar().getId())) {
                         return i;
@@ -435,6 +435,38 @@ public class SaleService {
             }
         }
         return -1;
+    }
+
+    private void checkComboSaleItemList(List<SaleItem> existingItems, SaleItem newItem, List<SaleItemDTO> existingDTOs) {
+    
+        int totalQuantity = newItem.getQuantity();
+       
+        for(SaleItem item : existingItems) {
+            if(item.getItemType() == ItemType.COMBO && item.getCombo().getId().equals(newItem.getCombo().getId())) {
+                totalQuantity += item.getQuantity();
+            }
+        }
+
+        double unitPrice = determinePrice(newItem.getCombo(), totalQuantity);
+
+        for(int i = 0; i < existingItems.size(); i++) {
+            SaleItem item = existingItems.get(i);
+            if (item.getItemType() == ItemType.COMBO && item.getCombo().getId().equals(newItem.getCombo().getId())) {
+                item.setUnitPrice(BigDecimal.valueOf(unitPrice));
+                item.setSubtotal(item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+                existingItems.set(i, item);
+                // Actualizar también el DTO correspondiente
+                SaleItemDTO dto = existingDTOs.get(i);
+                dto.setUnitPrice(item.getUnitPrice());
+                dto.setSubtotal(item.getSubtotal());
+                existingDTOs.set(i, dto);
+            }
+        }
+
+    
+        newItem.setUnitPrice(BigDecimal.valueOf(unitPrice));
+        newItem.setSubtotal(newItem.getUnitPrice().multiply(BigDecimal.valueOf(newItem.getQuantity())));
+       //return newItem;
     }
 
     /**
@@ -511,12 +543,36 @@ public class SaleService {
      * @return el precio unitario determinado
      */
     private double determinePrice(Combo combo, SaleItemRequest saleItemRequest) {
+        if (saleItemRequest.getQuantity() == combo.getUnitsInPaca()
+                && (combo.getPacaPrice() != null && combo.getPacaPrice() > 0)) {
+            return combo.getPacaPrice();
+        }
+
         if (combo.getCienPrice() != null && combo.getCienPrice() > 0 && saleItemRequest.getQuantity() >= 100) {
             return combo.getCienPrice();
         }
 
         if ((combo.getDocenaPrice() != null || combo.getDocenaPrice() > 0)
                 && (saleItemRequest.getQuantity() >= 12 || saleItemRequest.getQuantity() % 12 == 0)) {
+            return combo.getDocenaPrice();
+        }
+
+        return combo.getUnitPrice();
+
+    }
+
+    private double determinePrice(Combo combo, int totalQuantity) {
+        if (totalQuantity == combo.getUnitsInPaca()
+                && (combo.getPacaPrice() != null && combo.getPacaPrice() > 0)) {
+            return combo.getPacaPrice();
+        }
+
+        if (combo.getCienPrice() != null && combo.getCienPrice() > 0 && totalQuantity >= 100) {
+            return combo.getCienPrice();
+        }
+
+        if ((combo.getDocenaPrice() != null || combo.getDocenaPrice() > 0)
+                && (totalQuantity >= 12 || totalQuantity % 12 == 0)) {
             return combo.getDocenaPrice();
         }
 
@@ -552,6 +608,8 @@ public class SaleService {
         return jar.getUnitPrice();
 
     }
+
+    
 
     /**
      * Determina el precio unitario basado en la cantidad y los precios disponibles
@@ -641,10 +699,10 @@ public class SaleService {
      * 
      * @param saleItem el item de venta a validar
      */
-    private void validateInventory(SaleItem saleItem) {
+    private void validateInventory(SaleItem saleItem, List<SaleItem> existingItems) {
         // TODO , no se como resolver el tema de bodegas aun
         if (saleItem.getItemType() == ItemType.COMBO) {
-
+            validateInventoryCombo(saleItem, existingItems);
         } else if (saleItem.getItemType() == ItemType.JAR) {
             Jar jar = saleItem.getJar();
             List<BodegaJar> bodegaJar = jarService.sortBodegaJar(jar.getBodegas());
@@ -749,6 +807,11 @@ public class SaleService {
         } else {
             throw new IllegalArgumentException("Tipo de item de venta no reconocido: " + saleItem.getItemType());
         }
+    }
+
+    private void validateInventoryCombo(SaleItem saleItem, List<SaleItem> existingItems) {
+        // TODO Auto-generated method stub
+        // Combo combo = saleItem.
     }
 
     /**
