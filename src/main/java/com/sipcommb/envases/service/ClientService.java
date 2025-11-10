@@ -78,6 +78,11 @@ public class ClientService{
         Client client = clientRepository.findByName(trimmedName)
                 .orElseThrow(() -> new IllegalArgumentException("El cliente "+ trimmedName +" no existe"));
 
+        if(client.getIs_active().equals(state)){
+            String estado = state ? "activo" : "inactivo";
+            throw new IllegalArgumentException("El cliente "+ trimmedName +" ya se encuentra "+ estado);
+        }
+
         client.setIs_active(state);
 
         clientRepository.save(client);

@@ -181,15 +181,14 @@ public class ClientController {
     })
     public ResponseEntity<?> changeState(
         @RequestHeader("Authorization") String authHeader,
-        @RequestParam String name,
-        @RequestParam Boolean state
+        @RequestParam String name
     ){
         if(!permissionService.hasPermission(authHeader, "update")) {
             return ResponseEntity.status(403)
                     .body(new CustomApiResponse("Este usuario no tiene permiso para actualizar tapas"));
         }
         try{
-            return ResponseEntity.ok(clientService.changeState(name, state));
+            return ResponseEntity.ok(clientService.changeState(name, true));
         }catch (Exception e){
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: ", e.getMessage()));
         }
@@ -203,15 +202,14 @@ public class ClientController {
     })
     public ResponseEntity<?> deactivateClient(
         @RequestHeader("Authorization") String authHeader,
-        @RequestParam String name,
-        @RequestParam Boolean state
+        @RequestParam String name
     ){
         if(!permissionService.hasPermission(authHeader, "update")) {
             return ResponseEntity.status(403)
                     .body(new CustomApiResponse("Este usuario no tiene permiso para actualizar tapas"));
         }
         try{
-            return ResponseEntity.ok(clientService.changeState(name, state));
+            return ResponseEntity.ok(clientService.changeState(name, false));
         }catch (Exception e){
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: ", e.getMessage()));
         }
