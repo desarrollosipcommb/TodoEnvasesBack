@@ -14,6 +14,8 @@ public class ClientDTO {
 
     private boolean isActive;
 
+    private String document;
+
     public ClientDTO(){
 
     }
@@ -24,6 +26,7 @@ public class ClientDTO {
         this.phone = client.getPhone();
         this.description = client.getDescription();
         this.isActive = client.getIs_active();
+        this.document = client.getDocument();
     }
 
     public String getName(){
@@ -64,6 +67,14 @@ public class ClientDTO {
 
     public void setIsActive(boolean isActive){
         this.isActive = isActive;
+    }
+
+    public String getDocument() {
+        return document;
+    }
+
+    public void setDocument(String document) {
+        this.document = document;
     }
     
 }

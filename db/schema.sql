@@ -259,6 +259,7 @@ CREATE TABLE clientes (
     client_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     address VARCHAR(100),
+    document VARCHAR(100),
     phone VARCHAR(100),
     description TEXT,
     is_active BOOLEAN DEFAULT TRUE,

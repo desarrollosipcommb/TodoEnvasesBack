@@ -27,7 +27,7 @@ public class ClientService{
             throw new IllegalArgumentException("El cliente "+ cliente.getName()+ " ya existe");
         }
 
-        Client clienteNuevo = new Client(cliente.getName(), cliente.getAddress(), cliente.getPhone(), cliente.getDescription());
+        Client clienteNuevo = new Client(cliente.getName(), cliente.getAddress(), cliente.getPhone(), cliente.getDescription(), cliente.getDocument());
 
         clientRepository.save(clienteNuevo);
 
@@ -69,6 +69,20 @@ public class ClientService{
 
         return new ClientDTO(clientOriginal);
 
+    }
+
+    public ClientDTO changeState(String name, Boolean state){
+
+        String trimmedName = name.trim();
+
+        Client client = clientRepository.findByName(trimmedName)
+                .orElseThrow(() -> new IllegalArgumentException("El cliente "+ trimmedName +" no existe"));
+
+        client.setIs_active(state);
+
+        clientRepository.save(client);
+
+        return new ClientDTO(client);
     }
 
     public Page<ClientDTO> getAllClients(Pageable pageable){

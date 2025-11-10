@@ -173,4 +173,48 @@ public class ClientController {
         }
     }
 
+    @PutMapping("/activate")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Se cambio el estado del cliente correctamente", content = @Content(schema = @Schema(implementation = ClientDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al cambiar el estado del cliente")
+    })
+    public ResponseEntity<?> changeState(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam String name,
+        @RequestParam Boolean state
+    ){
+        if(!permissionService.hasPermission(authHeader, "update")) {
+            return ResponseEntity.status(403)
+                    .body(new CustomApiResponse("Este usuario no tiene permiso para actualizar tapas"));
+        }
+        try{
+            return ResponseEntity.ok(clientService.changeState(name, state));
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: ", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/deactivate")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Se cambio el estado del cliente correctamente", content = @Content(schema = @Schema(implementation = ClientDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al cambiar el estado del cliente")
+    })
+    public ResponseEntity<?> deactivateClient(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam String name,
+        @RequestParam Boolean state
+    ){
+        if(!permissionService.hasPermission(authHeader, "update")) {
+            return ResponseEntity.status(403)
+                    .body(new CustomApiResponse("Este usuario no tiene permiso para actualizar tapas"));
+        }
+        try{
+            return ResponseEntity.ok(clientService.changeState(name, state));
+        }catch (Exception e){
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: ", e.getMessage()));
+        }
+    }
+
 }
