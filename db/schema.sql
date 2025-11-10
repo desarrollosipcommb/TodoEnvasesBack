@@ -132,13 +132,11 @@ CREATE TABLE sale_items (
     quimico_id INT NULL, -- If selling quimico
     extracto_id INT NULL, -- If selling extracto
     combo_id INT NULL, -- If selling combo
-    quantity_jar INT NOT NULL,
-    quantity_cap INT NOT NULL,
-    quantity_quimico INT NOT NULL,
-    quantity_extracto INT NOT NULL,
+    quantity INT NOT NULL,
     unit_price DECIMAL(10, 2) NOT NULL,
     subtotal DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    color VARCHAR(100),
     FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
     FOREIGN KEY (jar_id) REFERENCES jars(id) ON DELETE RESTRICT,
     FOREIGN KEY (cap_color_id) REFERENCES cap_colors(id) ON DELETE RESTRICT,,

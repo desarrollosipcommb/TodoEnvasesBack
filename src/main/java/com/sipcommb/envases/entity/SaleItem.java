@@ -62,6 +62,10 @@ public class SaleItem {
     @DecimalMin("0.0")
     @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
     private BigDecimal subtotal;
+
+    private String color;
+
+    private String comboCapQuantity;
     
     // Constructors
     public SaleItem() {}
@@ -125,5 +129,11 @@ public class SaleItem {
 
     public Combo getCombo() { return combo; }
     public void setCombo(Combo combo) { this.combo = combo; }
+
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
+
+    public String getComboCapQuantity() { return comboCapQuantity; }
+    public void setComboCapQuantity(String comboCapQuantity) { this.comboCapQuantity = comboCapQuantity; }
 
 }

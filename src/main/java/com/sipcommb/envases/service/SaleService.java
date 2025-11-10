@@ -13,6 +13,7 @@ import com.sipcommb.envases.entity.Cap;
 import com.sipcommb.envases.entity.CapColor;
 import com.sipcommb.envases.entity.Client;
 import com.sipcommb.envases.entity.Combo;
+import com.sipcommb.envases.entity.ComboCap;
 import com.sipcommb.envases.entity.Extractos;
 import com.sipcommb.envases.entity.ItemType;
 import com.sipcommb.envases.entity.Jar;
@@ -147,23 +148,24 @@ public class SaleService {
                 // si el item ya existe, sacamos el existente de la lista
                 SaleItem existingItem = saleItemList.get(index);
 
-                //aca sumamos las cantidades
+                // aca sumamos las cantidades
                 existingItem.setQuantity(existingItem.getQuantity() + saleItem.getQuantity());
 
-                //añadimos la cantidad del request para recalcular el subtotal
+                // añadimos la cantidad del request para recalcular el subtotal
                 saleItemRequest.setQuantity(existingItem.getQuantity());
 
-                //llamamos este metodo de nuevo, porque este es el que nos dice que precio unitario usar 
+                // llamamos este metodo de nuevo, porque este es el que nos dice que precio
+                // unitario usar
                 SaleItem modifiedItem = checkSaleItems(saleItemRequest);
 
-                //sacamos el precio unitario y subtotal recalculados
+                // sacamos el precio unitario y subtotal recalculados
                 existingItem.setUnitPrice(modifiedItem.getUnitPrice());
                 existingItem.setSubtotal(modifiedItem.getSubtotal());
 
-                //reemplazamos el saleItem por el existente modificado
+                // reemplazamos el saleItem por el existente modificado
                 saleItem = existingItem;
 
-                //creamos el DTO correspondiente, que va a ser lo que vamos a devolver
+                // creamos el DTO correspondiente, que va a ser lo que vamos a devolver
                 SaleItemDTO existingDTO = saleItemDTOList.get(index);
 
                 existingDTO.setQuantity(saleItem.getQuantity());
@@ -171,7 +173,7 @@ public class SaleService {
                 existingDTO.setUnitPrice(saleItem.getUnitPrice());
 
             } else {
-                if(saleItem.getItemType() == ItemType.COMBO) {
+                if (saleItem.getItemType() == ItemType.COMBO) {
                     checkComboSaleItemList(saleItemList, saleItem, saleItemDTOList);
                 }
 
@@ -179,7 +181,8 @@ public class SaleService {
                 saleItemList.add(saleItem);
 
                 if (saleItem.getItemType() == ItemType.COMBO) {
-                    saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getComboName(), saleItem, saleItemRequest.getCapColor()));
+                    saleItemDTOList.add(
+                            new SaleItemDTO(saleItemRequest.getComboName(), saleItem, saleItemRequest.getCapColor()));
                 } else if (saleItem.getItemType() == ItemType.JAR) {
                     saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getJarName(), saleItem));
                 } else if (saleItem.getItemType() == ItemType.CAP) {
@@ -305,7 +308,9 @@ public class SaleService {
         SaleItem saleItem = new SaleItem();
 
         saleItem.setCombo(combo);
+        saleItem.setColor(saleItemRequest.getCapColor());
         saleItem.setQuantity(saleItemRequest.getQuantity());
+        saleItem.setComboCapQuantity(saleItemRequest.getComboCapQuantity());
         saleItem.setUnitPrice(BigDecimal.valueOf(determinePrice(combo, saleItemRequest)));
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(BigDecimal.valueOf(saleItemRequest.getQuantity())));
         saleItem.setItemType(ItemType.COMBO);
@@ -437,19 +442,32 @@ public class SaleService {
         return -1;
     }
 
-    private void checkComboSaleItemList(List<SaleItem> existingItems, SaleItem newItem, List<SaleItemDTO> existingDTOs) {
-    
+    /**
+     * Verifica y actualiza los precios unitarios y subtotales de los SaleItems de
+     * tipo COMBO en la lista existente, basándose en la cantidad total vendida.
+     * Hace lo mismo que checkItemSaleList pero actualiza los precios de los combos
+     * ya existentes en la lista
+     * No junta los combos en uno solo, solo actualiza los precios, dado que los
+     * combos pueden tener colores de tapa diferentes
+     * 
+     * @param existingItems Lista de SaleItem ya existentes
+     * @param newItem       Nuevo SaleItem a agregar
+     * @param existingDTOs  Lista de SaleItemDTO ya existentes
+     */
+    private void checkComboSaleItemList(List<SaleItem> existingItems, SaleItem newItem,
+            List<SaleItemDTO> existingDTOs) {
+
         int totalQuantity = newItem.getQuantity();
-       
-        for(SaleItem item : existingItems) {
-            if(item.getItemType() == ItemType.COMBO && item.getCombo().getId().equals(newItem.getCombo().getId())) {
+
+        for (SaleItem item : existingItems) {
+            if (item.getItemType() == ItemType.COMBO && item.getCombo().getId().equals(newItem.getCombo().getId())) {
                 totalQuantity += item.getQuantity();
             }
         }
 
         double unitPrice = determinePrice(newItem.getCombo(), totalQuantity);
 
-        for(int i = 0; i < existingItems.size(); i++) {
+        for (int i = 0; i < existingItems.size(); i++) {
             SaleItem item = existingItems.get(i);
             if (item.getItemType() == ItemType.COMBO && item.getCombo().getId().equals(newItem.getCombo().getId())) {
                 item.setUnitPrice(BigDecimal.valueOf(unitPrice));
@@ -463,10 +481,9 @@ public class SaleService {
             }
         }
 
-    
         newItem.setUnitPrice(BigDecimal.valueOf(unitPrice));
         newItem.setSubtotal(newItem.getUnitPrice().multiply(BigDecimal.valueOf(newItem.getQuantity())));
-       //return newItem;
+        // return newItem;
     }
 
     /**
@@ -609,8 +626,6 @@ public class SaleService {
 
     }
 
-    
-
     /**
      * Determina el precio unitario basado en la cantidad y los precios disponibles
      * de la tapa.
@@ -704,6 +719,7 @@ public class SaleService {
         if (saleItem.getItemType() == ItemType.COMBO) {
             validateInventoryCombo(saleItem, existingItems);
         } else if (saleItem.getItemType() == ItemType.JAR) {
+            
             Jar jar = saleItem.getJar();
             List<BodegaJar> bodegaJar = jarService.sortBodegaJar(jar.getBodegas());
 
@@ -809,9 +825,126 @@ public class SaleService {
         }
     }
 
+    /**
+     * Valida el inventario para un SaleItem de tipo COMBO sin modificarlo.
+     * Dado que estos tiene 1 envase y 1 o más tapas, tenemos que validar que
+     * tengamos inventario para todos los componentes
+     * 
+     * @param saleItem      el Combo a vender
+     * @param existingItems los items ya existentes en la venta
+     */
     private void validateInventoryCombo(SaleItem saleItem, List<SaleItem> existingItems) {
-        // TODO Auto-generated method stub
-        // Combo combo = saleItem.
+
+        // Sacamos el combo del saleItem para luego sacar el tarro y las tapas
+        Combo combo = saleItem.getCombo();
+
+        // Sacamos el envase para validar su inventario
+        Jar jar = combo.getJar();
+
+        // Sacamos todas las bodegas donde tengamos este envase y las ordenamos segun su
+        // prioridad
+        List<BodegaJar> bodegaJar = jarService.sortBodegaJar(jar.getBodegas());
+
+        // Inventario inicial que necesitamos
+        int requestedQuantity = saleItem.getQuantity();
+
+        // Sumar cantidades de combos existentes en la lista
+        // Es importante resaltar que este revisa si hay suficiente inventario para EL + el existente, si ya se ha pedido el mismo envase en la venta
+        for (SaleItem item : existingItems) {
+            if (item.getItemType() == ItemType.JAR && item.getJar().getId().equals(jar.getId())) {
+                requestedQuantity += item.getQuantity();
+            }
+        }
+
+        // Recorremos las bodegas para ver si tenemos suficiente inventario
+        for (BodegaJar bj : bodegaJar) {
+            if (requestedQuantity <= 0) {
+                break;
+            }
+
+            int availableInBodega = bj.getQuantity();
+            if (availableInBodega <= 0) {
+                continue;
+            }
+
+            int deductQuantity = Math.min(availableInBodega, requestedQuantity);
+            requestedQuantity -= deductQuantity;
+        }
+
+        if (requestedQuantity > 0) {
+            throw new IllegalArgumentException("No hay suficiente inventario para el tarro: " + jar.getName()
+                    + " en el combo: " + combo.getName() + ", se necesitan " + requestedQuantity + " unidades más.");
+        }
+
+        // Ahora validamos las tapas del combo
+
+        // Como un combo puede tener varias tapas, recorremos la lista de tapas
+        List<ComboCap> caps = combo.getCaps();
+
+        String[] colors = saleItem.getColor().trim().split(",");
+        String[] capComboQuantity = saleItem.getComboCapQuantity().trim().split(",");
+
+        int totalCheckedQuantity = 0;
+        for (String capQuantity : capComboQuantity) {
+            capQuantity = capQuantity.trim();
+            totalCheckedQuantity += Integer.parseInt(capQuantity);
+        }
+
+        if(totalCheckedQuantity != saleItem.getQuantity()) {
+            throw new IllegalArgumentException("La suma de las cantidades de tapas no coincide con la cantidad de tapas del combo: " + combo.getName());
+        }
+
+        if(caps.size() != colors.length || caps.size() != capComboQuantity.length) {
+            throw new IllegalArgumentException("La cantidad de colores o cantidades de tapas no coincide con la cantidad de tapas en el combo: " + combo.getName());
+        }
+
+        // Recorremos las tapas para validar su inventario
+        for (int i = 0; i < caps.size(); i++) {
+            ComboCap comboCap = caps.get(i);
+            capComboQuantity[i] = capComboQuantity[i].trim();
+            colors[i] = colors[i].trim();
+            if(capComboQuantity[i] == null || capComboQuantity[i].isEmpty() || capComboQuantity[i].equals("0")) {
+                continue;
+            }
+            // Verificamos que el color de la tapa si exista
+            CapColor capColor = capColorRepository.findByCapAndColor(comboCap.getCap(), colors[i])
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "El color " + saleItem.getColor() + " no existe en el tipo de tapa: "
+                                    + comboCap.getCap().getName()));
+
+            // Sacamos todas las bodegas donde tengamos esta tapa de este color y las
+            // ordenamos segun su prioridad
+            List<BodegaCapColor> bodegaCapColors = capColorService.sortBodegas(capColor.getBodegas());
+            int requestedCapQuantity = saleItem.getQuantity();
+            // Sumar cantidades de combos existentes en la lista
+            for (SaleItem item : existingItems) {
+                if (item.getItemType() == ItemType.CAP && item.getCapColor().getId().equals(capColor.getId())) {
+                    requestedCapQuantity += item.getQuantity();
+                }
+            }
+            for (BodegaCapColor bodegaCapColor : bodegaCapColors) {
+                if (requestedCapQuantity <= 0) {
+                    break;
+                }
+
+                int availableInBodega = bodegaCapColor.getQuantity();
+                if (availableInBodega <= 0) {
+                    continue;
+                }
+
+                int deductQuantity = Math.min(availableInBodega, requestedCapQuantity);
+                requestedCapQuantity -= deductQuantity;
+            }
+
+            // Si al final nos queda una cantidad pendiente, lanzamos el error
+            if (requestedCapQuantity > 0) {
+                throw new IllegalArgumentException(
+                        "No hay suficiente inventario para la tapa del combo: " + combo.getName()
+                                + ", se necesitan " + requestedCapQuantity + " unidades más.");
+            }
+
+        }
+
     }
 
     /**
