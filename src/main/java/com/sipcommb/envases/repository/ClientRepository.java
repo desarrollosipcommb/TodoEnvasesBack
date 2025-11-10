@@ -26,4 +26,7 @@ public interface ClientRepository extends JpaRepository<Client, Long>{
 
     @Query("SELECT c FROM Client c WHERE c.name LIKE %:name% AND c.is_active = true")
     Page<Client> findLikeName(Pageable pageable, @Param("name") String name);
+
+    @Query("SELECT c FROM Client c WHERE c.document = :document")
+    Optional<Client> findByDocument(@Param("document") String document);
 }

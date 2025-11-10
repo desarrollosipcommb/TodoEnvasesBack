@@ -27,6 +27,13 @@ public class ClientService{
             throw new IllegalArgumentException("El cliente "+ cliente.getName()+ " ya existe");
         }
 
+        if(cliente.getDocument() != null && !cliente.getDocument().isEmpty()){
+            cliente.setDocument(cliente.getDocument().trim());
+            if(clientRepository.findByDocument(cliente.getDocument()).isPresent()){
+                throw new IllegalArgumentException("El documento "+ cliente.getDocument()+ " ya se encuentra registrado");
+            }
+        }
+
         Client clienteNuevo = new Client(cliente.getName(), cliente.getAddress(), cliente.getPhone(), cliente.getDescription(), cliente.getDocument());
 
         clientRepository.save(clienteNuevo);
@@ -49,6 +56,15 @@ public class ClientService{
             }
         }
 
+        if(cliente.getDocument() !=null && !cliente.getDocument().isEmpty()){
+            cliente.setDocument(cliente.getDocument().trim());
+            if(clientRepository.findByDocument(cliente.getDocument()).isPresent()){
+                throw new IllegalArgumentException("El documento "+ cliente.getDocument()+ " ya se encuentra registrado");
+            }else{
+                clientOriginal.setDocument(cliente.getDocument());
+            }
+        }
+
         if(cliente.getAddress() !=null && !cliente.getAddress().isEmpty()){
             clientOriginal.setAddress(cliente.getAddress());
         }
@@ -63,6 +79,10 @@ public class ClientService{
 
         if(cliente.getIsActive() !=null){
             clientOriginal.setIs_active(cliente.getIsActive());
+        }
+
+        if(cliente.getDocument() != null && !cliente.getDocument().isEmpty()){
+            clientOriginal.setDocument(cliente.getDocument());
         }
 
         clientRepository.save(clientOriginal);
