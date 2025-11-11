@@ -689,43 +689,37 @@ public class SaleService {
     private BigDecimal determinePrice(Extractos extracto, SaleItemRequest saleItemRequest) {
         int quantity = saleItemRequest.getQuantity();
 
-        if (quantity < 22) {
-            throw new IllegalArgumentException("La cantidad de extracto debe ser al menos 22ml");
-        }
-
-        if (quantity % 1000 == 0) {
+        if (quantity >= 1000) {
             saleItemRequest.setQuantity(saleItemRequest.getQuantity() / 1000);
             return extracto.getPrice1000ml();
         }
 
-        if (quantity % 500 == 0) {
+        if (quantity >= 500) {
             saleItemRequest.setQuantity(saleItemRequest.getQuantity() / 500);
             return extracto.getPrice500ml();
         }
 
-        if (quantity % 250 == 0) {
+        if (quantity >= 250) {
             saleItemRequest.setQuantity(saleItemRequest.getQuantity() / 250);
             return extracto.getPrice250ml();
         }
 
-        if (quantity % 125 == 0) {
+        if (quantity >= 125) {
             saleItemRequest.setQuantity(saleItemRequest.getQuantity() / 125);
             return extracto.getPrice125ml();
         }
 
-        if (quantity % 60 == 0) {
+        if (quantity >= 60) {
             saleItemRequest.setQuantity(saleItemRequest.getQuantity() / 60);
             return extracto.getPrice60ml();
         }
 
-        if (quantity % 22 == 0) {
+        if (quantity >= 22) {
             saleItemRequest.setQuantity(saleItemRequest.getQuantity() / 22);
             return extracto.getPrice22ml();
         }
 
-        throw new IllegalArgumentException(
-                "La cantidad de extracto debe ser un múltiplo de 22, 60, 125, 250, 500 o 1000ml");
-
+        throw new IllegalArgumentException("La cantidad de extracto debe ser al menos 22ml");
     }
 
     /**
