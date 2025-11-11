@@ -50,9 +50,9 @@ public class BodegaService {
             return "Bodega con la prioridad " + priority + " ya existe.";
         }
 
-        if(name.toLowerCase().equals("devoluciones")) {
+        if (name.toLowerCase().equals("devoluciones")) {
             priority = 0L;
-        }else if(priority <=0) {
+        } else if (priority <= 0) {
             return "La prioridad debe ser un número positivo.";
         }
 
@@ -67,16 +67,17 @@ public class BodegaService {
     public BodegaResponse changePriority(String name, Long newPriority) {
         Bodega bodega = getBodegaByName(name);
 
-        if(bodega.getName().equals("devoluciones")) {
+        if (bodega.getName().equals("devoluciones")) {
             throw new IllegalArgumentException("No se puede cambiar la prioridad de la bodega de devoluciones.");
-        }else if(newPriority <=0) {
+        } else if (newPriority <= 0) {
             throw new IllegalArgumentException("La prioridad debe ser un número positivo.");
         }
 
         Optional<Bodega> existingPriority = bodegaRepository.findByPriority(newPriority);
         if (existingPriority.isPresent() && !existingPriority.get().getName().equals(name)) {
-            throw new IllegalArgumentException("La prioridad " + newPriority + " ya está asignada a la bodega: "+ existingPriority.get().getName());
-        }else if(existingPriority.isPresent() && existingPriority.get().getName().equals(name)) {
+            throw new IllegalArgumentException("La prioridad " + newPriority + " ya está asignada a la bodega: "
+                    + existingPriority.get().getName());
+        } else if (existingPriority.isPresent() && existingPriority.get().getName().equals(name)) {
             throw new IllegalArgumentException("La bodega " + name + " ya tiene la prioridad " + newPriority + ".");
         }
 
@@ -93,11 +94,11 @@ public class BodegaService {
     public BodegaResponse ChangeName(String oldName, String newName) {
         Bodega bodega = getBodegaByName(oldName);
 
-        if(oldName.equals(newName)){
+        if (oldName.equals(newName)) {
             throw new IllegalArgumentException("El nombre nuevo es igual al nombre actual.");
         }
 
-        if(bodega.getName().equals("devoluciones")) {
+        if (bodega.getName().equals("devoluciones")) {
             throw new IllegalArgumentException("No se puede cambiar el nombre de la bodega de devoluciones.");
         }
 

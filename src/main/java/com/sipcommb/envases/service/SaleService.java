@@ -97,6 +97,9 @@ public class SaleService {
     @Autowired
     private PriceService priceService;
 
+    @Autowired
+    private InventoryService inventoryService;
+
     /**
      * Planea o añade un venta en el sistema, dependiendo del parámetro saveSale.
      * 
@@ -120,6 +123,23 @@ public class SaleService {
             throw new IllegalArgumentException("Problema al establecer el método de pago: " + e.getMessage());
         }
 
+        if (saleRequest.getType() == null) {
+            sale.setType(com.sipcommb.envases.entity.SaleType.PUNTO_DE_VENTA);
+        } else if (saleRequest.getType().equalsIgnoreCase("DOMICILIO")) {
+            sale.setType(com.sipcommb.envases.entity.SaleType.DOMICILIO);
+        } else if (saleRequest.getType().equalsIgnoreCase("PUNTO_DE_VENTA")) {
+            sale.setType(com.sipcommb.envases.entity.SaleType.PUNTO_DE_VENTA);
+        } else {
+            throw new IllegalArgumentException("Tipo de venta no reconocido: " + saleRequest.getType());
+        }
+
+        if (saleRequest.getDescription() == null) {
+            saleRequest.setDescription("");
+        } else {
+            saleRequest.setDescription(saleRequest.getDescription().trim());
+        }
+
+        sale.setNotes(saleRequest.getDescription());
         Client client = clientService.getClientByName(saleRequest.getClientName());
         sale.setClient(client);
         Optional<User> userOpt = userRepository.findById(jwtService.getUserIdFromToken(token));
@@ -203,7 +223,7 @@ public class SaleService {
         for (SaleItem saleItem : saleItemList) {
 
             if (saveSale) {
-                modifyInventory(saleItem, userOpt.get().getId().intValue());
+                modifyInventory(saleItem, saleItemList, userOpt.get().getId().intValue());
             } else {
                 validateInventory(saleItem, saleItemList);
             }
@@ -719,7 +739,7 @@ public class SaleService {
         if (saleItem.getItemType() == ItemType.COMBO) {
             validateInventoryCombo(saleItem, existingItems);
         } else if (saleItem.getItemType() == ItemType.JAR) {
-            
+
             Jar jar = saleItem.getJar();
             List<BodegaJar> bodegaJar = jarService.sortBodegaJar(jar.getBodegas());
 
@@ -849,7 +869,8 @@ public class SaleService {
         int requestedQuantity = saleItem.getQuantity();
 
         // Sumar cantidades de combos existentes en la lista
-        // Es importante resaltar que este revisa si hay suficiente inventario para EL + el existente, si ya se ha pedido el mismo envase en la venta
+        // Es importante resaltar que este revisa si hay suficiente inventario para EL +
+        // el existente, si ya se ha pedido el mismo envase en la venta
         for (SaleItem item : existingItems) {
             if (item.getItemType() == ItemType.JAR && item.getJar().getId().equals(jar.getId())) {
                 requestedQuantity += item.getQuantity();
@@ -890,12 +911,16 @@ public class SaleService {
             totalCheckedQuantity += Integer.parseInt(capQuantity);
         }
 
-        if(totalCheckedQuantity != saleItem.getQuantity()) {
-            throw new IllegalArgumentException("La suma de las cantidades de tapas no coincide con la cantidad de tapas del combo: " + combo.getName());
+        if (totalCheckedQuantity != saleItem.getQuantity()) {
+            throw new IllegalArgumentException(
+                    "La suma de las cantidades de tapas no coincide con la cantidad de tapas del combo: "
+                            + combo.getName());
         }
 
-        if(caps.size() != colors.length || caps.size() != capComboQuantity.length) {
-            throw new IllegalArgumentException("La cantidad de colores o cantidades de tapas no coincide con la cantidad de tapas en el combo: " + combo.getName());
+        if (caps.size() != colors.length || caps.size() != capComboQuantity.length) {
+            throw new IllegalArgumentException(
+                    "La cantidad de colores o cantidades de tapas no coincide con la cantidad de tapas en el combo: "
+                            + combo.getName());
         }
 
         // Recorremos las tapas para validar su inventario
@@ -903,7 +928,7 @@ public class SaleService {
             ComboCap comboCap = caps.get(i);
             capComboQuantity[i] = capComboQuantity[i].trim();
             colors[i] = colors[i].trim();
-            if(capComboQuantity[i] == null || capComboQuantity[i].isEmpty() || capComboQuantity[i].equals("0")) {
+            if (capComboQuantity[i] == null || capComboQuantity[i].isEmpty() || capComboQuantity[i].equals("0")) {
                 continue;
             }
             // Verificamos que el color de la tapa si exista
@@ -953,10 +978,10 @@ public class SaleService {
      * @param saleItem el item de venta que se va a procesar
      * @param userId   el ID del usuario que realiza la venta
      */
-    private void modifyInventory(SaleItem saleItem, int userId) {
-        // TODO, no se como resolver el tema de bodegas aun
-        if (saleItem.getItemType() == ItemType.COMBO) {
+    private void modifyInventory(SaleItem saleItem, List<SaleItem> existingItems, int userId) {
 
+        if (saleItem.getItemType() == ItemType.COMBO) {
+            modifyInventoryCombo(saleItem, existingItems, userId);
         } else if (saleItem.getItemType() == ItemType.JAR) {
             Jar jar = saleItem.getJar();
             List<BodegaJar> bodegaJar = jarService.sortBodegaJar(jar.getBodegas());
@@ -976,6 +1001,14 @@ public class SaleService {
                 int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
                 bj.setQuantity(availableInBodega - deductQuantity);
                 quantityToDeduct -= deductQuantity;
+                inventoryService.newItem(
+                        jar.getId(),
+                        "jar",
+                        quantityToDeduct,
+                        "sale",
+                        userId,
+                        "Se vendieron " + deductQuantity + " unidades del tarro: " + jar.getName()
+                                + ", salio de la bodega: " + bj.getBodega().getName());
             }
 
             if (quantityToDeduct > 0) {
@@ -1002,6 +1035,15 @@ public class SaleService {
                 int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
                 bodegaCapColor.setQuantity(availableInBodega - deductQuantity);
                 quantityToDeduct -= deductQuantity;
+                inventoryService.newItem(
+                        capColor.getId(),
+                        "cap",
+                        deductQuantity,
+                        "sale",
+                        userId,
+                        "Se vendieron " + deductQuantity + " unidades de la tapa: " + capColor.getCap().getName()
+                                + " color " + capColor.getColor() + ", salio de la bodega: "
+                                + bodegaCapColor.getBodega().getName());
             }
 
             if (quantityToDeduct > 0) {
@@ -1028,6 +1070,14 @@ public class SaleService {
                 int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
                 bq.setQuantity(availableInBodega - deductQuantity);
                 quantityToDeduct -= deductQuantity;
+                inventoryService.newItem(
+                        Long.valueOf(quimico.getId()),
+                        "quimico",
+                        deductQuantity,
+                        "sale",
+                        userId,
+                        "Se vendieron " + deductQuantity + " unidades del químico: " + quimico.getName()
+                                + ", salio de la bodega: " + bq.getBodega().getName());
             }
 
             if (quantityToDeduct > 0) {
@@ -1055,6 +1105,14 @@ public class SaleService {
                 int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
                 be.setQuantity(availableInBodega - deductQuantity);
                 quantityToDeduct -= deductQuantity;
+                inventoryService.newItem(
+                        Long.valueOf(extracto.getId()),
+                        "extracto",
+                        deductQuantity,
+                        "sale",
+                        userId,
+                        "Se vendieron " + deductQuantity + " unidades del extracto: " + extracto.getName()
+                                + ", salio de la bodega: " + be.getBodega().getName());
             }
 
             if (quantityToDeduct > 0) {
@@ -1066,6 +1124,152 @@ public class SaleService {
             throw new IllegalArgumentException("Tipo de item de venta no reconocido: " + saleItem.getItemType());
         }
 
+    }
+
+    /**
+     * Modifica el inventario restando las cantidades vendidas para un SaleItem de
+     * tipo COMBO.
+     * Dado que estos tiene 1 envase y 1 o más tapas, tenemos que modificar el
+     * inventario para todos los componentes
+     * 
+     * @param saleItem      el Combo a vender
+     * @param existingItems los items ya existentes en la venta
+     * @param userId        el ID del usuario que realiza la venta
+     */
+    private void modifyInventoryCombo(SaleItem saleItem, List<SaleItem> existingItems, int userId) {
+        // Sacamos el combo del saleItem para luego sacar el tarro y las tapas
+        Combo combo = saleItem.getCombo();
+
+        // Sacamos el envase para validar su inventario
+        Jar jar = combo.getJar();
+
+        // Sacamos todas las bodegas donde tengamos este envase y las ordenamos segun su
+        // prioridad
+        List<BodegaJar> bodegaJar = jarService.sortBodegaJar(jar.getBodegas());
+
+        // Inventario inicial que necesitamos
+        int requestedQuantity = saleItem.getQuantity();
+
+        // Sumar cantidades de combos existentes en la lista
+        // Es importante resaltar que este revisa si hay suficiente inventario para EL +
+        // el existente, si ya se ha pedido el mismo envase en la venta
+        for (SaleItem item : existingItems) {
+            if (item.getItemType() == ItemType.JAR && item.getJar().getId().equals(jar.getId())) {
+                requestedQuantity += item.getQuantity();
+            }
+        }
+
+        // Recorremos las bodegas para ver si tenemos suficiente inventario
+        for (BodegaJar bj : bodegaJar) {
+            if (requestedQuantity <= 0) {
+                break;
+            }
+
+            int availableInBodega = bj.getQuantity();
+            if (availableInBodega <= 0) {
+                continue;
+            }
+
+            int deductQuantity = Math.min(availableInBodega, requestedQuantity);
+            bj.setQuantity(availableInBodega - deductQuantity);
+            requestedQuantity -= deductQuantity;
+            inventoryService.newItem(
+                    jar.getId(),
+                    "jar",
+                    deductQuantity,
+                    "sale",
+                    userId,
+                    "Se vendieron " + deductQuantity + " unidades del tarro: " + jar.getName() + " en el combo: "
+                            + combo.getName() + ", salio de la bodega: " + bj.getBodega().getName());
+        }
+
+        if (requestedQuantity > 0) {
+            throw new IllegalArgumentException("No hay suficiente inventario para el tarro: " + jar.getName()
+                    + " en el combo: " + combo.getName() + ", se necesitan " + requestedQuantity + " unidades más.");
+        }
+
+        // Ahora validamos las tapas del combo
+
+        // Como un combo puede tener varias tapas, recorremos la lista de tapas
+        List<ComboCap> caps = combo.getCaps();
+
+        String[] colors = saleItem.getColor().trim().split(",");
+        String[] capComboQuantity = saleItem.getComboCapQuantity().trim().split(",");
+
+        int totalCheckedQuantity = 0;
+        for (String capQuantity : capComboQuantity) {
+            capQuantity = capQuantity.trim();
+            totalCheckedQuantity += Integer.parseInt(capQuantity);
+        }
+
+        if (totalCheckedQuantity != saleItem.getQuantity()) {
+            throw new IllegalArgumentException(
+                    "La suma de las cantidades de tapas no coincide con la cantidad de tapas del combo: "
+                            + combo.getName());
+        }
+
+        if (caps.size() != colors.length || caps.size() != capComboQuantity.length) {
+            throw new IllegalArgumentException(
+                    "La cantidad de colores o cantidades de tapas no coincide con la cantidad de tapas en el combo: "
+                            + combo.getName());
+        }
+
+        // Recorremos las tapas para validar su inventario
+        for (int i = 0; i < caps.size(); i++) {
+            ComboCap comboCap = caps.get(i);
+            capComboQuantity[i] = capComboQuantity[i].trim();
+            colors[i] = colors[i].trim();
+            if (capComboQuantity[i] == null || capComboQuantity[i].isEmpty() || capComboQuantity[i].equals("0")) {
+                continue;
+            }
+            // Verificamos que el color de la tapa si exista
+            CapColor capColor = capColorRepository.findByCapAndColor(comboCap.getCap(), colors[i])
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "El color " + saleItem.getColor() + " no existe en el tipo de tapa: "
+                                    + comboCap.getCap().getName()));
+
+            // Sacamos todas las bodegas donde tengamos esta tapa de este color y las
+            // ordenamos segun su prioridad
+            List<BodegaCapColor> bodegaCapColors = capColorService.sortBodegas(capColor.getBodegas());
+            int requestedCapQuantity = saleItem.getQuantity();
+            // Sumar cantidades de combos existentes en la lista
+            for (SaleItem item : existingItems) {
+                if (item.getItemType() == ItemType.CAP && item.getCapColor().getId().equals(capColor.getId())) {
+                    requestedCapQuantity += item.getQuantity();
+                }
+            }
+            for (BodegaCapColor bodegaCapColor : bodegaCapColors) {
+                if (requestedCapQuantity <= 0) {
+                    break;
+                }
+
+                int availableInBodega = bodegaCapColor.getQuantity();
+                if (availableInBodega <= 0) {
+                    continue;
+                }
+
+                int deductQuantity = Math.min(availableInBodega, requestedCapQuantity);
+                bodegaCapColor.setQuantity(availableInBodega - deductQuantity);
+                requestedCapQuantity -= deductQuantity;
+                inventoryService.newItem(
+                        capColor.getId(),
+                        "cap",
+                        deductQuantity,
+                        "sale",
+                        userId,
+                        "Se vendieron " + deductQuantity + " unidades de la tapa: " + capColor.getCap().getName()
+                                + " color " + capColor.getColor() + " en el combo: " + combo.getName()
+                                + ", salio de la bodega: " + bodegaCapColor.getBodega().getName());
+            }
+
+            // Si al final nos queda una cantidad pendiente, lanzamos el error
+            if (requestedCapQuantity > 0) {
+                throw new IllegalArgumentException(
+                        "No hay suficiente inventario para la tapa del combo: " + combo.getName()
+                                + ", se necesitan " + requestedCapQuantity + " unidades más.");
+            }
+
+        }
     }
 
     /**

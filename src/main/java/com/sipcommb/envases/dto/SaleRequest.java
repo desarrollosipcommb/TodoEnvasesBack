@@ -12,16 +12,19 @@ public class SaleRequest {
 
     private String saleDate;
 
+    private String type;
+
     private List<SaleItemRequest> items;
 
     public SaleRequest() {
     }
-    public SaleRequest(String clientName, String description, String paymentMethod, String saleDate, List<SaleItemRequest> items) {
+    public SaleRequest(String clientName, String description, String paymentMethod, String saleDate, List<SaleItemRequest> items, String type) {
         this.clientName = clientName;
         this.description = description;
         this.paymentMethod = paymentMethod;
         this.saleDate = saleDate;
         this.items = items;
+        this.type = type;
     }
 
     public String getClientName() {
@@ -62,6 +65,14 @@ public class SaleRequest {
 
     public void setSaleDate(String saleDate) {
         this.saleDate = saleDate;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
 }

@@ -398,10 +398,11 @@ public class QuimicosService {
             }
         }
 
-        for( BodegaDTO bodegaDTO : quimicoDTO.getBodegaName()) {
+        for (BodegaDTO bodegaDTO : quimicoDTO.getBodegaName()) {
             Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
 
-            BodegaQuimicos bodegaQuimicos = new BodegaQuimicos(bodega, quimico, bodegaDTO.getQuantity() != null ? bodegaDTO.getQuantity() : 0);
+            BodegaQuimicos bodegaQuimicos = new BodegaQuimicos(bodega, quimico,
+                    bodegaDTO.getQuantity() != null ? bodegaDTO.getQuantity() : 0);
             bodegaQuimicoRepository.save(bodegaQuimicos);
         }
 
@@ -454,16 +455,17 @@ public class QuimicosService {
     }
 
     public List<BodegaQuimicos> sortBodegaQuimicos(List<BodegaQuimicos> bodegaQuimicos) {
-       try{
-         return bodegaQuimicos.stream()
-                .filter(bq -> bq.getBodega() != null && bq.getBodega().getPriority() != null && bq.getBodega().getPriority() > 0)
-                .sorted(Comparator.comparing(
-                        bq -> bq.getBodega() != null ? bq.getBodega().getPriority() : null,
-                        Comparator.nullsLast(Comparator.naturalOrder())))
-                .collect(Collectors.toList());
-       } catch (Exception e) {
-              throw new RuntimeException("Error al ordenar las bodegas por prioridad: " + e.getMessage());
-       }
+        try {
+            return bodegaQuimicos.stream()
+                    .filter(bq -> bq.getBodega() != null && bq.getBodega().getPriority() != null
+                            && bq.getBodega().getPriority() > 0)
+                    .sorted(Comparator.comparing(
+                            bq -> bq.getBodega() != null ? bq.getBodega().getPriority() : null,
+                            Comparator.nullsLast(Comparator.naturalOrder())))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Error al ordenar las bodegas por prioridad: " + e.getMessage());
+        }
     }
 
 }

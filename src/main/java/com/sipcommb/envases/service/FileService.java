@@ -165,7 +165,7 @@ public class FileService {
                     throw new RuntimeException("la cantidad de la tapa es obligatoria");
                 }
 
-                if(getCellAsString(descriptionCell).equals("")){
+                if (getCellAsString(descriptionCell).equals("")) {
                     throw new RuntimeException("la descripción de la tapa es obligatoria");
                 }
 
@@ -448,8 +448,6 @@ public class FileService {
                     throw new RuntimeException("la cantidad de la tapa y nombre es obligatorio");
                 }
 
-                
-
                 if (getCellAsString(diameterCell).equals("")) {
                     throw new RuntimeException("el diametro de la tapa es obligatorio");
                 }
@@ -537,7 +535,6 @@ public class FileService {
             Cell ml22cell = row.getCell(7);
             Cell quantityCell = row.getCell(8);
             Cell bodegaCell = row.getCell(9);
-
 
             try {
 

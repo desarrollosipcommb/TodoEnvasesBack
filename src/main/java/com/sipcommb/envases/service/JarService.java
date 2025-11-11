@@ -376,7 +376,7 @@ public class JarService {
         return new JarDTO(jarOptional.get());
     }
 
-    //Se usa solo en fileservice para manejar el excel
+    // Se usa solo en fileservice para manejar el excel
     public JarDTO updateInventoryJar(String nameJar, List<BodegaDTO> bodegaDTOs, String token) {
         Optional<Jar> jarOptional = jarRepository.getByName(nameJar.trim().toLowerCase());
 
@@ -390,7 +390,7 @@ public class JarService {
             bodegaService.getBodegaByName(bodegaDTO.getName());
             Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository
                     .findByBodegaAndJar(bodegaService.getBodegaByName(bodegaDTO.getName()), jar);
-           
+
             BodegaJar bodegaJar = null;
 
             if (!bodegaJarOpt.isPresent()) {
@@ -617,16 +617,17 @@ public class JarService {
     }
 
     public List<BodegaJar> sortBodegaJar(List<BodegaJar> bodegaJars) {
-       try{
-         return bodegaJars.stream()
-                .filter(bj -> bj.getBodega() != null && bj.getBodega().getPriority() != null && bj.getBodega().getPriority() > 0)
-                .sorted(Comparator.comparing(
-                        bj -> bj.getBodega() != null ? bj.getBodega().getPriority() : null,
-                        Comparator.nullsLast(Comparator.naturalOrder())))
-                .collect(Collectors.toList());
-       } catch (Exception e) {
-              throw new RuntimeException("Error al ordenar las bodegas por prioridad: " + e.getMessage());
-       }
+        try {
+            return bodegaJars.stream()
+                    .filter(bj -> bj.getBodega() != null && bj.getBodega().getPriority() != null
+                            && bj.getBodega().getPriority() > 0)
+                    .sorted(Comparator.comparing(
+                            bj -> bj.getBodega() != null ? bj.getBodega().getPriority() : null,
+                            Comparator.nullsLast(Comparator.naturalOrder())))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Error al ordenar las bodegas por prioridad: " + e.getMessage());
+        }
     }
 
 }
