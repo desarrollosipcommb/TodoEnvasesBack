@@ -55,7 +55,11 @@ public class Sale {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Enumerated(EnumType.STRING)
     private SaleType type;
+
+    @Column(name = "is_active")
+    private boolean isActive = true;
 
     // Enums
     public enum PaymentMethod {
@@ -126,6 +130,8 @@ public class Sale {
         this.totalAmount = this.totalAmount.add(price);
     }
 
+    public boolean isActive() { return isActive; }
+    public void setActive(boolean isActive) { this.isActive = isActive; }
     
     
 }

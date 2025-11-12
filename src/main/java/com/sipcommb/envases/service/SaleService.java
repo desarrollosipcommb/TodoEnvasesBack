@@ -5,6 +5,7 @@ import com.sipcommb.envases.dto.SaleDTO;
 import com.sipcommb.envases.dto.SaleItemDTO;
 import com.sipcommb.envases.dto.SaleItemRequest;
 import com.sipcommb.envases.dto.SaleRequest;
+import com.sipcommb.envases.entity.Bodega;
 import com.sipcommb.envases.entity.BodegaCapColor;
 import com.sipcommb.envases.entity.BodegaExtractos;
 import com.sipcommb.envases.entity.BodegaJar;
@@ -21,6 +22,11 @@ import com.sipcommb.envases.entity.Quimicos;
 import com.sipcommb.envases.entity.Sale;
 import com.sipcommb.envases.entity.SaleItem;
 import com.sipcommb.envases.entity.User;
+import com.sipcommb.envases.repository.BodegaCapColorRepository;
+import com.sipcommb.envases.repository.BodegaExtractoRepository;
+import com.sipcommb.envases.repository.BodegaJarRepository;
+import com.sipcommb.envases.repository.BodegaQuimicoRepository;
+import com.sipcommb.envases.repository.BodegaRepository;
 import com.sipcommb.envases.repository.CapColorRepository;
 import com.sipcommb.envases.repository.CapRepository;
 import com.sipcommb.envases.repository.ComboRepository;
@@ -99,6 +105,21 @@ public class SaleService {
 
     @Autowired
     private InventoryService inventoryService;
+
+    @Autowired
+    private BodegaRepository bodegaRepository;
+
+    @Autowired
+    private BodegaCapColorRepository bodegaCapColorRepository;
+
+    @Autowired
+    private BodegaExtractoRepository bodegaExtractoRepository;
+
+    @Autowired
+    private BodegaJarRepository bodegaJarRepository;
+
+    @Autowired
+    private BodegaQuimicoRepository bodegaQuimicoRepository;
 
     /**
      * Planea o añade un venta en el sistema, dependiendo del parámetro saveSale.
@@ -1385,13 +1406,8 @@ public class SaleService {
         List<SaleItemDTO> saleItemDTOs = new ArrayList<>();
         for (SaleItem saleItem : saleItems) {
             if (saleItem.getItemType() == ItemType.COMBO) {
-                /*
-                 * TODO no funiona
-                 * saleItemDTOs.add(new SaleItemDTO(comboRepository
-                 * .findByJarAndCap(saleItem.getJar().getId(),
-                 * saleItem.getCapColor().getId()).orElse(null).getName(),
-                 * saleItem));
-                 */
+                saleItemDTOs.add(new SaleItemDTO(
+                        comboRepository.findById(saleItem.getCombo().getId()).orElse(null).getName(), saleItem));
             } else if (saleItem.getItemType() == ItemType.JAR) {
                 saleItemDTOs.add(new SaleItemDTO(
                         jarRepository.findById(saleItem.getJar().getId()).orElse(null).getName(), saleItem));
@@ -1432,4 +1448,154 @@ public class SaleService {
         }
     }
 
+    public SaleDTO deactivateSale(Long id) {
+        Optional<Sale> saleOpt = saleRepository.findById(id);
+        if (!saleOpt.isPresent()) {
+            throw new IllegalArgumentException("Venta no encontrada: " + id);
+        }
+
+        Bodega devoluciones = bodegaRepository.findByName("devoluciones").orElseThrow(
+                () -> new IllegalArgumentException("No se ha configurado una bodega de devoluciones"));
+
+        Sale sale = saleOpt.get();
+
+        if(sale.isActive()==false){
+            throw new IllegalArgumentException("La venta ya está desactivada: " + id);
+        }
+
+        List<SaleItem> saleItems = saleItemRepository.findBySale(sale.getId());
+
+        for (SaleItem items : saleItems) {
+            if (items.getItemType() == ItemType.JAR) {
+
+                Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository
+                        .findByBodegaAndJar(devoluciones, items.getJar());
+
+                if (bodegaJarOpt.isPresent()) {
+                    BodegaJar bodegaJar = bodegaJarOpt.get();
+                    bodegaJar.setQuantity(bodegaJar.getQuantity() + items.getQuantity());
+                    bodegaJarRepository.save(bodegaJar);
+                } else {
+                    BodegaJar newBodegaJar = new BodegaJar();
+                    newBodegaJar.setBodega(devoluciones);
+                    newBodegaJar.setJar(items.getJar());
+                    newBodegaJar.setQuantity(items.getQuantity());
+                    bodegaJarRepository.save(newBodegaJar);
+                }
+
+            } else if (items.getItemType() == ItemType.CAP) {
+
+                Optional<BodegaCapColor> bodegaCapColorOpt = bodegaCapColorRepository
+                        .findByBodegaIdAndCapColorId(devoluciones.getId(), items.getCapColor().getId());
+
+                if (bodegaCapColorOpt.isPresent()) {
+                    BodegaCapColor bodegaCapColor = bodegaCapColorOpt.get();
+                    bodegaCapColor.setQuantity(bodegaCapColor.getQuantity() + items.getQuantity());
+                    bodegaCapColorRepository.save(bodegaCapColor);
+                } else {
+                    BodegaCapColor newBodegaCapColor = new BodegaCapColor();
+                    newBodegaCapColor.setBodega(devoluciones);
+                    newBodegaCapColor.setCapColor(items.getCapColor());
+                    newBodegaCapColor.setQuantity(items.getQuantity());
+                    bodegaCapColorRepository.save(newBodegaCapColor);
+                }
+
+            } else if (items.getItemType() == ItemType.QUIMICO) {
+
+                Optional<BodegaQuimicos> bodegaQuimicoOpt = bodegaQuimicoRepository
+                        .findByBodegaAndQuimico(devoluciones, items.getQuimico());
+
+                if (bodegaQuimicoOpt.isPresent()) {
+                    BodegaQuimicos bodegaQuimico = bodegaQuimicoOpt.get();
+                    bodegaQuimico.setQuantity(bodegaQuimico.getQuantity() + items.getQuantity());
+                    bodegaQuimicoRepository.save(bodegaQuimico);
+                } else {
+                    BodegaQuimicos newBodegaQuimico = new BodegaQuimicos();
+                    newBodegaQuimico.setBodega(devoluciones);
+                    newBodegaQuimico.setQuimico(items.getQuimico());
+                    newBodegaQuimico.setQuantity(items.getQuantity());
+                    bodegaQuimicoRepository.save(newBodegaQuimico);
+                }
+
+            } else if (items.getItemType() == ItemType.EXTRACTO) {
+
+                Optional<BodegaExtractos> bodegaExtractoOpt = bodegaExtractoRepository
+                        .findByBodegaAndExtracto(devoluciones, items.getExtracto());
+
+                if (bodegaExtractoOpt.isPresent()) {
+                    BodegaExtractos bodegaExtracto = bodegaExtractoOpt.get();
+                    bodegaExtracto.setQuantity(bodegaExtracto.getQuantity() + items.getQuantity());
+                    bodegaExtractoRepository.save(bodegaExtracto);
+                } else {
+                    BodegaExtractos newBodegaExtracto = new BodegaExtractos();
+                    newBodegaExtracto.setBodega(devoluciones);
+                    newBodegaExtracto.setExtracto(items.getExtracto());
+                    newBodegaExtracto.setQuantity(items.getQuantity());
+                    bodegaExtractoRepository.save(newBodegaExtracto);
+                }
+
+            } else if (items.getItemType() == ItemType.COMBO) {
+
+                // Devolvemos el tarro
+                Jar jar = items.getCombo().getJar();
+                Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository
+                        .findByBodegaAndJar(devoluciones, jar);
+
+                if (bodegaJarOpt.isPresent()) {
+                    BodegaJar bodegaJar = bodegaJarOpt.get();
+                    bodegaJar.setQuantity(bodegaJar.getQuantity() + items.getQuantity());
+                    bodegaJarRepository.save(bodegaJar);
+                } else {
+                    BodegaJar newBodegaJar = new BodegaJar();
+                    newBodegaJar.setBodega(devoluciones);
+                    newBodegaJar.setJar(jar);
+                    newBodegaJar.setQuantity(items.getQuantity());
+                    bodegaJarRepository.save(newBodegaJar);
+                }
+
+                // Devolvemos las tapas
+                List<ComboCap> caps = items.getCombo().getCaps();
+
+                String[] colors = items.getColor().trim().split(",");
+                String[] capComboQuantity = items.getComboCapQuantity().trim().split(",");
+
+                for (int x = 0; x < caps.size(); x++) {
+                    final int index = x; // Create a final copy of x
+                    ComboCap comboCap = caps.get(index);
+                    capComboQuantity[index] = capComboQuantity[index].trim();
+                    colors[index] = colors[index].trim();
+                    if (capComboQuantity[index] == null || capComboQuantity[index].isEmpty()
+                            || capComboQuantity[index].equals("0")) {
+                        continue;
+                    }
+                    // Verificamos que el color de la tapa si exista
+                    CapColor capColor = capColorRepository.findByCapAndColor(comboCap.getCap(), colors[index])
+                            .orElseThrow(() -> new IllegalArgumentException(
+                                    "El color " + colors[index] + " no existe en el tipo de tapa: "
+                                            + comboCap.getCap().getName()));
+
+                    Optional<BodegaCapColor> bodegaCapColorOpt = bodegaCapColorRepository
+                            .findByBodegaIdAndCapColorId(devoluciones.getId(), capColor.getId());
+
+                    if (bodegaCapColorOpt.isPresent()) {
+                        BodegaCapColor bodegaCapColor = bodegaCapColorOpt.get();
+                        bodegaCapColor
+                                .setQuantity(bodegaCapColor.getQuantity() + Integer.parseInt(capComboQuantity[index]));
+                        bodegaCapColorRepository.save(bodegaCapColor);
+                    } else {
+                        BodegaCapColor newBodegaCapColor = new BodegaCapColor();
+                        newBodegaCapColor.setBodega(devoluciones);
+                        newBodegaCapColor.setCapColor(capColor);
+                        newBodegaCapColor.setQuantity(Integer.parseInt(capComboQuantity[index]));
+                        bodegaCapColorRepository.save(newBodegaCapColor);
+                    }
+                }
+            }
+        }
+        sale.setActive(false);
+        saleRepository.save(sale);
+
+        return toSaleDTO(sale);
+
+    }
 }

@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -236,6 +237,28 @@ public class SaleController {
                 cause = cause.getCause();
             }
             return ResponseEntity.status(500).body(new CustomApiResponse("Error al obtener las ventas por rango de precio: " + cause.getMessage()));
+        }
+    }
+
+    @PutMapping("/deactivate")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Venta desactivada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al desactivar la venta")
+    })
+    public ResponseEntity<?> deactivateSale(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam Long id
+    ) {
+        if(!permissionService.hasPermission(authHeader, "sales")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para desactivar ventas"));
+        }
+        try {
+            SaleDTO saleDTO = saleService.deactivateSale(id);
+            return ResponseEntity.ok(saleDTO);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(new CustomApiResponse("Error al desactivar la venta: " + e.getMessage()));
         }
     }
 }

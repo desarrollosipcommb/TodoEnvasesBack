@@ -117,7 +117,7 @@ CREATE TABLE sales (
     is_active BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
     FOREIGN KEY (client_id) REFERENCES clientes(client_id) ON DELETE RESTRICT,
-    CHECK (total_amount >= 0)
+    
 );
 
 -- ============================================

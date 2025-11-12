@@ -143,6 +143,7 @@ public class BodegaService {
         for (String bodegaName : bodegaNames) {
             BodegaResponse bodegaResponse = new BodegaResponse();
             bodegaResponse.setBodegaName(bodegaName);
+            bodegaResponse.setPriority(bodegaRepository.findByName(bodegaName).get().getPriority());
             bodegaResponses.add(bodegaResponse);
         }
 

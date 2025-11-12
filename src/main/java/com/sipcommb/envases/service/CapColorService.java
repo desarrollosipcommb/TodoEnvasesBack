@@ -107,8 +107,6 @@ public class CapColorService {
 
             capColorRepository.save(newColor);
 
-            capColorRepository.save(newColor);
-
             inventoryService.newItem(
                     newColor.getId() != null ? newColor.getId().longValue() : null,
                     "cap",
