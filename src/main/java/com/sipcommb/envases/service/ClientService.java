@@ -114,8 +114,8 @@ public class ClientService {
         return new ClientDTO(client);
     }
 
-    public Page<ClientDTO> getAllClients(Pageable pageable) {
-        return clientRepository.findAll(pageable).map(ClientDTO::new);
+    public Page<ClientDTO> getAllClients(Pageable pageable, String name) {
+        return clientRepository.findAllByName(pageable,name).map(ClientDTO::new);
     }
 
     public Page<ClientDTO> getAllClientsActive(Pageable pageable) {

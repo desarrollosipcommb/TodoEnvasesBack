@@ -67,7 +67,8 @@ public class ClientController {
     public ResponseEntity<?> getAllClients(
         @RequestHeader("Authorization") String authHeader,
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(defaultValue = "") String name
     ){
         if (!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403)
@@ -76,7 +77,7 @@ public class ClientController {
 
         try{
             Pageable pageable = PageRequest.of(page, size);
-            return ResponseEntity.ok(clientService.getAllClients(pageable));
+            return ResponseEntity.ok(clientService.getAllClients(pageable,name));
         } catch (Exception e){
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: "+ e.getMessage()));
         }
