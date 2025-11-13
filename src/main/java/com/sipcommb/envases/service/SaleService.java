@@ -1448,6 +1448,12 @@ public class SaleService {
         }
     }
 
+    /**
+     * Desactiva una venta y devuelve los items vendidos a la bodega de devoluciones.
+     * 
+     * @param id el ID de la venta a desactivar
+     * @return el DTO SaleDTO de la venta desactivada
+     */
     public SaleDTO deactivateSale(Long id) {
         Optional<Sale> saleOpt = saleRepository.findById(id);
         if (!saleOpt.isPresent()) {
@@ -1598,4 +1604,15 @@ public class SaleService {
         return toSaleDTO(sale);
 
     }
+
+    public Page<SaleDTO> getSalesByClient(Pageable pageable, String clientName) {
+        Page<Sale> sales = saleRepository.findByClient(clientName, pageable);
+        List<SaleDTO> saleDTOs = new ArrayList<>();
+        for (Sale sale : sales) {
+            SaleDTO saleDTO = toSaleDTO(sale);
+            saleDTOs.add(saleDTO);
+        }
+        return new PageImpl<>(saleDTOs, pageable, sales.getTotalElements());
+    }
+
 }

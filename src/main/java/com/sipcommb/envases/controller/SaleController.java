@@ -192,13 +192,13 @@ public class SaleController {
 
     @GetMapping("/by-username")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lista de ventas del usuario obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+        @ApiResponse(responseCode = "200", description = "Lista de ventas del vendedor obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas del usuario")
     })
     public ResponseEntity<?> getSalesByUsername(
         @RequestHeader("Authorization") String authHeader,
-        @RequestBody String username,
+        @RequestParam String username,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size
     ) {
@@ -261,4 +261,28 @@ public class SaleController {
             return ResponseEntity.status(500).body(new CustomApiResponse("Error al desactivar la venta: " + e.getMessage()));
         }
     }
+
+    @GetMapping("/byClient")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de ventas por cliente obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas por cliente")
+    })
+    public ResponseEntity<?> getSalesByClient(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam String clientName,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        if(!permissionService.hasPermission(authHeader, "sales")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(saleService.getSalesByClient(pageable, clientName));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new CustomApiResponse("Error al obtener las ventas por cliente: " + e.getMessage()));
+        }
+    }
+
 }
