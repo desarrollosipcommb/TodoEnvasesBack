@@ -118,10 +118,11 @@ public class FileService {
             }
 
             Cell nameCell = row.getCell(0);
+            Cell priorityCell = row.getCell(1);
 
             try {
 
-                bodegaService.addBodega(nameCell.getStringCellValue());
+                bodegaService.addBodega(nameCell.getStringCellValue(), (long) priorityCell.getNumericCellValue());
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Bodega agregada correctamente"));
 
@@ -164,7 +165,7 @@ public class FileService {
                     throw new RuntimeException("la cantidad de la tapa es obligatoria");
                 }
 
-                if(getCellAsString(descriptionCell).equals("")){
+                if (getCellAsString(descriptionCell).equals("")) {
                     throw new RuntimeException("la descripción de la tapa es obligatoria");
                 }
 
@@ -447,8 +448,6 @@ public class FileService {
                     throw new RuntimeException("la cantidad de la tapa y nombre es obligatorio");
                 }
 
-                
-
                 if (getCellAsString(diameterCell).equals("")) {
                     throw new RuntimeException("el diametro de la tapa es obligatorio");
                 }
@@ -536,7 +535,6 @@ public class FileService {
             Cell ml22cell = row.getCell(7);
             Cell quantityCell = row.getCell(8);
             Cell bodegaCell = row.getCell(9);
-
 
             try {
 

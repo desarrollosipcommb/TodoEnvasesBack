@@ -117,7 +117,7 @@ CREATE TABLE sales (
     is_active BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
     FOREIGN KEY (client_id) REFERENCES clientes(client_id) ON DELETE RESTRICT,
-    CHECK (total_amount >= 0)
+    
 );
 
 -- ============================================
@@ -131,18 +131,18 @@ CREATE TABLE sale_items (
     cap_id INT NULL, -- If selling cap or combo
     quimico_id INT NULL, -- If selling quimico
     extracto_id INT NULL, -- If selling extracto
-    quantity_jar INT NOT NULL,
-    quantity_cap INT NOT NULL,
-    quantity_quimico INT NOT NULL,
-    quantity_extracto INT NOT NULL,
+    combo_id INT NULL, -- If selling combo
+    quantity INT NOT NULL,
     unit_price DECIMAL(10, 2) NOT NULL,
     subtotal DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    color VARCHAR(100),
     FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
     FOREIGN KEY (jar_id) REFERENCES jars(id) ON DELETE RESTRICT,
     FOREIGN KEY (cap_color_id) REFERENCES cap_colors(id) ON DELETE RESTRICT,,
     FOREIGN KEY (quimico_id) REFERENCES quimicos(id) ON DELETE RESTRICT,
     FOREIGN KEY (extracto_id) REFERENCES extractos(id) ON DELETE RESTRICT,
+    FOREIGN KEY (combo_id) REFERENCES combos(id) ON DELETE RESTRICT
     -- Ensure at least one item is specified based on type
     CHECK (
         (item_type = 'jar' AND jar_id IS NOT NULL AND cap_id IS NULL) OR
@@ -259,6 +259,7 @@ CREATE TABLE clientes (
     client_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     address VARCHAR(100),
+    document VARCHAR(100),
     phone VARCHAR(100),
     description TEXT,
     is_active BOOLEAN DEFAULT TRUE,
@@ -270,6 +271,7 @@ CREATE TABLE clientes (
 
 CREATE TABLE bodega(
     id INT PRIMARY KEY AUTO_INCREMENT,
+    priority INT NOT NULL,
     name VARCHAR(100) NOT NULL,
 );
 

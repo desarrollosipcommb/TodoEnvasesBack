@@ -117,14 +117,15 @@ public class InventoryService {
         return response;
     }
 
-    public Page<TransactionResponseDTO> getByUsername(Pageable pageable, String username, String itemType, String transactionType) {
+    public Page<TransactionResponseDTO> getByUsername(Pageable pageable, String username, String itemType,
+            String transactionType) {
 
         Optional<List<User>> users = userRepository.findLikeUsername(username);
         if (!users.isPresent()) {
             return new PageImpl<>(Collections.emptyList(), pageable, 0);
         }
 
-        List<Transaction> allTransactions =filterTransactions(users.get(), itemType, transactionType);
+        List<Transaction> allTransactions = filterTransactions(users.get(), itemType, transactionType);
 
         // Pagina manualmente la lista
         int start = (int) pageable.getOffset();
@@ -141,10 +142,11 @@ public class InventoryService {
         for (User user : users) {
             int userId = user.getId().intValue();
 
-            if(!itemType.isEmpty() && !transactionType.isEmpty()) {
+            if (!itemType.isEmpty() && !transactionType.isEmpty()) {
                 ItemType itemTypeEnum = ItemType.valueOf(itemType.toUpperCase().trim());
                 TransactionType transactionTypeEnum = TransactionType.valueOf(transactionType.toLowerCase().trim());
-                filtered.addAll(inventoryRepository.findByUserAndItemTypeAndTransactionType(userId, itemTypeEnum, transactionTypeEnum));
+                filtered.addAll(inventoryRepository.findByUserAndItemTypeAndTransactionType(userId, itemTypeEnum,
+                        transactionTypeEnum));
             } else if (!itemType.isEmpty()) {
                 ItemType itemTypeEnum = ItemType.valueOf(itemType.toUpperCase().trim());
                 filtered.addAll(inventoryRepository.findByUserAndItemType(userId, itemTypeEnum));
@@ -156,8 +158,6 @@ public class InventoryService {
             }
 
         }
-            
-
 
         return filtered;
     }

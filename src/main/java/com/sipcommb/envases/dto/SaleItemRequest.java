@@ -18,10 +18,13 @@ public class SaleItemRequest {
 
     private String extractoName;
 
+    private String comboCapQuantity;
+
     public SaleItemRequest() {
     }
 
-    public SaleItemRequest(String comboName, String jarName, String capName, String capColor, String diameter, Integer quantity, String quimicoName, String extractoName) {
+    public SaleItemRequest(String comboName, String jarName, String capName, String capColor, 
+    String diameter, Integer quantity, String quimicoName, String extractoName) {
         this.comboName = comboName;
         this.jarName = jarName;
         this.capName = capName;
@@ -96,5 +99,12 @@ public class SaleItemRequest {
         this.extractoName = extractoName;
     }
 
-    
+    public String getComboCapQuantity() {
+        return comboCapQuantity;
+    }
+
+    public void setComboCapQuantity(String comboCapQuantity) {
+        this.comboCapQuantity = comboCapQuantity;
+    }
+
 }

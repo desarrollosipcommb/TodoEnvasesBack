@@ -11,7 +11,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
-
 import com.sipcommb.envases.dto.BodegaItem;
 import com.sipcommb.envases.dto.BodegaResponse;
 import com.sipcommb.envases.entity.Bodega;
@@ -24,7 +23,7 @@ import com.sipcommb.envases.repository.BodegaRepository;
 @Service
 @Transactional
 public class BodegaService {
-    
+
     @Autowired
     private BodegaRepository bodegaRepository;
 
@@ -40,18 +39,81 @@ public class BodegaService {
     @Autowired
     private BodegaCapColorRepository bodegaCapColorRepository;
 
-    public String addBodega(String name) {
+    public String addBodega(String name, Long priority) {
 
-        Optional<Bodega> existingBodega = bodegaRepository.findByName(name);
-        if (existingBodega.isPresent()) {
-            return "Bodega con el nombre " + name + " ya existe.";
+        if (bodegaExists(name)) {
+            return "La bodega con nombre " + name + " ya existe.";
+        }
+
+        Optional<Bodega> existingPriority = bodegaRepository.findByPriority(priority);
+        if (existingPriority.isPresent()) {
+            return "Bodega con la prioridad " + priority + " ya existe.";
+        }
+
+        if (name.toLowerCase().equals("devoluciones")) {
+            priority = 0L;
+        } else if (priority <= 0) {
+            return "La prioridad debe ser un número positivo.";
         }
 
         Bodega newBodega = new Bodega();
         newBodega.setName(name.toLowerCase());
+        newBodega.setPriority(priority);
         bodegaRepository.save(newBodega);
 
         return "Se añadió la bodega: " + newBodega.getName();
+    }
+
+    public BodegaResponse changePriority(String name, Long newPriority) {
+        Bodega bodega = getBodegaByName(name);
+
+        if (bodega.getName().equals("devoluciones")) {
+            throw new IllegalArgumentException("No se puede cambiar la prioridad de la bodega de devoluciones.");
+        } else if (newPriority <= 0) {
+            throw new IllegalArgumentException("La prioridad debe ser un número positivo.");
+        }
+
+        Optional<Bodega> existingPriority = bodegaRepository.findByPriority(newPriority);
+        if (existingPriority.isPresent() && !existingPriority.get().getName().equals(name)) {
+            throw new IllegalArgumentException("La prioridad " + newPriority + " ya está asignada a la bodega: "
+                    + existingPriority.get().getName());
+        } else if (existingPriority.isPresent() && existingPriority.get().getName().equals(name)) {
+            throw new IllegalArgumentException("La bodega " + name + " ya tiene la prioridad " + newPriority + ".");
+        }
+
+        bodega.setPriority(newPriority);
+        bodegaRepository.save(bodega);
+
+        BodegaResponse bodegaResponse = new BodegaResponse();
+        bodegaResponse.setBodegaName(bodega.getName());
+        bodegaResponse.setPriority(bodega.getPriority());
+
+        return bodegaResponse;
+    }
+
+    public BodegaResponse ChangeName(String oldName, String newName) {
+        Bodega bodega = getBodegaByName(oldName);
+
+        if (oldName.equals(newName)) {
+            throw new IllegalArgumentException("El nombre nuevo es igual al nombre actual.");
+        }
+
+        if (bodega.getName().equals("devoluciones")) {
+            throw new IllegalArgumentException("No se puede cambiar el nombre de la bodega de devoluciones.");
+        }
+
+        if (bodegaExists(newName)) {
+            throw new IllegalArgumentException("La bodega con nombre " + newName + " ya existe.");
+        }
+
+        bodega.setName(newName.toLowerCase());
+        bodegaRepository.save(bodega);
+
+        BodegaResponse bodegaResponse = new BodegaResponse();
+        bodegaResponse.setBodegaName(bodega.getName());
+        bodegaResponse.setPriority(bodega.getPriority());
+
+        return bodegaResponse;
     }
 
     public List<String> getAllBodegas() {
@@ -61,7 +123,7 @@ public class BodegaService {
     public Bodega getBodegaByName(String name) {
         Optional<Bodega> bodega = bodegaRepository.findByName(name.toLowerCase());
 
-        if(!bodega.isPresent()) {
+        if (!bodega.isPresent()) {
             throw new IllegalArgumentException("La bodega con nombre " + name + " no existe.");
         }
 
@@ -81,6 +143,7 @@ public class BodegaService {
         for (String bodegaName : bodegaNames) {
             BodegaResponse bodegaResponse = new BodegaResponse();
             bodegaResponse.setBodegaName(bodegaName);
+            bodegaResponse.setPriority(bodegaRepository.findByName(bodegaName).get().getPriority());
             bodegaResponses.add(bodegaResponse);
         }
 
@@ -97,7 +160,7 @@ public class BodegaService {
             for (BodegaResponse bodegaResponse : bodegaResponses) {
                 if (bodegaResponse.getBodegaName().equals(bodegaName)) {
                     bodegaResponse.getItems().add(new BodegaItem(quimicoName, quantity));
-                    break; 
+                    break;
                 }
             }
 
@@ -111,7 +174,7 @@ public class BodegaService {
             for (BodegaResponse bodegaResponse : bodegaResponses) {
                 if (bodegaResponse.getBodegaName().equals(bodegaName)) {
                     bodegaResponse.getItems().add(new BodegaItem(extractoName, quantity));
-                    break; 
+                    break;
                 }
             }
 
@@ -125,7 +188,7 @@ public class BodegaService {
             for (BodegaResponse bodegaResponse : bodegaResponses) {
                 if (bodegaResponse.getBodegaName().equals(bodegaName)) {
                     bodegaResponse.getItems().add(new BodegaItem(jarName, quantity));
-                    break; 
+                    break;
                 }
             }
 
@@ -140,7 +203,7 @@ public class BodegaService {
                 if (bodegaResponse.getBodegaName().equals(bodegaName)) {
                     String fullCapColorName = capName + " - " + colorName;
                     bodegaResponse.getItems().add(new BodegaItem(fullCapColorName, quantity));
-                    break; 
+                    break;
                 }
             }
 

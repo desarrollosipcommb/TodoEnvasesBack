@@ -42,4 +42,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
       @Param("nombreVendedor") String nombreVendedor
   );
 
+    @Query("SELECT s FROM Sale s WHERE LOWER(s.client.name) = LOWER(:clientName)")
+    Page<Sale> findByClient(@Param("clientName") String clientName, Pageable pageable);
+
 }

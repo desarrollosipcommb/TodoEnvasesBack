@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class JarTypeService {
-    
+
     @Autowired
     private JarTypeRepository jarTypeRepository;
 
@@ -59,14 +59,14 @@ public class JarTypeService {
     public JarTypeDTO updateJarType(String diameter, JarTypeDTO jarTypeDTO) {
         Optional<JarType> jarTypeOpt = jarTypeRepository.getTypeByDiameter(diameter);
 
-        if(!jarTypeOpt.isPresent()) {
+        if (!jarTypeOpt.isPresent()) {
             throw new RuntimeException("No se encontro el tipo de tapa con diametro: " + diameter);
         }
 
         JarType jarType = jarTypeOpt.get();
 
-        if(jarTypeRepository.getTypeByName(jarTypeDTO.getName()).isPresent() && 
-           !jarType.getName().equals(jarTypeDTO.getName())) {
+        if (jarTypeRepository.getTypeByName(jarTypeDTO.getName()).isPresent() &&
+                !jarType.getName().equals(jarTypeDTO.getName())) {
             throw new RuntimeException("Ya existe un tipo de tapa con el nombre: " + jarTypeDTO.getName());
         }
 
@@ -100,33 +100,33 @@ public class JarTypeService {
     }
 
     public List<JarTypeDTO> getAll() {
-      List<JarType> jarTypes = jarTypeRepository.findAll();
-      return jarTypes.stream()
-          .map(JarTypeDTO::new)
-          .collect(Collectors.toList());
+        List<JarType> jarTypes = jarTypeRepository.findAll();
+        return jarTypes.stream()
+                .map(JarTypeDTO::new)
+                .collect(Collectors.toList());
     }
 
     public JarTypeDTO setActive(String diameter, Boolean isActive) {
         Optional<JarType> jarTypeOpt = jarTypeRepository.getTypeByDiameter(diameter);
 
-        if(!jarTypeOpt.isPresent()) {
+        if (!jarTypeOpt.isPresent()) {
             throw new RuntimeException("No se encontro el tipo de tapa con diametro: " + diameter);
         }
 
         JarType jarType = jarTypeOpt.get();
         jarType.setIsActive(isActive);
 
-        if(!isActive) {
+        if (!isActive) {
             List<Jar> jars = jarType.getJars();
-            if(jars != null && !jars.isEmpty()) {
-                for(Jar jar : jars) {
+            if (jars != null && !jars.isEmpty()) {
+                for (Jar jar : jars) {
                     jar.setIsActive(false);
                     jarRepository.save(jar);
                 }
             }
             List<Cap> caps = jarType.getCaps();
-            if(caps != null && !caps.isEmpty()) {
-                for(Cap cap : caps) {
+            if (caps != null && !caps.isEmpty()) {
+                for (Cap cap : caps) {
                     cap.setIsActive(false);
                     capRepository.save(cap);
                 }
@@ -134,9 +134,8 @@ public class JarTypeService {
         }
 
         jarTypeRepository.save(jarType);
-        
+
         return new JarTypeDTO(jarType);
     }
 
-    
 }

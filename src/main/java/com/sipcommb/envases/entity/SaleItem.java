@@ -47,6 +47,10 @@ public class SaleItem {
     @JoinColumn(name = "extracto_id")
     private Extractos extracto;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "combo_id")
+    private Combo combo;
+
     @Min(1)
     @Column(nullable = false)
     private Integer quantity;
@@ -59,17 +63,18 @@ public class SaleItem {
     @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
     private BigDecimal subtotal;
 
-    
+    private String color;
 
-
+    private String comboCapQuantity;
     
     // Constructors
     public SaleItem() {}
-    
-    public SaleItem(Sale sale, Jar jar, Integer quantity, BigDecimal unitPrice) {
+
+    public SaleItem(Sale sale, Jar jar, Integer quantity, Combo combo, BigDecimal unitPrice) {
         this.sale = sale;
         this.jar = jar;
         this.quantity = quantity;
+        this.combo = combo;
         this.unitPrice = unitPrice;
         
     }
@@ -121,5 +126,14 @@ public class SaleItem {
     public void setExtracto(Extractos extracto) {
         this.extracto = extracto;
     }
+
+    public Combo getCombo() { return combo; }
+    public void setCombo(Combo combo) { this.combo = combo; }
+
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
+
+    public String getComboCapQuantity() { return comboCapQuantity; }
+    public void setComboCapQuantity(String comboCapQuantity) { this.comboCapQuantity = comboCapQuantity; }
 
 }
