@@ -23,18 +23,18 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     @NonNull
     Page<Client> findAll(@NonNull Pageable peageable);
 
-    @Query("SELECT c FROM Client c WHERE c.name LIKE %:name%")
+    @Query("SELECT c FROM Client c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))")
     Page<Client> findAllByName(Pageable pageable, @Param("name") String name);
 
     @Query("SELECT c FROM Client c WHERE c.is_active = :active")
     Page<Client> findAllActive(Pageable peageable, @Param("active") Boolean active);
 
-    @Query("SELECT c FROM Client c WHERE c.name LIKE %:name% AND c.is_active = true")
+    @Query("SELECT c FROM Client c WHERE (LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%')) OR LOWER(c.document) LIKE LOWER(CONCAT('%', :name, '%'))) AND c.is_active = true")
     Page<Client> findLikeName(Pageable pageable, @Param("name") String name);
 
     @Query("SELECT c FROM Client c WHERE c.document = :document")
     Optional<Client> findByDocument(@Param("document") String document);
 
-    @Query("SELECT c FROM Client c WHERE c.name LIKE %:name% AND c.is_active = true")
+    @Query("SELECT c FROM Client c WHERE (LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%')) OR LOWER(c.document) LIKE LOWER(CONCAT('%', :name, '%'))) AND c.is_active = true")
     List<Client> findLikeName(@Param("name") String name);
 }

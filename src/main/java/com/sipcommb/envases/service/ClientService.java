@@ -23,18 +23,20 @@ public class ClientService {
 
     public ClientDTO addClient(ClientDTO cliente) {
 
-        cliente.setName(cliente.getName().trim());
-
-        if (clientRepository.findByName(cliente.getName().toLowerCase()).isPresent()) {
-            throw new IllegalArgumentException("El cliente " + cliente.getName() + " ya existe");
+        if(cliente.getName() == null || cliente.getName().isEmpty()) {
+            throw new IllegalArgumentException("El nombre no puede estar vacío");
         }
 
-        if (cliente.getDocument() != null && !cliente.getDocument().isEmpty()) {
-            cliente.setDocument(cliente.getDocument().trim());
-            if (clientRepository.findByDocument(cliente.getDocument()).isPresent()) {
-                throw new IllegalArgumentException(
-                        "El documento " + cliente.getDocument() + " ya se encuentra registrado");
-            }
+        cliente.setName(cliente.getName().trim());
+
+        if (cliente.getDocument() == null || cliente.getDocument().isEmpty()) {
+            throw new IllegalArgumentException("El documento no puede estar vacío");
+        }
+
+        cliente.setDocument(cliente.getDocument().trim());
+        if (clientRepository.findByDocument(cliente.getDocument()).isPresent()) {
+            throw new IllegalArgumentException(
+                    "El documento " + cliente.getDocument() + " ya se encuentra registrado");
         }
 
         Client clienteNuevo = new Client(cliente.getName(), cliente.getAddress(), cliente.getPhone(),
@@ -49,9 +51,9 @@ public class ClientService {
 
         cliente.setNameOriginal(cliente.getNameOriginal().trim());
 
-        Client clientOriginal = clientRepository.findByName(cliente.getNameOriginal())
+        Client clientOriginal = clientRepository.findByDocument(cliente.getDocument())
                 .orElseThrow(
-                        () -> new IllegalArgumentException("El cliente " + cliente.getNameOriginal() + " no existe"));
+                        () -> new IllegalArgumentException("El cliente " + cliente.getNameOriginal() + " con el document " + cliente.getDocument() + " no existe"));
 
         if (cliente.getNameNew() != null && !cliente.getNameNew().isEmpty()) {
             if (clientRepository.findByName(cliente.getNameNew()).isPresent()) {
@@ -97,16 +99,16 @@ public class ClientService {
 
     }
 
-    public ClientDTO changeState(String name, Boolean state) {
+    public ClientDTO changeState(String document, Boolean state) {
 
-        String trimmedName = name.trim();
+        String trimmedDocument = document.trim();
 
-        Client client = clientRepository.findByName(trimmedName)
-                .orElseThrow(() -> new IllegalArgumentException("El cliente " + trimmedName + " no existe"));
+        Client client = clientRepository.findByDocument(trimmedDocument)
+                .orElseThrow(() -> new IllegalArgumentException("El cliente " + trimmedDocument + " no existe"));
 
         if (client.getIs_active().equals(state)) {
             String estado = state ? "activo" : "inactivo";
-            throw new IllegalArgumentException("El cliente " + trimmedName + " ya se encuentra " + estado);
+            throw new IllegalArgumentException("El cliente " + trimmedDocument + " ya se encuentra " + estado);
         }
 
         client.setIs_active(state);
@@ -117,7 +119,7 @@ public class ClientService {
     }
 
     public Page<ClientDTO> getAllClients(Pageable pageable, String name) {
-        return clientRepository.findAllByName(pageable,name).map(ClientDTO::new);
+        return clientRepository.findAllByName(pageable, name).map(ClientDTO::new);
     }
 
     public Page<ClientDTO> getAllClientsActive(Pageable pageable) {
