@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -33,4 +34,7 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     @Query("SELECT c FROM Client c WHERE c.document = :document")
     Optional<Client> findByDocument(@Param("document") String document);
+
+    @Query("SELECT c FROM Client c WHERE c.name LIKE %:name% AND c.is_active = true")
+    List<Client> findLikeName(@Param("name") String name);
 }

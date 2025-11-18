@@ -1,5 +1,7 @@
 package com.sipcommb.envases.service;
 
+import java.util.List;
+
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -133,6 +135,10 @@ public class ClientService {
     public Client getClientByName(String name) {
         return clientRepository.findByName(name.toLowerCase().trim())
                 .orElseThrow(() -> new IllegalArgumentException("El cliente " + name + " no existe"));
+    }
+
+    public List<Client> getClientsLikeName(String name) {
+        return clientRepository.findLikeName(name.toLowerCase().trim());
     }
 
 }
