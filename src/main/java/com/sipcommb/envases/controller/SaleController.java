@@ -36,56 +36,56 @@ public class SaleController {
     private PermissionService permissionService;
 
     @Autowired
-    private SaleService saleService; 
-    
+    private SaleService saleService;
+
 
     // Se usa para crear una venta y guardarla en la base de datos
     @Operation(
-        summary = "Crear una venta", 
-        description = "Permite crear una venta y guardarla en la base de datos. Se deberia correr el plan antes de crear la venta para evitar errores. \\n\\n" + //
-                        "Quiero resaltar que cada SaleRequest tiene una lista de SaleItemRequest, este solo puede tener un nombre especificado, es decir \\n" + //
-                        "Si se llena capName y jarName al tiempo va a soltar error")
+            summary = "Crear una venta",
+            description = "Permite crear una venta y guardarla en la base de datos. Se deberia correr el plan antes de crear la venta para evitar errores. \\n\\n" + //
+                    "Quiero resaltar que cada SaleRequest tiene una lista de SaleItemRequest, este solo puede tener un nombre especificado, es decir \\n" + //
+                    "Si se llena capName y jarName al tiempo va a soltar error")
     @PostMapping("/add")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Venta creada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error en la solicitud")
+            @ApiResponse(responseCode = "200", description = "Venta creada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error en la solicitud")
     })
     public ResponseEntity<?> addSale(@RequestHeader("Authorization") String authHeader, @RequestBody SaleRequest sale) {
-        if(!permissionService.hasPermission(authHeader, "sales")) {
+        if (!permissionService.hasPermission(authHeader, "sales")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear ventas"));
         }
 
-    try{
-        SaleDTO saleDTO = saleService.addSale(sale, authHeader.trim().replace("Bearer ", ""), true);
-        return ResponseEntity.ok(saleDTO);
-    }catch (Exception e) {
-        
-        return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+        try {
+            SaleDTO saleDTO = saleService.addSale(sale, authHeader.trim().replace("Bearer ", ""), true);
+            return ResponseEntity.ok(saleDTO);
+        } catch (Exception e) {
+
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+        }
     }
-}
 
 
     @Operation(
-        summary = "Planificar una venta", 
-        description = "Permite planificar una venta sin guardarla en la base de datos para ver el precio total y los detalles de la venta.  \\n\\n" + //
-                        "Quiero resaltar que cada SaleRequest tiene una lista de SaleItemRequest, este solo puede tener un nombre especificado, es decir \\n" + //
-                        "Si se llena capName y jarName al tiempo va a soltar error")
+            summary = "Planificar una venta",
+            description = "Permite planificar una venta sin guardarla en la base de datos para ver el precio total y los detalles de la venta.  \\n\\n" + //
+                    "Quiero resaltar que cada SaleRequest tiene una lista de SaleItemRequest, este solo puede tener un nombre especificado, es decir \\n" + //
+                    "Si se llena capName y jarName al tiempo va a soltar error")
     @PostMapping("/plan")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Venta planificada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error en la solicitud")
+            @ApiResponse(responseCode = "200", description = "Venta planificada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error en la solicitud")
     })
     public ResponseEntity<?> planSale(@RequestHeader("Authorization") String authHeader, @RequestBody SaleRequest sale) {
-        if(!permissionService.hasPermission(authHeader, "sales")) {
+        if (!permissionService.hasPermission(authHeader, "sales")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear ventas"));
         }
 
-        try{
+        try {
             SaleDTO saleDTO = saleService.addSale(sale, authHeader.trim().replace("Bearer ", ""), false);
             return ResponseEntity.ok(saleDTO);
-        }catch (Exception e) {
+        } catch (Exception e) {
             Throwable cause = e;
             while (cause.getCause() != null) {
                 cause = cause.getCause();
@@ -93,21 +93,21 @@ public class SaleController {
             cause.printStackTrace();
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + cause.getMessage()));
         }
-             
+
     }
 
     @GetMapping("/all")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lista de ventas obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas")
+            @ApiResponse(responseCode = "200", description = "Lista de ventas obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas")
     })
     public ResponseEntity<?> getAllSales(
-        @RequestHeader("Authorization") String authHeader,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        if(!permissionService.hasPermission(authHeader, "sales")) {
+        if (!permissionService.hasPermission(authHeader, "sales")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
         }
         try {
@@ -120,66 +120,67 @@ public class SaleController {
 
     @GetMapping("/like-sellerName-range")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lista de ventas obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas")
+            @ApiResponse(responseCode = "200", description = "Lista de ventas obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas")
     })
     public ResponseEntity<?> getAllSales(
-        @RequestHeader("Authorization") String authHeader,
-        @RequestParam() String fechaInicio,
-        @RequestParam() String fechaFin,
-        @RequestParam(required = false) String sellerName,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam() String fechaInicio,
+            @RequestParam() String fechaFin,
+            @RequestParam(required = false) String sellerName,
+            @RequestParam(required = false) String clientName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-      if(!permissionService.hasPermission(authHeader, "sales")) {
-        return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
-      }
-      try {
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(saleService.getFindByFechaAndVendedor(fechaInicio,fechaFin,sellerName,pageable));
-      } catch (Exception e) {
-        return ResponseEntity.status(500).body(new CustomApiResponse("Error al obtener las ventas: " + e.getMessage()));
-      }
+        if (!permissionService.hasPermission(authHeader, "sales")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(saleService.getFindByFechaAndVendedor(fechaInicio, fechaFin, sellerName, clientName, pageable));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new CustomApiResponse("Error al obtener las ventas: " + e.getMessage()));
+        }
     }
 
 
     //TODO: es posible que esto necesite cambios cuando se puedan editar ventas
     @GetMapping("/like-sellerName-range/total")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Total de ventas obtenido exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = BigDecimal.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error al obtener el total de ventas")
+            @ApiResponse(responseCode = "200", description = "Total de ventas obtenido exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = BigDecimal.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al obtener el total de ventas")
     })
     public ResponseEntity<?> getTotalSales(
-        @RequestHeader("Authorization") String authHeader,
-        @RequestParam() String fechaInicio,
-        @RequestParam() String fechaFin,
-        @RequestParam(required = false) String sellerName
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam() String fechaInicio,
+            @RequestParam() String fechaFin,
+            @RequestParam(required = false) String sellerName
     ) {
-      if(!permissionService.hasPermission(authHeader, "sales")) {
-        return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
-      }
-      try {
-        return ResponseEntity.ok(saleService.getTotalAmountByFechaAndVendedor(fechaInicio,fechaFin,sellerName));
-      } catch (Exception e) {
-        return ResponseEntity.status(500).body(new CustomApiResponse("Error al obtener el total de ventas: " + e.getMessage()));
-      }
+        if (!permissionService.hasPermission(authHeader, "sales")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
+        }
+        try {
+            return ResponseEntity.ok(saleService.getTotalAmountByFechaAndVendedor(fechaInicio, fechaFin, sellerName));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new CustomApiResponse("Error al obtener el total de ventas: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/by-email")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lista de ventas del usuario obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas del usuario")
+            @ApiResponse(responseCode = "200", description = "Lista de ventas del usuario obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas del usuario")
     })
     public ResponseEntity<?> getSalesByUser(
-        @RequestHeader("Authorization") String authHeader, 
-        @RequestBody String email,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody String email,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        if(!permissionService.hasPermission(authHeader, "sales")) {
+        if (!permissionService.hasPermission(authHeader, "sales")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
         }
         try {
@@ -192,17 +193,17 @@ public class SaleController {
 
     @GetMapping("/by-username")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lista de ventas del vendedor obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas del usuario")
+            @ApiResponse(responseCode = "200", description = "Lista de ventas del vendedor obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas del usuario")
     })
     public ResponseEntity<?> getSalesByUsername(
-        @RequestHeader("Authorization") String authHeader,
-        @RequestParam String username,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam String username,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        if(!permissionService.hasPermission(authHeader, "sales")) {
+        if (!permissionService.hasPermission(authHeader, "sales")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
         }
         try {
@@ -215,17 +216,17 @@ public class SaleController {
 
     @GetMapping("/priceRange")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lista de ventas por rango de precio obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas por rango de precio")
+            @ApiResponse(responseCode = "200", description = "Lista de ventas por rango de precio obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas por rango de precio")
     })
     public ResponseEntity<?> getPriceRange(
-        @RequestHeader("Authorization") String authHeader,
-        @RequestBody PriceSearchRequest priceRangeRequest,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody PriceSearchRequest priceRangeRequest,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        if(!permissionService.hasPermission(authHeader, "sales")) {
+        if (!permissionService.hasPermission(authHeader, "sales")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
         }
         try {
@@ -242,15 +243,15 @@ public class SaleController {
 
     @PutMapping("/deactivate")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Venta desactivada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error al desactivar la venta")
+            @ApiResponse(responseCode = "200", description = "Venta desactivada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al desactivar la venta")
     })
     public ResponseEntity<?> deactivateSale(
-        @RequestHeader("Authorization") String authHeader,
-        @RequestParam Long id
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam Long id
     ) {
-        if(!permissionService.hasPermission(authHeader, "sales")) {
+        if (!permissionService.hasPermission(authHeader, "sales")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para desactivar ventas"));
         }
         try {
@@ -264,17 +265,17 @@ public class SaleController {
 
     @GetMapping("/byClient")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lista de ventas por cliente obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
-        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
-        @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas por cliente")
+            @ApiResponse(responseCode = "200", description = "Lista de ventas por cliente obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = SaleDTO.class))),
+            @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+            @ApiResponse(responseCode = "400", description = "Error al obtener la lista de ventas por cliente")
     })
     public ResponseEntity<?> getSalesByClient(
-        @RequestHeader("Authorization") String authHeader,
-        @RequestParam String clientName,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam String clientName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        if(!permissionService.hasPermission(authHeader, "sales")) {
+        if (!permissionService.hasPermission(authHeader, "sales")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para leer las ventas"));
         }
         try {
