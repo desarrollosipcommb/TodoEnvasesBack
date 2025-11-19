@@ -229,7 +229,7 @@ public class SaleService {
                     saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getJarName(), saleItem));
                 } else if (saleItem.getItemType() == ItemType.CAP) {
                     saleItemDTOList.add(new SaleItemDTO(
-                            saleItemRequest.getCapName() + ' ' + saleItemRequest.getCapColor(), saleItem));
+                            saleItemRequest.getCapName() + ' ' + saleItemRequest.getCapColor(), saleItem, saleItemRequest.getCapColor()));
                 } else if (saleItem.getItemType() == ItemType.QUIMICO) {
                     saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getQuimicoName(), saleItem));
                 } else if (saleItem.getItemType() == ItemType.EXTRACTO) {

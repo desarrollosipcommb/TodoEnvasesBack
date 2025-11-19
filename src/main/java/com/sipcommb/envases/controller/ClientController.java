@@ -150,9 +150,9 @@ public class ClientController {
         }
     }
 
-    @GetMapping("/all/likeName")
+    @GetMapping("/all/likeNamePageable")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Se retornaron los clientes con el nombre especificado", content = @Content(schema = @Schema(implementation = ClientDTO.class))),
+        @ApiResponse(responseCode = "200", description = "Se retornaron los clientes con el nombre especificado en una pagina", content = @Content(schema = @Schema(implementation = ClientDTO.class))),
         @ApiResponse(responseCode = "403", description = "Permiso denegado"),
         @ApiResponse(responseCode = "400", description = "Error al obtener los clientes")
     })
@@ -169,6 +169,27 @@ public class ClientController {
         try{
             Pageable pageable = PageRequest.of(page, size);
             return ResponseEntity.ok(clientService.getClientsLikeName(pageable, name));
+        }catch(Exception e){
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: "+ e.getMessage()));
+        }
+    }
+
+    @GetMapping("/all/likeNameList")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Se retornaron los clientes con el nombre especificado en una lista", content = @Content(schema = @Schema(implementation = ClientDTO.class))),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener los clientes")
+    })
+    public ResponseEntity<?> getLikeNameList(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "") String name
+    ){
+        if (!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403)
+                    .body(new CustomApiResponse("Este usuario no tiene permiso para ver las tapas"));
+        }
+        try{
+            return ResponseEntity.ok(clientService.getClientsLikeName(name));
         }catch(Exception e){
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: "+ e.getMessage()));
         }
@@ -203,7 +224,8 @@ public class ClientController {
     })
     public ResponseEntity<?> deactivateClient(
         @RequestHeader("Authorization") String authHeader,
-        @RequestParam String name
+        @RequestParam(required = true) String name,
+        @RequestParam(required = true) String document
     ){
         if(!permissionService.hasPermission(authHeader, "update")) {
             return ResponseEntity.status(403)

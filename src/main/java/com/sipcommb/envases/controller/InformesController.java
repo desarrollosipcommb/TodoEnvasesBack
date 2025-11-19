@@ -57,4 +57,60 @@ public class InformesController {
         }
     }
 
+    @GetMapping("/sales/by-client")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Informe generado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Solicitud incorrecta"),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado, el usuario no tiene permiso"),
+    })
+    public ResponseEntity<?> generarInformeVentasPorCliente(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "true") boolean completed,
+            @RequestParam(defaultValue = "false") boolean cancelled,
+            @RequestParam(required = false) String clientName,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para generar informes"));
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(informesService.generarInformeVentasPorCliente(clientName, startDate, endDate, pageable, completed, cancelled));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/sales/by-item")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Informe generado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Solicitud incorrecta"),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado, el usuario no tiene permiso"),
+    })
+    public ResponseEntity<?> generarInformeVentasPorItem(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(required = false) String name, // si queremos buscar un objeto en particular
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "true") boolean jar, // tipos de items a incluir
+            @RequestParam(defaultValue = "true") boolean cap,
+            @RequestParam(defaultValue = "true") boolean quimico,
+            @RequestParam(defaultValue = "true") boolean extracto,
+            @RequestParam(defaultValue = "true") boolean combo
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para generar informes"));
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(informesService.generarInformeVentasPorItem(name, pageable, jar, cap, quimico, extracto, combo));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+        }
+    }
+
 }
