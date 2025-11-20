@@ -1020,7 +1020,7 @@ public class SaleService {
                 inventoryService.newItem(
                         jar.getId(),
                         "jar",
-                        quantityToDeduct,
+                        deductQuantity,
                         "sale",
                         userId,
                         "Se vendieron " + deductQuantity + " unidades del tarro: " + jar.getName()
