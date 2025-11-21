@@ -63,16 +63,6 @@ public class ClientService {
             }
         }
 
-        if (cliente.getDocument() != null && !cliente.getDocument().isEmpty()) {
-            cliente.setDocument(cliente.getDocument().trim());
-            if (clientRepository.findByDocument(cliente.getDocument()).isPresent()) {
-                throw new IllegalArgumentException(
-                        "El documento " + cliente.getDocument() + " ya se encuentra registrado");
-            } else {
-                clientOriginal.setDocument(cliente.getDocument());
-            }
-        }
-
         if (cliente.getAddress() != null && !cliente.getAddress().isEmpty()) {
             clientOriginal.setAddress(cliente.getAddress());
         }
