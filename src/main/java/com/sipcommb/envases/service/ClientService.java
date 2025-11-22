@@ -133,4 +133,9 @@ public class ClientService {
         return clientRepository.findLikeName(name.toLowerCase().trim());
     }
 
+    public Client getClientByDocument(String document) {
+        return clientRepository.findByDocument(document.toLowerCase().trim())
+                .orElseThrow(() -> new IllegalArgumentException("El cliente con documento " + document + " no existe"));
+    }
+
 }

@@ -162,7 +162,7 @@ public class SaleService {
         }
 
         sale.setNotes(saleRequest.getDescription());
-        Client client = clientService.getClientByName(saleRequest.getClientName());
+        Client client = clientService.getClientByDocument(saleRequest.getClientDocument());
         sale.setClient(client);
         Optional<User> userOpt = userRepository.findById(jwtService.getUserIdFromToken(token));
 

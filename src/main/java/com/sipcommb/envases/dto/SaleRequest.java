@@ -4,7 +4,7 @@ import java.util.List;
 
 public class SaleRequest {
     
-    private String clientName;
+    private String clientDocument;
 
     private String description;
 
@@ -18,8 +18,8 @@ public class SaleRequest {
 
     public SaleRequest() {
     }
-    public SaleRequest(String clientName, String description, String paymentMethod, String saleDate, List<SaleItemRequest> items, String type) {
-        this.clientName = clientName;
+    public SaleRequest(String clientDocument, String description, String paymentMethod, String saleDate, List<SaleItemRequest> items, String type) {
+        this.clientDocument = clientDocument;
         this.description = description;
         this.paymentMethod = paymentMethod;
         this.saleDate = saleDate;
@@ -27,12 +27,12 @@ public class SaleRequest {
         this.type = type;
     }
 
-    public String getClientName() {
-        return clientName;
+    public String getClientDocument() {
+        return clientDocument;
     }
 
-    public void setClientName(String clientName) {
-        this.clientName = clientName;
+    public void setClientDocument(String clientDocument) {
+        this.clientDocument = clientDocument;
     }
 
     public String getDescription() {
