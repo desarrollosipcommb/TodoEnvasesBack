@@ -64,13 +64,15 @@ public class BodegaController {
         @ApiResponse(responseCode = "403", description = "Permiso denegado")
     })
     public ResponseEntity<?> getAllBodegas(
-        @RequestHeader("Authorization") String authHeader
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(defaultValue = "") String nameFilter
+
     ) {
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver las bodegas"));
         }
         try {
-            List<String> bodegas = bodegaService.getAllBodegas();
+            List<String> bodegas = bodegaService.getAllBodegas(nameFilter);
             return ResponseEntity.ok(bodegas);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));

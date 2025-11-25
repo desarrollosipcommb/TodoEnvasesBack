@@ -116,8 +116,8 @@ public class BodegaService {
         return bodegaResponse;
     }
 
-    public List<String> getAllBodegas() {
-        return bodegaRepository.findAllBodegasNames();
+    public List<String> getAllBodegas(String nameFilter) {
+        return bodegaRepository.findBodegasByNameFilter(nameFilter);
     }
 
     public Bodega getBodegaByName(String name) {
