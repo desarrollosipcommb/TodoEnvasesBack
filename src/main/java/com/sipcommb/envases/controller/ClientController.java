@@ -189,7 +189,7 @@ public class ClientController {
                     .body(new CustomApiResponse("Este usuario no tiene permiso para ver las tapas"));
         }
         try{
-            return ResponseEntity.ok(clientService.getClientsLikeName(name));
+            return ResponseEntity.ok(clientService.getClientsLikeNameDTO(name));
         }catch(Exception e){
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: "+ e.getMessage()));
         }

@@ -1,6 +1,7 @@
 package com.sipcommb.envases.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -131,6 +132,11 @@ public class ClientService {
 
     public List<Client> getClientsLikeName(String name) {
         return clientRepository.findLikeName(name.toLowerCase().trim());
+    }
+
+    public List<ClientDTO> getClientsLikeNameDTO(String name) {
+        List<Client> clients = clientRepository.findLikeName(name.toLowerCase().trim());
+        return clients.stream().map(ClientDTO::new).collect(Collectors.toList());
     }
 
     public Client getClientByDocument(String document) {

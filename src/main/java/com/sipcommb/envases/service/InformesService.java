@@ -164,11 +164,11 @@ public class InformesService {
                     for (SaleItem saleItem : saleItems) {
                         saleItemDTOs.add(mapToSaleItemInformeDTO(saleItem, sale));
                     }
-                } else if (completed == sale.isActive()) {
+                } else if (completed == true &&completed == sale.isActive()) {
                     for (SaleItem saleItem : saleItems) {
                         saleItemDTOs.add(mapToSaleItemInformeDTO(saleItem, sale));
                     }
-                } else if (cancelled == !sale.isActive()) {
+                } else if (cancelled == true && cancelled == !sale.isActive() ) {
                     for (SaleItem saleItem : saleItems) {
                         saleItemDTOs.add(mapToSaleItemInformeDTO(saleItem, sale));
                     }
