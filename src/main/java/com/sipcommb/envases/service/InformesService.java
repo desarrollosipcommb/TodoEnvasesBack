@@ -135,7 +135,7 @@ public class InformesService {
         if (clientNameFilter == null || clientNameFilter.isEmpty()) {
             clientNameFilter = "";
         }
-
+     
         if (fechaInicio == null || fechaInicio.isEmpty()) {
             fechaInicio = "0000-01-01"; // yyyy-MM-dd
         }

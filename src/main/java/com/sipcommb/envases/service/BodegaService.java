@@ -39,21 +39,21 @@ public class BodegaService {
     @Autowired
     private BodegaCapColorRepository bodegaCapColorRepository;
 
-    public String addBodega(String name, Long priority) {
+    public BodegaResponse addBodega(String name, Long priority) {
 
         if (bodegaExists(name)) {
-            return "La bodega con nombre " + name + " ya existe.";
+            throw new IllegalArgumentException("La bodega con nombre " + name + " ya existe.");
         }
 
         Optional<Bodega> existingPriority = bodegaRepository.findByPriority(priority);
         if (existingPriority.isPresent()) {
-            return "Bodega con la prioridad " + priority + " ya existe.";
+            throw new IllegalArgumentException("Bodega con la prioridad " + priority + " ya existe.");
         }
 
         if (name.toLowerCase().equals("devoluciones")) {
             priority = 0L;
         } else if (priority <= 0) {
-            return "La prioridad debe ser un número positivo.";
+            throw new IllegalArgumentException("La prioridad debe ser un número positivo.");
         }
 
         Bodega newBodega = new Bodega();
@@ -61,7 +61,11 @@ public class BodegaService {
         newBodega.setPriority(priority);
         bodegaRepository.save(newBodega);
 
-        return "Se añadió la bodega: " + newBodega.getName();
+        BodegaResponse bodegaResponse = new BodegaResponse();
+        bodegaResponse.setBodegaName(newBodega.getName());
+        bodegaResponse.setPriority(newBodega.getPriority());
+
+        return bodegaResponse;
     }
 
     public BodegaResponse changePriority(String name, Long newPriority) {
@@ -210,6 +214,58 @@ public class BodegaService {
         }
 
         return new PageImpl<>(bodegaResponses, pageable, bodegaResponses.size());
+    }
+
+    public Page<BodegaResponse> getBodegas(Pageable pageable, String nameFilter) {
+
+        if (nameFilter != null && !nameFilter.isEmpty()) {
+            nameFilter = nameFilter.toLowerCase().trim();
+        } else {
+            nameFilter = "";
+        }
+
+        Page<Bodega> bodegas = bodegaRepository.findBodegasByNameFilter(nameFilter, pageable);
+        Page<BodegaResponse> bodegaResponses = bodegas.map(bodega -> new BodegaResponse(bodega));
+
+        return bodegaResponses;
+    }
+
+    public BodegaResponse update(String newName, String oldName, Long priority) {
+
+        Bodega bodega = getBodegaByName(oldName);
+        
+        if (!newName.equals(oldName)) {
+            if (newName != null && !newName.isEmpty()) {
+                if (bodegaExists(newName)) {
+                    throw new IllegalArgumentException("La bodega con nombre " + newName + " ya existe.");
+                }
+                bodega.setName(newName.toLowerCase());
+            }
+        }
+
+        if (priority != null && priority != 0L && !priority.equals(bodega.getPriority())) {
+            if (bodega.getName().equals("devoluciones")) {
+                throw new IllegalArgumentException("No se puede cambiar la prioridad de la bodega de devoluciones.");
+            } else if (priority <= 0) {
+                throw new IllegalArgumentException("La prioridad debe ser un número positivo.");
+            }
+
+            Optional<Bodega> existingPriority = bodegaRepository.findByPriority(priority);
+            if (existingPriority.isPresent()) {
+                throw new IllegalArgumentException("La prioridad " + priority + " ya está asignada a la bodega: "
+                        + existingPriority.get().getName());
+            }
+
+            bodega.setPriority(priority);
+        }
+
+        bodegaRepository.save(bodega);
+
+        BodegaResponse bodegaResponse = new BodegaResponse();
+        bodegaResponse.setBodegaName(bodega.getName());
+        bodegaResponse.setPriority(bodega.getPriority());
+
+        return bodegaResponse;
     }
 
 }

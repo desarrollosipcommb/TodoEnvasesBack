@@ -3,6 +3,8 @@ package com.sipcommb.envases.dto;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sipcommb.envases.entity.Bodega;
+
 public class BodegaResponse {
 
     private String bodegaName;
@@ -18,6 +20,11 @@ public class BodegaResponse {
         this.bodegaName = bodegaName;
         this.priority = priority;
         this.items = items;
+    }
+
+    public BodegaResponse(Bodega bodega){
+        this.bodegaName = bodega.getName();
+        this.priority = bodega.getPriority();
     }
 
     public String getBodegaName() {

@@ -142,4 +142,51 @@ public class BodegaController {
         }
     }
 
+    @PutMapping("/update")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Bodega actualizada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Error al actualizar la bodega"),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado")
+    })
+    public ResponseEntity<?> updateBodega(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(required = false) String name,
+        @RequestParam(required = false) String newName,
+        @RequestParam(required = false) Long priority
+    ) {
+        if(!permissionService.hasPermission(authHeader, "update")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para actualizar las bodegas"));
+        }
+        try {
+            return ResponseEntity.ok(bodegaService.update(newName, name, priority));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+        }
+    }
+
+
+    @GetMapping("/like-name")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de bodegas que coinciden con el filtro"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener las bodegas"),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado")
+    })
+    public ResponseEntity<?> getBodegasLikeName(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(required = false) String nameFilter,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver las bodegas"));
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<BodegaResponse> bodegasPage = bodegaService.getBodegas(pageable, nameFilter);
+            return ResponseEntity.ok(bodegasPage);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+        }
+    }
+
 }

@@ -57,7 +57,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
     @Query("SELECT s FROM Sale s WHERE LOWER(s.client.name) = LOWER(:clientName)")
     Page<Sale> findByClient(@Param("clientName") String clientName, Pageable pageable);
 
-    @Query("SELECT s FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate AND LOWER(s.client.name) = LOWER(:clientName)")
+    @Query("SELECT s FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate AND LOWER(s.client.name) = LOWER(:clientName) ORDER BY s.saleDate DESC")
     List<Sale> findByDateRangeAndClient(
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
