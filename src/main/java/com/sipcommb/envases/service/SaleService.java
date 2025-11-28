@@ -1,5 +1,6 @@
 package com.sipcommb.envases.service;
 
+import com.sipcommb.envases.dto.ComboCapOrderDTO;
 import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.dto.SaleDTO;
 import com.sipcommb.envases.dto.SaleItemDTO;
@@ -15,6 +16,7 @@ import com.sipcommb.envases.entity.CapColor;
 import com.sipcommb.envases.entity.Client;
 import com.sipcommb.envases.entity.Combo;
 import com.sipcommb.envases.entity.ComboCap;
+import com.sipcommb.envases.entity.ComboItemOrder;
 import com.sipcommb.envases.entity.Extractos;
 import com.sipcommb.envases.entity.ItemType;
 import com.sipcommb.envases.entity.Jar;
@@ -229,7 +231,8 @@ public class SaleService {
                     saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getJarName(), saleItem));
                 } else if (saleItem.getItemType() == ItemType.CAP) {
                     saleItemDTOList.add(new SaleItemDTO(
-                            saleItemRequest.getCapName() + ' ' + saleItemRequest.getCapColor(), saleItem, saleItemRequest.getCapColor()));
+                            saleItemRequest.getCapName() + ' ' + saleItemRequest.getCapColor(), saleItem,
+                            saleItemRequest.getCapColor()));
                 } else if (saleItem.getItemType() == ItemType.QUIMICO) {
                     saleItemDTOList.add(new SaleItemDTO(saleItemRequest.getQuimicoName(), saleItem));
                 } else if (saleItem.getItemType() == ItemType.EXTRACTO) {
@@ -272,7 +275,7 @@ public class SaleService {
      *
      * @param saleItemRequest el DTO de saleItem
      * @return SaleItem el item final que se va a añadir al la base de datos junto a
-     * la venta
+     *         la venta
      */
     private SaleItem checkSaleItems(SaleItemRequest saleItemRequest) {
 
@@ -350,14 +353,44 @@ public class SaleService {
         SaleItem saleItem = new SaleItem();
 
         saleItem.setCombo(combo);
-        saleItem.setColor(saleItemRequest.getCapColor());
+        saleItem.setComboItemOrder(
+                createComboItemOrders(saleItemRequest, saleItem));
         saleItem.setQuantity(saleItemRequest.getQuantity());
-        saleItem.setComboCapQuantity(saleItemRequest.getComboCapQuantity());
         saleItem.setUnitPrice(BigDecimal.valueOf(determinePrice(combo, saleItemRequest)));
         saleItem.setSubtotal(saleItem.getUnitPrice().multiply(BigDecimal.valueOf(saleItemRequest.getQuantity())));
         saleItem.setItemType(ItemType.COMBO);
         saleItem.setSale(null);
         return saleItem;
+    }
+
+    private List<ComboItemOrder> createComboItemOrders(SaleItemRequest saleItemRequest, SaleItem saleItem) {
+        List<ComboItemOrder> comboItemOrders = new ArrayList<>();
+
+        for (ComboCapOrderDTO comboCapOrderDTO : saleItemRequest.getComboCapOrderDTO()) {
+            ComboItemOrder comboItemOrder = new ComboItemOrder();
+            Optional<Cap> capOpt = capRepository.findByName(comboCapOrderDTO.getCapName().trim());
+
+            if (!capOpt.isPresent()) {
+                throw new IllegalArgumentException(
+                        "La tapa " + comboCapOrderDTO.getCapName() + " no existe en el sistema");
+            }
+
+            Optional<CapColor> capColorOpt = capColorRepository.findByCapAndColor(
+                    capOpt.get(),
+                    comboCapOrderDTO.getColor().trim());
+
+            if (!capColorOpt.isPresent()) {
+                throw new IllegalArgumentException("El color " + comboCapOrderDTO.getColor()
+                        + " no existe para la tapa " + comboCapOrderDTO.getCapName());
+            }
+
+            comboItemOrder.setColor(capColorOpt.get());
+            comboItemOrder.setQuantity(comboCapOrderDTO.getQuantity());
+            comboItemOrder.setSaleItem(saleItem);
+            comboItemOrders.add(comboItemOrder);
+        }
+
+        return comboItemOrders;
     }
 
     /**
@@ -497,7 +530,7 @@ public class SaleService {
      * @param existingDTOs  Lista de SaleItemDTO ya existentes
      */
     private void checkComboSaleItemList(List<SaleItem> existingItems, SaleItem newItem,
-                                        List<SaleItemDTO> existingDTOs) {
+            List<SaleItemDTO> existingDTOs) {
 
         int totalQuantity = newItem.getQuantity();
 
@@ -650,7 +683,7 @@ public class SaleService {
     private BigDecimal determinePrice(Jar jar, SaleItemRequest saleItemRequest) {
         if (saleItemRequest.getQuantity() == jar.getUnitsInPaca()
                 && (jar.getPacaPrice() != null && jar.getPacaPrice().compareTo(
-                BigDecimal.ZERO) > 0)) {
+                        BigDecimal.ZERO) > 0)) {
             return jar.getPacaPrice();
         }
 
@@ -751,7 +784,6 @@ public class SaleService {
      * @param saleItem el item de venta a validar
      */
     private void validateInventory(SaleItem saleItem, List<SaleItem> existingItems) {
-        // TODO , no se como resolver el tema de bodegas aun
         if (saleItem.getItemType() == ItemType.COMBO) {
             validateInventoryCombo(saleItem, existingItems);
         } else if (saleItem.getItemType() == ItemType.JAR) {
@@ -918,13 +950,14 @@ public class SaleService {
         // Como un combo puede tener varias tapas, recorremos la lista de tapas
         List<ComboCap> caps = combo.getCaps();
 
-        String[] colors = saleItem.getColor().trim().split(",");
-        String[] capComboQuantity = saleItem.getComboCapQuantity().trim().split(",");
+        /*
+         * String[] colors = saleItem.getColor().trim().split(",");
+         * String[] capComboQuantity = saleItem.getComboCapQuantity().trim().split(",");
+         */
 
         int totalCheckedQuantity = 0;
-        for (String capQuantity : capComboQuantity) {
-            capQuantity = capQuantity.trim();
-            totalCheckedQuantity += Integer.parseInt(capQuantity);
+        for (ComboItemOrder comboOrder : saleItem.getComboItemOrder()) {
+            totalCheckedQuantity += comboOrder.getQuantity();
         }
 
         if (totalCheckedQuantity != saleItem.getQuantity()) {
@@ -933,36 +966,41 @@ public class SaleService {
                             + combo.getName());
         }
 
-        if (caps.size() != colors.length || caps.size() != capComboQuantity.length) {
-            throw new IllegalArgumentException(
-                    "La cantidad de colores o cantidades de tapas no coincide con la cantidad de tapas en el combo: "
-                            + combo.getName());
-        }
+        // Como ahora usamos el DTO ComboItemOrder, recorremos esa lista para validar
+        // cada tapa
+        for (ComboItemOrder comboOrder : saleItem.getComboItemOrder()) {
+            boolean found = false;
 
-        // Recorremos las tapas para validar su inventario
-        for (int i = 0; i < caps.size(); i++) {
-            ComboCap comboCap = caps.get(i);
-            capComboQuantity[i] = capComboQuantity[i].trim();
-            colors[i] = colors[i].trim();
-            if (capComboQuantity[i] == null || capComboQuantity[i].isEmpty() || capComboQuantity[i].equals("0")) {
-                continue;
+            // revisamos que la tapa pertenezca al combo
+            for (ComboCap comboCap : caps) {
+                if (comboCap.getCap().equals(comboOrder.getColor().getCap())) {
+                    found = true;
+                    break;
+                }
             }
-            // Verificamos que el color de la tapa si exista
-            CapColor capColor = capColorRepository.findByCapAndColor(comboCap.getCap(), colors[i])
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "El color " + saleItem.getColor() + " no existe en el tipo de tapa: "
-                                    + comboCap.getCap().getName()));
+            if (!found) {
+                throw new IllegalArgumentException(
+                        "La tapa " + comboOrder.getColor().getCap().getName() + " no pertenece al combo: " + combo.getName());
+            }
+
+            // Sacamos el color de la tapa
+            CapColor capColor = comboOrder.getColor();
 
             // Sacamos todas las bodegas donde tengamos esta tapa de este color y las
             // ordenamos segun su prioridad
             List<BodegaCapColor> bodegaCapColors = capColorService.sortBodegas(capColor.getBodegas());
-            int requestedCapQuantity = saleItem.getQuantity();
+
+            // Sacamos cuanta cantidad de esta tapa necesitamos
+            int requestedCapQuantity = comboOrder.getQuantity();
+
             // Sumar cantidades de combos existentes en la lista
             for (SaleItem item : existingItems) {
                 if (item.getItemType() == ItemType.CAP && item.getCapColor().getId().equals(capColor.getId())) {
                     requestedCapQuantity += item.getQuantity();
                 }
             }
+
+            // recorremos todas las bodegas para ver si tenemos suficiente inventario
             for (BodegaCapColor bodegaCapColor : bodegaCapColors) {
                 if (requestedCapQuantity <= 0) {
                     break;
@@ -977,7 +1015,6 @@ public class SaleService {
                 requestedCapQuantity -= deductQuantity;
             }
 
-            // Si al final nos queda una cantidad pendiente, lanzamos el error
             if (requestedCapQuantity > 0) {
                 throw new IllegalArgumentException(
                         "No hay suficiente inventario para la tapa del combo: " + combo.getName()
@@ -985,6 +1022,59 @@ public class SaleService {
             }
 
         }
+
+        /*
+         * // Recorremos las tapas para validar su inventario
+         * for (int i = 0; i < caps.size(); i++) {
+         * ComboCap comboCap = caps.get(i);
+         * capComboQuantity[i] = capComboQuantity[i].trim();
+         * colors[i] = colors[i].trim();
+         * if (capComboQuantity[i] == null || capComboQuantity[i].isEmpty() ||
+         * capComboQuantity[i].equals("0")) {
+         * continue;
+         * }
+         * // Verificamos que el color de la tapa si exista
+         * CapColor capColor = capColorRepository.findByCapAndColor(comboCap.getCap(),
+         * colors[i])
+         * .orElseThrow(() -> new IllegalArgumentException(
+         * "El color " + saleItem.getColor() + " no existe en el tipo de tapa: "
+         * + comboCap.getCap().getName()));
+         * 
+         * // Sacamos todas las bodegas donde tengamos esta tapa de este color y las
+         * // ordenamos segun su prioridad
+         * List<BodegaCapColor> bodegaCapColors =
+         * capColorService.sortBodegas(capColor.getBodegas());
+         * int requestedCapQuantity = saleItem.getQuantity();
+         * // Sumar cantidades de combos existentes en la lista
+         * for (SaleItem item : existingItems) {
+         * if (item.getItemType() == ItemType.CAP &&
+         * item.getCapColor().getId().equals(capColor.getId())) {
+         * requestedCapQuantity += item.getQuantity();
+         * }
+         * }
+         * for (BodegaCapColor bodegaCapColor : bodegaCapColors) {
+         * if (requestedCapQuantity <= 0) {
+         * break;
+         * }
+         * 
+         * int availableInBodega = bodegaCapColor.getQuantity();
+         * if (availableInBodega <= 0) {
+         * continue;
+         * }
+         * 
+         * int deductQuantity = Math.min(availableInBodega, requestedCapQuantity);
+         * requestedCapQuantity -= deductQuantity;
+         * }
+         * 
+         * // Si al final nos queda una cantidad pendiente, lanzamos el error
+         * if (requestedCapQuantity > 0) {
+         * throw new IllegalArgumentException(
+         * "No hay suficiente inventario para la tapa del combo: " + combo.getName()
+         * + ", se necesitan " + requestedCapQuantity + " unidades más.");
+         * }
+         * 
+         * }
+         */
 
     }
 
@@ -1204,18 +1294,13 @@ public class SaleService {
                     + " en el combo: " + combo.getName() + ", se necesitan " + requestedQuantity + " unidades más.");
         }
 
-        // Ahora validamos las tapas del combo
+        List<ComboItemOrder> comboItemOrder = saleItem.getComboItemOrder();
 
-        // Como un combo puede tener varias tapas, recorremos la lista de tapas
-        List<ComboCap> caps = combo.getCaps();
-
-        String[] colors = saleItem.getColor().trim().split(",");
-        String[] capComboQuantity = saleItem.getComboCapQuantity().trim().split(",");
-
+        // Hacemos la sumatoria para ver que tengan la misma cantidad de tapas que el
+        // envase
         int totalCheckedQuantity = 0;
-        for (String capQuantity : capComboQuantity) {
-            capQuantity = capQuantity.trim();
-            totalCheckedQuantity += Integer.parseInt(capQuantity);
+        for (ComboItemOrder order : comboItemOrder) {
+            totalCheckedQuantity += order.getQuantity();
         }
 
         if (totalCheckedQuantity != saleItem.getQuantity()) {
@@ -1224,36 +1309,41 @@ public class SaleService {
                             + combo.getName());
         }
 
-        if (caps.size() != colors.length || caps.size() != capComboQuantity.length) {
-            throw new IllegalArgumentException(
-                    "La cantidad de colores o cantidades de tapas no coincide con la cantidad de tapas en el combo: "
-                            + combo.getName());
-        }
+        List<ComboCap> caps = combo.getCaps();
 
-        // Recorremos las tapas para validar su inventario
-        for (int i = 0; i < caps.size(); i++) {
-            ComboCap comboCap = caps.get(i);
-            capComboQuantity[i] = capComboQuantity[i].trim();
-            colors[i] = colors[i].trim();
-            if (capComboQuantity[i] == null || capComboQuantity[i].isEmpty() || capComboQuantity[i].equals("0")) {
-                continue;
+        for (ComboItemOrder comboOrder : saleItem.getComboItemOrder()) {
+            boolean found = false;
+
+            // revisamos que la tapa pertenezca al combo
+            for (ComboCap comboCap : caps) {
+                if (comboCap.getCap().equals(comboOrder.getColor().getCap())) {
+                    found = true;
+                    break;
+                }
             }
-            // Verificamos que el color de la tapa si exista
-            CapColor capColor = capColorRepository.findByCapAndColor(comboCap.getCap(), colors[i])
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "El color " + saleItem.getColor() + " no existe en el tipo de tapa: "
-                                    + comboCap.getCap().getName()));
+            if (!found) {
+                throw new IllegalArgumentException(
+                        "La tapa " + comboOrder.getColor().getCap().getName() + " no pertenece al combo: " + combo.getName());
+            }
+
+            // Sacamos el color de la tapa
+            CapColor capColor = comboOrder.getColor();
 
             // Sacamos todas las bodegas donde tengamos esta tapa de este color y las
             // ordenamos segun su prioridad
             List<BodegaCapColor> bodegaCapColors = capColorService.sortBodegas(capColor.getBodegas());
-            int requestedCapQuantity = saleItem.getQuantity();
+
+            // Sacamos cuanta cantidad de esta tapa necesitamos
+            int requestedCapQuantity = comboOrder.getQuantity();
+
             // Sumar cantidades de combos existentes en la lista
             for (SaleItem item : existingItems) {
                 if (item.getItemType() == ItemType.CAP && item.getCapColor().getId().equals(capColor.getId())) {
                     requestedCapQuantity += item.getQuantity();
                 }
             }
+
+            // recorremos todas las bodegas para ver si tenemos suficiente inventario
             for (BodegaCapColor bodegaCapColor : bodegaCapColors) {
                 if (requestedCapQuantity <= 0) {
                     break;
@@ -1278,7 +1368,6 @@ public class SaleService {
                                 + ", salio de la bodega: " + bodegaCapColor.getBodega().getName());
             }
 
-            // Si al final nos queda una cantidad pendiente, lanzamos el error
             if (requestedCapQuantity > 0) {
                 throw new IllegalArgumentException(
                         "No hay suficiente inventario para la tapa del combo: " + combo.getName()
@@ -1286,6 +1375,7 @@ public class SaleService {
             }
 
         }
+
     }
 
     /**
@@ -1316,13 +1406,14 @@ public class SaleService {
      * @return una página de SaleDTO que representa las ventas filtradas
      */
     public Page<SaleDTO> getFindByFechaAndVendedor(String fechaInicioStr, String fechaFinStr,
-                                                   String nombreUsuario, String nombreCliente,
-                                                   Pageable pageable) {
+            String nombreUsuario, String nombreCliente,
+            Pageable pageable) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         LocalDate fechaInicio = LocalDate.parse(fechaInicioStr, formatter);
         LocalDate fechaFin = LocalDate.parse(fechaFinStr, formatter);
-        Page<Sale> sales = saleRepository.findByFechaAndVendedorAndComprador(fechaInicio, fechaFin, nombreUsuario, nombreCliente, pageable);
+        Page<Sale> sales = saleRepository.findByFechaAndVendedorAndComprador(fechaInicio, fechaFin, nombreUsuario,
+                nombreCliente, pageable);
         List<SaleDTO> saleDTOs = new ArrayList<>();
         for (Sale sale : sales) {
             SaleDTO saleDTO = toSaleDTO(sale);
@@ -1341,7 +1432,7 @@ public class SaleService {
      * @return el monto total de ventas como BigDecimal
      */
     public BigDecimal getTotalAmountByFechaAndVendedor(String fechaInicioStr, String fechaFinStr,
-                                                       String nombreUsuario) {
+            String nombreUsuario) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         LocalDate fechaInicio = LocalDate.parse(fechaInicioStr, formatter);
@@ -1451,7 +1542,8 @@ public class SaleService {
     }
 
     /**
-     * Desactiva una venta y devuelve los items vendidos a la bodega de devoluciones.
+     * Desactiva una venta y devuelve los items vendidos a la bodega de
+     * devoluciones.
      *
      * @param id el ID de la venta a desactivar
      * @return el DTO SaleDTO de la venta desactivada
@@ -1561,26 +1653,14 @@ public class SaleService {
                     bodegaJarRepository.save(newBodegaJar);
                 }
 
-                // Devolvemos las tapas
-                List<ComboCap> caps = items.getCombo().getCaps();
 
-                String[] colors = items.getColor().trim().split(",");
-                String[] capComboQuantity = items.getComboCapQuantity().trim().split(",");
+                for (ComboItemOrder comboOrder : items.getComboItemOrder()) {
 
-                for (int x = 0; x < caps.size(); x++) {
-                    final int index = x; // Create a final copy of x
-                    ComboCap comboCap = caps.get(index);
-                    capComboQuantity[index] = capComboQuantity[index].trim();
-                    colors[index] = colors[index].trim();
-                    if (capComboQuantity[index] == null || capComboQuantity[index].isEmpty()
-                            || capComboQuantity[index].equals("0")) {
+                    CapColor capColor = comboOrder.getColor();
+                    Integer capQuantity = comboOrder.getQuantity();
+                    if (capQuantity == null || capQuantity.equals(0)) {
                         continue;
                     }
-                    // Verificamos que el color de la tapa si exista
-                    CapColor capColor = capColorRepository.findByCapAndColor(comboCap.getCap(), colors[index])
-                            .orElseThrow(() -> new IllegalArgumentException(
-                                    "El color " + colors[index] + " no existe en el tipo de tapa: "
-                                            + comboCap.getCap().getName()));
 
                     Optional<BodegaCapColor> bodegaCapColorOpt = bodegaCapColorRepository
                             .findByBodegaIdAndCapColorId(devoluciones.getId(), capColor.getId());
@@ -1588,16 +1668,17 @@ public class SaleService {
                     if (bodegaCapColorOpt.isPresent()) {
                         BodegaCapColor bodegaCapColor = bodegaCapColorOpt.get();
                         bodegaCapColor
-                                .setQuantity(bodegaCapColor.getQuantity() + Integer.parseInt(capComboQuantity[index]));
+                                .setQuantity(bodegaCapColor.getQuantity() + capQuantity);
                         bodegaCapColorRepository.save(bodegaCapColor);
                     } else {
                         BodegaCapColor newBodegaCapColor = new BodegaCapColor();
                         newBodegaCapColor.setBodega(devoluciones);
                         newBodegaCapColor.setCapColor(capColor);
-                        newBodegaCapColor.setQuantity(Integer.parseInt(capComboQuantity[index]));
+                        newBodegaCapColor.setQuantity(capQuantity);
                         bodegaCapColorRepository.save(newBodegaCapColor);
                     }
                 }
+
             }
         }
         sale.setActive(false);

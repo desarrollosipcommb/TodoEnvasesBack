@@ -1,6 +1,10 @@
 package com.sipcommb.envases.entity;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -11,6 +15,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Min;
@@ -36,7 +41,7 @@ public class SaleItem {
     private Jar jar;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cap_id")
+    @JoinColumn(name = "cap_color_id")
     private CapColor capColor;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -63,9 +68,12 @@ public class SaleItem {
     @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
     private BigDecimal subtotal;
 
-    private String color;
+    //private String color;
 
-    private String comboCapQuantity;
+    //private String comboCapQuantity;
+
+    @OneToMany(mappedBy = "saleItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ComboItemOrder> comboItemOrder = new ArrayList<>();
     
     // Constructors
     public SaleItem() {}
@@ -130,10 +138,19 @@ public class SaleItem {
     public Combo getCombo() { return combo; }
     public void setCombo(Combo combo) { this.combo = combo; }
 
+    /* 
     public String getColor() { return color; }
     public void setColor(String color) { this.color = color; }
 
     public String getComboCapQuantity() { return comboCapQuantity; }
     public void setComboCapQuantity(String comboCapQuantity) { this.comboCapQuantity = comboCapQuantity; }
+    */
 
+    public List<ComboItemOrder> getComboItemOrder() {
+        return comboItemOrder;
+    }
+
+    public void setComboItemOrder(List<ComboItemOrder> comboItemOrder) {
+        this.comboItemOrder = comboItemOrder;
+    }
 }

@@ -1,5 +1,8 @@
 package com.sipcommb.envases.dto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SaleItemRequest {
 
     private String comboName;
@@ -18,7 +21,9 @@ public class SaleItemRequest {
 
     private String extractoName;
 
-    private String comboCapQuantity;
+    //private String comboCapQuantity;
+
+    private List<ComboCapOrderDTO> comboCapOrderDTO = new ArrayList<>();
 
     public SaleItemRequest() {
     }
@@ -98,13 +103,21 @@ public class SaleItemRequest {
     public void setExtractoName(String extractoName) {
         this.extractoName = extractoName;
     }
-
+    /* 
     public String getComboCapQuantity() {
         return comboCapQuantity;
     }
 
     public void setComboCapQuantity(String comboCapQuantity) {
         this.comboCapQuantity = comboCapQuantity;
+    }
+    */
+    public List<ComboCapOrderDTO> getComboCapOrderDTO() {
+        return comboCapOrderDTO;
+    }
+
+    public void setComboCapOrderDTO(List<ComboCapOrderDTO> comboCapOrderDTO) {
+        this.comboCapOrderDTO = comboCapOrderDTO;
     }
 
 }

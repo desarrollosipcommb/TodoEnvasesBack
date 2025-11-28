@@ -19,6 +19,8 @@ public interface CapRepository extends JpaRepository<Cap, Long> {
         Optional<Cap> findByNameAndDiameter(@Param("name") String name,
                         @Param("diameter") String diameter);
 
+        Optional<Cap> findByName(String name);
+
         @Query("SELECT c FROM Cap c WHERE c.name = :name and c.jarType.diameter = :diameter")
         Optional<Cap> findByNameAndDiameterIncludingInactive(@Param("name") String name,
                         @Param("diameter") String diameter);

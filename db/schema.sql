@@ -128,7 +128,7 @@ CREATE TABLE sale_items (
     sale_id INT NOT NULL,
     item_type ENUM('jar', 'cap', 'combo', 'quimico', 'extracto') NOT NULL,
     jar_id INT NULL, -- If selling jar or combo
-    cap_id INT NULL, -- If selling cap or combo
+    cap_color_id INT NULL, -- If selling cap or combo
     quimico_id INT NULL, -- If selling quimico
     extracto_id INT NULL, -- If selling extracto
     combo_id INT NULL, -- If selling combo
@@ -136,7 +136,6 @@ CREATE TABLE sale_items (
     unit_price DECIMAL(10, 2) NOT NULL,
     subtotal DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    color VARCHAR(100),
     FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
     FOREIGN KEY (jar_id) REFERENCES jars(id) ON DELETE RESTRICT,
     FOREIGN KEY (cap_color_id) REFERENCES cap_colors(id) ON DELETE RESTRICT,,
@@ -201,6 +200,19 @@ CREATE TABLE combo_caps (
     FOREIGN KEY (combo_id) REFERENCES combos(id) ON DELETE CASCADE,
     FOREIGN KEY (cap_id) REFERENCES caps(id) ON DELETE RESTRICT,
     UNIQUE (combo_id, cap_id) -- Evita duplicados
+);
+
+-- ============================================
+-- 9.2 combo_item_orders
+-- ============================================
+
+CREATE TABLE combo_item_orders (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    cap_color_id INT NOT NULL,
+    quantity INT NOT NULL DEFAULT 0,
+    sale_item_id INT NOT NULL,
+    FOREIGN KEY (cap_color_id) REFERENCES cap_colors(id) ON DELETE RESTRICT,
+    FOREIGN KEY (sale_item_id) REFERENCES sale_items(id) ON DELETE CASCADE
 );
 
 
@@ -337,8 +349,8 @@ CREATE TABLE bodega_extractos (
 
 -- Insert default roles
 INSERT INTO roles (name, description, permissions) VALUES
-('admin', 'Administrator with full access', '["create", "read", "update", "delete", "sales"]'),
-('seller', 'Sales person with limited access', '["read", "sales", "view_own_sales", "create_client"]');
+('admin', 'Administrator with full access', '["create", "read", "update", "delete", "sales", "create_client", "update_client"]'),
+('seller', 'Sales person with limited access', '["read", "sales", "view_own_sales", "create_client", "update_client"]');
 
 -- Insert default admin user (password: admin123 - should be hashed in production)
 

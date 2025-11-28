@@ -46,7 +46,7 @@ public class ClientController {
         @RequestBody ClientDTO request,
         @RequestHeader("Authorization") String authHeader
     ){
-        if (!permissionService.hasPermission(authHeader, "create")) {
+        if (!permissionService.hasPermission(authHeader, "create_client")) {
             return ResponseEntity.status(403)
                     .body(new CustomApiResponse("Este usuario no tiene permiso para crear tapas"));
         }
@@ -93,7 +93,7 @@ public class ClientController {
         @RequestHeader("Authorization") String authHeader,
         @RequestBody ClientRequestDTO request
     ){
-        if(!permissionService.hasPermission(authHeader, "update")) {
+        if(!permissionService.hasPermission(authHeader, "update_client")) {
             return ResponseEntity.status(403)
                     .body(new CustomApiResponse("Este usuario no tiene permiso para actualizar tapas"));
         }
@@ -205,7 +205,7 @@ public class ClientController {
         @RequestHeader("Authorization") String authHeader,
         @RequestParam String name
     ){
-        if(!permissionService.hasPermission(authHeader, "update")) {
+        if(!permissionService.hasPermission(authHeader, "update_client")) {
             return ResponseEntity.status(403)
                     .body(new CustomApiResponse("Este usuario no tiene permiso para actualizar tapas"));
         }
@@ -227,7 +227,7 @@ public class ClientController {
         @RequestParam(required = true) String name,
         @RequestParam(required = true) String document
     ){
-        if(!permissionService.hasPermission(authHeader, "update")) {
+        if(!permissionService.hasPermission(authHeader, "update_client")) {
             return ResponseEntity.status(403)
                     .body(new CustomApiResponse("Este usuario no tiene permiso para actualizar tapas"));
         }

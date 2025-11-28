@@ -191,7 +191,7 @@ public class InformesService {
     private SaleItemInformeDTO mapToSaleItemInformeDTO(SaleItem saleItem, Sale sale) {
         String itemName = "";
         if (saleItem.getItemType() == ItemType.CAP) {
-            itemName = saleItem.getCapColor().getCap().getName() + " " + saleItem.getColor();
+            itemName = saleItem.getCapColor().getCap().getName() + " " + saleItem.getCapColor().getColor();
         } else if (saleItem.getItemType() == ItemType.JAR) {
             itemName = saleItem.getJar().getName();
         } else if (saleItem.getItemType() == ItemType.QUIMICO) {
