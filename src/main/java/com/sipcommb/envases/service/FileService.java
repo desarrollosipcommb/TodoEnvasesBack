@@ -211,8 +211,9 @@ public class FileService {
                         "Tipo de tapa agregado correctamente"));
 
             } catch (Exception e) {
+                String errorStart = erroStartMessage(e.getMessage(), "tapa");
                 fileResponses.add(new FileResponse(getCellAsString(nameCell) + " " + getCellAsString(colorCell),
-                        "Error, " + e.getMessage()));
+                        errorStart + e.getMessage()));
             }
 
         }
@@ -275,7 +276,8 @@ public class FileService {
                         .add(new FileResponse(nameCell.getStringCellValue(), "Tipo de tapa agregado correctamente"));
 
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+                String errorStart = erroStartMessage(e.getMessage(), "envase");
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), errorStart + e.getMessage()));
             }
         }
         return fileResponses;
@@ -321,7 +323,8 @@ public class FileService {
                 ), token);
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Químico agregado correctamente"));
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+                String errorStart = erroStartMessage(e.getMessage(), "quimico");
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), errorStart + e.getMessage()));
             }
         }
         return fileResponses;
@@ -375,7 +378,8 @@ public class FileService {
                         getCellAsNullableDouble(ml1000cell)), token);
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Extracto agregado correctamente"));
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Error, " + e.getMessage()));
+                String errorStart = erroStartMessage(e.getMessage(), "extracto");
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), errorStart + e.getMessage()));
             }
         }
         return fileResponses;
@@ -403,7 +407,7 @@ public class FileService {
                 }
 
                 List<BodegaDTO> bodegaDTOs = generateBodegas(bodegaCell, quantityCell);
-
+                
                 jarService.updateInventoryJar(
                         nameCell.getStringCellValue(),
                         bodegaDTOs,
@@ -411,8 +415,8 @@ public class FileService {
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Inventario del envase actualizado"));
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(getCellAsString(nameCell), "Error, " + e.getMessage()));
-                e.printStackTrace();
+                String errorStart = erroStartMessage(e.getMessage(), "inventario a envase");
+                fileResponses.add(new FileResponse(getCellAsString(nameCell), errorStart + e.getMessage()));
             }
         }
         return fileResponses;
@@ -468,9 +472,9 @@ public class FileService {
                 fileResponses.add(new FileResponse(getCellAsString(nameCell) + " " + getCellAsString(colorCell),
                         "Inventario de la tapa ha sido actualizado"));
             } catch (Exception e) {
+                String errorStart = erroStartMessage(e.getMessage(), "inventario a tapa");
                 fileResponses.add(new FileResponse(getCellAsString(nameCell) + " " + getCellAsString(colorCell),
-                        "Error al crear, " + e.getMessage()));
-                e.printStackTrace();
+                        errorStart + e.getMessage()));
             }
         }
         return fileResponses;
@@ -505,7 +509,8 @@ public class FileService {
                 fileResponses
                         .add(new FileResponse(nameCell.getStringCellValue(), "Inventario del químico actualizado"));
             } catch (Exception e) {
-                fileResponses.add(new FileResponse(getCellAsString(nameCell), "Error, " + e.getMessage()));
+                String errorStart = erroStartMessage(e.getMessage(), "inventario a quimico");
+                fileResponses.add(new FileResponse(getCellAsString(nameCell), errorStart + e.getMessage()));
             }
         }
         return fileResponses;
@@ -562,10 +567,10 @@ public class FileService {
                         getCellAsNullableDouble(ml250cell),
                         getCellAsNullableDouble(ml500cell),
                         getCellAsNullableDouble(ml1000cell)), token);
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Extracto agregado correctamente"));
+                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Inventario del extracto actualizado"));
             } catch (Exception e) {
-
-                fileResponses.add(new FileResponse(getCellAsString(nameCell), "Error, " + e.getMessage()));
+                String errorStart = erroStartMessage(e.getMessage(), "inventario a extracto");
+                fileResponses.add(new FileResponse(getCellAsString(nameCell), errorStart + e.getMessage()));
             }
 
         }
@@ -647,5 +652,13 @@ public class FileService {
         }
 
         return caps;
+    }
+
+    private String erroStartMessage(String message, String elementType) {
+        String errorStart = "Error, ";
+        if (message.contains("bodega")) {
+            errorStart = "Error al agregar el " + elementType + ", ";
+        }
+        return errorStart;
     }
 }
