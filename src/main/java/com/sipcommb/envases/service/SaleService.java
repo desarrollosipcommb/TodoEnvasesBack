@@ -1,5 +1,6 @@
 package com.sipcommb.envases.service;
 
+import com.sipcommb.envases.dto.ClientDTO;
 import com.sipcommb.envases.dto.ComboCapOrderDTO;
 import com.sipcommb.envases.dto.PriceSearchRequest;
 import com.sipcommb.envases.dto.SaleDTO;
@@ -134,7 +135,7 @@ public class SaleService {
      *                    (true) o solo validada (false)
      * @return SaleDTO que representa la venta.
      */
-    public SaleDTO addSale(SaleRequest saleRequest, String token, boolean saveSale) {
+    public SaleDTO addSale(SaleRequest saleRequest, String token, boolean saveSale, String... args) {
         Sale sale = new Sale();
 
         if (saleRequest.getItems() == null || saleRequest.getItems().size() == 0 || saleRequest.getItems().isEmpty()) {
@@ -153,6 +154,8 @@ public class SaleService {
             sale.setType(com.sipcommb.envases.entity.SaleType.DOMICILIO);
         } else if (saleRequest.getType().equalsIgnoreCase("PUNTO_DE_VENTA")) {
             sale.setType(com.sipcommb.envases.entity.SaleType.PUNTO_DE_VENTA);
+        } else if (!saveSale) {
+            sale.setType(com.sipcommb.envases.entity.SaleType.PUNTO_DE_VENTA);
         } else {
             throw new IllegalArgumentException("Tipo de venta no reconocido: " + saleRequest.getType());
         }
@@ -164,8 +167,35 @@ public class SaleService {
         }
 
         sale.setNotes(saleRequest.getDescription());
-        Client client = clientService.getClientByDocument(saleRequest.getClientDocument());
-        sale.setClient(client);
+
+        try {
+            Client client = clientService.getClientByDocument(saleRequest.getClientDocument());
+            sale.setClient(client);
+        } catch (Exception e) {
+            if (saveSale) {
+                ClientDTO newClientDTO = new ClientDTO(
+                        args[0], // name
+                        args[3], // address
+                        args[2], // phone
+                        "Cliente agregado automáticamente al crear la venta", // description
+                        true, // isActive
+                        args[1] // document
+                );
+                clientService.addClient(newClientDTO);
+                Client client = clientService.getClientByDocument(saleRequest.getClientDocument());
+                sale.setClient(client);
+            }else{
+                sale.setClient(new Client(
+                    "nombre de prueba",
+                    "direccion de prueba",
+                    "telefono de prueba",
+                    "descripcion de prueba",
+                    "0"
+                ));
+            }
+
+        }
+
         Optional<User> userOpt = userRepository.findById(jwtService.getUserIdFromToken(token));
 
         if (!userOpt.isPresent()) {
@@ -980,7 +1010,8 @@ public class SaleService {
             }
             if (!found) {
                 throw new IllegalArgumentException(
-                        "La tapa " + comboOrder.getColor().getCap().getName() + " no pertenece al combo: " + combo.getName());
+                        "La tapa " + comboOrder.getColor().getCap().getName() + " no pertenece al combo: "
+                                + combo.getName());
             }
 
             // Sacamos el color de la tapa
@@ -1323,7 +1354,8 @@ public class SaleService {
             }
             if (!found) {
                 throw new IllegalArgumentException(
-                        "La tapa " + comboOrder.getColor().getCap().getName() + " no pertenece al combo: " + combo.getName());
+                        "La tapa " + comboOrder.getColor().getCap().getName() + " no pertenece al combo: "
+                                + combo.getName());
             }
 
             // Sacamos el color de la tapa
@@ -1652,7 +1684,6 @@ public class SaleService {
                     newBodegaJar.setQuantity(items.getQuantity());
                     bodegaJarRepository.save(newBodegaJar);
                 }
-
 
                 for (ComboItemOrder comboOrder : items.getComboItemOrder()) {
 

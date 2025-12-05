@@ -29,6 +29,15 @@ public class ClientDTO {
         this.document = client.getDocument();
     }
 
+    public ClientDTO(String name, String address, String phone, String description, boolean isActive, String document){
+        this.name = name;
+        this.address = address;
+        this.phone = phone;
+        this.description = description;
+        this.isActive = isActive;
+        this.document = document;
+    }
+
     public String getName(){
         return this.name;
     }

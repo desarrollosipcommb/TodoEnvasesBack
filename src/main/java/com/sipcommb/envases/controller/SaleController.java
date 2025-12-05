@@ -51,13 +51,20 @@ public class SaleController {
             @ApiResponse(responseCode = "403", description = "Permiso denegado"),
             @ApiResponse(responseCode = "400", description = "Error en la solicitud")
     })
-    public ResponseEntity<?> addSale(@RequestHeader("Authorization") String authHeader, @RequestBody SaleRequest sale) {
+    public ResponseEntity<?> addSale(
+        @RequestHeader("Authorization") String authHeader, 
+        @RequestBody SaleRequest sale,
+        @RequestParam(required = false) String clientName,  
+        @RequestParam(required = false) String clientDocument,
+        @RequestParam(required = false) String clientPhone,
+        @RequestParam(required = false) String clientAddress
+    ) {
         if (!permissionService.hasPermission(authHeader, "sales")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear ventas"));
         }
 
         try {
-            SaleDTO saleDTO = saleService.addSale(sale, authHeader.trim().replace("Bearer ", ""), true);
+            SaleDTO saleDTO = saleService.addSale(sale, authHeader.trim().replace("Bearer ", ""), true, clientName, clientDocument, clientPhone, clientAddress);
             return ResponseEntity.ok(saleDTO);
         } catch (Exception e) {
 
