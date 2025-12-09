@@ -1,6 +1,7 @@
 package com.sipcommb.envases.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
@@ -142,6 +143,10 @@ public class ClientService {
     public Client getClientByDocument(String document) {
         return clientRepository.findByDocument(document.toLowerCase().trim())
                 .orElseThrow(() -> new IllegalArgumentException("El cliente con documento " + document + " no existe"));
+    }
+
+    public Optional<Client> findClientByDocument(String document) {
+        return clientRepository.findByDocument(document.toLowerCase().trim());
     }
 
 }

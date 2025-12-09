@@ -168,22 +168,10 @@ public class SaleService {
 
         sale.setNotes(saleRequest.getDescription());
 
-        try {
-            Client client = clientService.getClientByDocument(saleRequest.getClientDocument());
-            sale.setClient(client);
-        } catch (Exception e) {
-            if (saveSale) {
-                ClientDTO newClientDTO = new ClientDTO(
-                        args[0], // name
-                        args[3], // address
-                        args[2], // phone
-                        "Cliente agregado automáticamente al crear la venta", // description
-                        true, // isActive
-                        args[1] // document
-                );
-                clientService.addClient(newClientDTO);
-                Client client = clientService.getClientByDocument(saleRequest.getClientDocument());
-                sale.setClient(client);
+        if(!saveSale){
+            Optional<Client> client = clientService.findClientByDocument(saleRequest.getClientDocument());
+            if(client.isPresent()){
+                sale.setClient(client.get());
             }else{
                 sale.setClient(new Client(
                     "nombre de prueba",
@@ -193,7 +181,23 @@ public class SaleService {
                     "0"
                 ));
             }
-
+        }else{
+            Optional<Client> client = clientService.findClientByDocument(saleRequest.getClientDocument());
+            if(client.isPresent()){
+                sale.setClient(client.get());
+            }else{
+                ClientDTO newClientDTO = new ClientDTO(
+                        args[0], // name
+                        args[3], // address
+                        args[2], // phone
+                        "Cliente agregado automáticamente al crear la venta", // description
+                        true, // isActive
+                        args[1] // document
+                );
+                clientService.addClient(newClientDTO);
+                Client newClient = clientService.getClientByDocument(saleRequest.getClientDocument());
+                sale.setClient(newClient); 
+            }
         }
 
         Optional<User> userOpt = userRepository.findById(jwtService.getUserIdFromToken(token));
