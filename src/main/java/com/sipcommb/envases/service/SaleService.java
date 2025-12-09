@@ -169,6 +169,16 @@ public class SaleService {
         sale.setNotes(saleRequest.getDescription());
 
         if(!saveSale){
+            if(saleRequest.getClientDocument() ==null){
+                sale.setClient(new Client(
+                    "nombre de prueba",
+                    "direccion de prueba",
+                    "telefono de prueba",
+                    "descripcion de prueba",
+                    "0"
+                ));
+                return new SaleDTO(sale, new ArrayList<>());
+            }
             Optional<Client> client = clientService.findClientByDocument(saleRequest.getClientDocument());
             if(client.isPresent()){
                 sale.setClient(client.get());
