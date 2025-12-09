@@ -13,8 +13,6 @@ public class SaleItemRequest {
 
     private String capColor;
 
-    private String diameter;
-
     private Integer quantity;
 
     private String quimicoName;
@@ -29,12 +27,11 @@ public class SaleItemRequest {
     }
 
     public SaleItemRequest(String comboName, String jarName, String capName, String capColor, 
-    String diameter, Integer quantity, String quimicoName, String extractoName) {
+    Integer quantity, String quimicoName, String extractoName) {
         this.comboName = comboName;
         this.jarName = jarName;
         this.capName = capName;
         this.capColor = capColor;
-        this.diameter = diameter;
         this.quantity = quantity;
         this.quimicoName = quimicoName;
         this.extractoName = extractoName;
@@ -70,14 +67,6 @@ public class SaleItemRequest {
 
     public void setCapColor(String capColor) {
         this.capColor = capColor;
-    }
-
-    public String getDiameter() {
-        return diameter;
-    }
-
-    public void setDiameter(String diameter) {
-        this.diameter = diameter;
     }
 
     public Integer getQuantity() {

@@ -186,6 +186,19 @@ public class SaleService {
             if(client.isPresent()){
                 sale.setClient(client.get());
             }else{
+
+                if(args.length < 4) {
+                    throw new IllegalArgumentException("El cliente con documento " + saleRequest.getClientDocument() + " no existe. Proporcione los datos necesarios para crearlo automáticamente.");
+                }
+
+                if(args[1] == null || args[1].isEmpty() || args[1]=="") {
+                    throw new IllegalArgumentException("El documento del cliente no puede estar vacío para la creación automática.");
+                }
+
+                if(args[0] == null || args[0].isEmpty() || args[0]=="") {
+                    throw new IllegalArgumentException("El nombre del cliente no puede estar vacío para la creación automática.");
+                }
+
                 ClientDTO newClientDTO = new ClientDTO(
                         args[0], // name
                         args[3], // address
@@ -360,13 +373,10 @@ public class SaleService {
             return createSaleItem(extracto, saleItemRequest);
         }
 
-        if ((saleItemRequest.getCapColor() == null || saleItemRequest.getCapColor() == "")
-                && (saleItemRequest.getDiameter() == null || saleItemRequest.getDiameter() == "")) {
-            throw new IllegalArgumentException("Debe especificar el color y el diametro de la tapa");
-        }
+
 
         if (saleItemRequest.getCapName() != null) {
-            Cap cap = manageCap(saleItemRequest.getCapName(), saleItemRequest.getDiameter());
+            Cap cap = manageCap(saleItemRequest.getCapName());
             return createSaleItem(cap, saleItemRequest);
         }
 
@@ -644,11 +654,11 @@ public class SaleService {
      * @param diameter
      * @return Cap válido
      */
-    private Cap manageCap(String capName, String diameter) {
-        Optional<Cap> capOpt = capRepository.findByNameAndDiameter(capName, diameter);
+    private Cap manageCap(String capName) {
+        Optional<Cap> capOpt = capRepository.findByName(capName);
         if (!capOpt.isPresent()) {
             throw new IllegalArgumentException(
-                    "Tapa no encontrada: " + capName + " con diámetro: " + diameter);
+                    "Tapa no encontrada: " + capName);
         }
 
         Cap cap = capOpt.get();

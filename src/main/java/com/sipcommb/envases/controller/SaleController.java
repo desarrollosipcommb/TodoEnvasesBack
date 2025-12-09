@@ -54,10 +54,10 @@ public class SaleController {
     public ResponseEntity<?> addSale(
         @RequestHeader("Authorization") String authHeader, 
         @RequestBody SaleRequest sale,
-        @RequestParam(required = false) String clientName,  
-        @RequestParam(required = false) String clientDocument,
-        @RequestParam(required = false) String clientPhone,
-        @RequestParam(required = false) String clientAddress
+        @RequestParam(defaultValue = "") String clientName,  
+        @RequestParam(defaultValue = "") String clientDocument,
+        @RequestParam(defaultValue = "") String clientPhone,
+        @RequestParam(defaultValue = "") String clientAddress
     ) {
         if (!permissionService.hasPermission(authHeader, "sales")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para crear ventas"));
