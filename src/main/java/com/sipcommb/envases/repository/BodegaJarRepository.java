@@ -20,4 +20,8 @@ public interface BodegaJarRepository extends JpaRepository<BodegaJar, Long> {
 
     @Query("SELECT bj FROM BodegaJar bj WHERE bj.bodega.name LIKE %:bodegaName% AND bj.jar.name LIKE %:itemName%")
     List<BodegaJar> findByBodegaNameContaining(@Param("bodegaName") String bodegaName, @Param("itemName") String itemName);
+
+    @Query("SELECT bj FROM BodegaJar bj WHERE bj.bodega.name LIKE %:bodegaName% AND bj.jar.name LIKE %:itemName%")
+    Optional<BodegaJar> findBodegaItem(@Param("bodegaName") String bodegaName, @Param("itemName") String itemName);
 }
+

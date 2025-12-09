@@ -3,6 +3,7 @@ package com.sipcommb.envases.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -14,6 +15,10 @@ import org.springframework.stereotype.Service;
 import com.sipcommb.envases.dto.BodegaItem;
 import com.sipcommb.envases.dto.BodegaResponse;
 import com.sipcommb.envases.entity.Bodega;
+import com.sipcommb.envases.entity.BodegaCapColor;
+import com.sipcommb.envases.entity.BodegaExtractos;
+import com.sipcommb.envases.entity.BodegaJar;
+import com.sipcommb.envases.entity.BodegaQuimicos;
 import com.sipcommb.envases.repository.BodegaCapColorRepository;
 import com.sipcommb.envases.repository.BodegaExtractoRepository;
 import com.sipcommb.envases.repository.BodegaJarRepository;
@@ -233,7 +238,7 @@ public class BodegaService {
     public BodegaResponse update(String newName, String oldName, Long priority) {
 
         Bodega bodega = getBodegaByName(oldName);
-        
+
         if (!newName.equals(oldName)) {
             if (newName != null && !newName.isEmpty()) {
                 if (bodegaExists(newName)) {
@@ -266,6 +271,138 @@ public class BodegaService {
         bodegaResponse.setPriority(bodega.getPriority());
 
         return bodegaResponse;
+    }
+
+    public BodegaResponse getSpecific(String name, String itemFilter) {
+        Bodega bodega = getBodegaByName(name);
+
+        List<BodegaItem> filteredItems = new ArrayList<>();
+
+        filteredItems.addAll(bodegaQuimicoRepository.findByBodegaNameContaining(name, itemFilter).stream()
+                .map(bq -> new BodegaItem(bq.getQuimico().getName(), bq.getQuantity())).collect(Collectors.toList()));
+        filteredItems.addAll(bodegaExtractoRepository.findByBodegaNameContaining(name, itemFilter).stream()
+                .map(be -> new BodegaItem(be.getExtracto().getName(), be.getQuantity())).collect(Collectors.toList()));
+        filteredItems.addAll(bodegaJarRepository.findByBodegaNameContaining(name, itemFilter).stream()
+                .map(bj -> new BodegaItem(bj.getJar().getName(), bj.getQuantity())).collect(Collectors.toList()));
+        filteredItems.addAll(bodegaCapColorRepository.findByBodegaNameContaining(name, itemFilter).stream()
+                .map(bcc -> new BodegaItem(bcc.getCapColor().getCap().getName() + " " + bcc.getCapColor().getColor(),
+                        bcc.getQuantity()))
+                .collect(Collectors.toList()));
+        BodegaResponse bodegaResponse = new BodegaResponse(bodega);
+
+        bodegaResponse.setItems(filteredItems);
+        return bodegaResponse;
+    }
+
+    public BodegaResponse transferInventory(String fromBodegaName, String toBodegaName, String item, Integer quantity) {
+        Bodega fromBodega = getBodegaByName(fromBodegaName);
+        Bodega toBodega = getBodegaByName(toBodegaName);
+
+        Optional<BodegaCapColor> capColorItem = bodegaCapColorRepository.findBodegaItem(fromBodega.getName(), item);
+
+        Optional<BodegaJar> jarItem = bodegaJarRepository.findBodegaItem(fromBodega.getName(), item);
+
+        Optional<BodegaExtractos> extractoItem = bodegaExtractoRepository.findBodegaItem(fromBodega.getName(), item);
+
+        Optional<BodegaQuimicos> quimicoItem = bodegaQuimicoRepository.findBodegaItem(fromBodega.getName(), item);
+
+        if(capColorItem.isPresent()){
+            if(capColorItem.get().getQuantity() < quantity){
+                throw new IllegalArgumentException("No hay suficiente inventario para transferir.");
+            }
+
+            capColorItem.get().setQuantity(capColorItem.get().getQuantity() - quantity);
+
+            bodegaCapColorRepository.save(capColorItem.get());
+
+            Optional<BodegaCapColor> toCapColorItem = bodegaCapColorRepository.findByBodegaIdAndCapColorId(toBodega.getId(), capColorItem.get().getCapColor().getId());
+
+            if(toCapColorItem.isPresent()){
+                toCapColorItem.get().setQuantity(toCapColorItem.get().getQuantity() + quantity);
+                bodegaCapColorRepository.save(toCapColorItem.get());
+            } else {
+                BodegaCapColor newItem = new BodegaCapColor();
+                newItem.setBodega(toBodega);
+                newItem.setCapColor(capColorItem.get().getCapColor());
+                newItem.setQuantity(quantity);
+                bodegaCapColorRepository.save(newItem);
+            }
+            return new BodegaResponse(toBodega);
+        }
+
+        if(jarItem.isPresent()){
+            if(jarItem.get().getQuantity() < quantity){
+                throw new IllegalArgumentException("No hay suficiente inventario para transferir.");
+            }
+
+            jarItem.get().setQuantity(jarItem.get().getQuantity() - quantity);
+
+            bodegaJarRepository.save(jarItem.get());
+
+            Optional<BodegaJar> toJarItem = bodegaJarRepository.findByBodegaAndJar(toBodega, jarItem.get().getJar());
+
+            if(toJarItem.isPresent()){
+                toJarItem.get().setQuantity(toJarItem.get().getQuantity() + quantity);
+                bodegaJarRepository.save(toJarItem.get());
+            } else {
+                BodegaJar newItem = new BodegaJar();
+                newItem.setBodega(toBodega);
+                newItem.setJar(jarItem.get().getJar());
+                newItem.setQuantity(quantity);
+                bodegaJarRepository.save(newItem);
+            }
+            return new BodegaResponse(toBodega);
+        }
+
+        if(extractoItem.isPresent()){
+            if(extractoItem.get().getQuantity() < quantity){
+                throw new IllegalArgumentException("No hay suficiente inventario para transferir.");
+            }
+
+            extractoItem.get().setQuantity(extractoItem.get().getQuantity() - quantity);
+
+            bodegaExtractoRepository.save(extractoItem.get());
+
+            Optional<BodegaExtractos> toExtractoItem = bodegaExtractoRepository.findByBodegaAndExtracto(toBodega, extractoItem.get().getExtracto());
+
+            if(toExtractoItem.isPresent()){
+                toExtractoItem.get().setQuantity(toExtractoItem.get().getQuantity() + quantity);
+                bodegaExtractoRepository.save(toExtractoItem.get());
+            } else {
+                BodegaExtractos newItem = new BodegaExtractos();
+                newItem.setBodega(toBodega);
+                newItem.setExtracto(extractoItem.get().getExtracto());
+                newItem.setQuantity(quantity);
+                bodegaExtractoRepository.save(newItem);
+            }
+            return new BodegaResponse(toBodega);
+        }
+
+        if(quimicoItem.isPresent()){
+            if(quimicoItem.get().getQuantity() < quantity){
+                throw new IllegalArgumentException("No hay suficiente inventario para transferir.");
+            }
+
+            quimicoItem.get().setQuantity(quimicoItem.get().getQuantity() - quantity);
+
+            bodegaQuimicoRepository.save(quimicoItem.get());
+
+            Optional<BodegaQuimicos> toQuimicoItem = bodegaQuimicoRepository.findByBodegaAndQuimico(toBodega, quimicoItem.get().getQuimico());
+
+            if(toQuimicoItem.isPresent()){
+                toQuimicoItem.get().setQuantity(toQuimicoItem.get().getQuantity() + quantity);
+                bodegaQuimicoRepository.save(toQuimicoItem.get());
+            } else {
+                BodegaQuimicos newItem = new BodegaQuimicos();
+                newItem.setBodega(toBodega);
+                newItem.setQuimico(quimicoItem.get().getQuimico());
+                newItem.setQuantity(quantity);
+                bodegaQuimicoRepository.save(newItem);
+            }
+            return new BodegaResponse(toBodega);
+        }
+
+        throw new IllegalArgumentException("El ítem " + item + " no existe en la bodega " + fromBodegaName + ".");
     }
 
 }

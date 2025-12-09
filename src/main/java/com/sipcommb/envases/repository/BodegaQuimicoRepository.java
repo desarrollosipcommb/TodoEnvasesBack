@@ -23,4 +23,7 @@ public interface BodegaQuimicoRepository extends JpaRepository<BodegaQuimicos, L
     @Query("SELECT bq FROM BodegaQuimicos bq WHERE bq.bodega.name LIKE %:bodegaName% AND bq.quimico.name LIKE %:itemName%")
     List<BodegaQuimicos> findByBodegaNameContaining(@Param("bodegaName") String bodegaName, @Param("itemName") String itemName);
 
+    @Query("SELECT bq FROM BodegaQuimicos bq WHERE bq.bodega.name LIKE %:bodegaName% AND bq.quimico.name LIKE %:itemName%")
+    Optional<BodegaQuimicos> findBodegaItem(@Param("bodegaName") String bodegaName, @Param("itemName") String itemName);
+
 }

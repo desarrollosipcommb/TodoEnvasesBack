@@ -189,4 +189,48 @@ public class BodegaController {
         }
     }
 
+    @GetMapping("/specific")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Bodega obtenida exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Error al obtener la bodega"),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado")
+    })
+    public ResponseEntity<?> getSpecificBodega(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam String name,
+        @RequestParam(defaultValue = "") String itemFilter
+    ) {
+        if(!permissionService.hasPermission(authHeader, "read")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver las bodegas"));
+        }
+        try {
+            return ResponseEntity.ok(bodegaService.getSpecific(name, itemFilter));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/transfer-inventory")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Inventario transferido exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Error al transferir el inventario"),
+        @ApiResponse(responseCode = "403", description = "Permiso denegado")
+    })
+    public ResponseEntity<?> transferInventoryBetweenBodegas(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam String fromBodegaName,
+        @RequestParam String toBodegaName,
+        @RequestParam String item,
+        @RequestParam int quantity
+    ) {
+        if(!permissionService.hasPermission(authHeader, "update")) {
+            return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para transferir inventario entre bodegas"));
+        }
+        try {
+            return ResponseEntity.ok(bodegaService.transferInventory(fromBodegaName, toBodegaName, item, quantity));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
+        } 
+    }
+
 }
