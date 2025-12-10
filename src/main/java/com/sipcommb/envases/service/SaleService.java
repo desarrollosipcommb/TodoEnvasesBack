@@ -169,7 +169,7 @@ public class SaleService {
         sale.setNotes(saleRequest.getDescription());
 
         if(!saveSale){
-            if(saleRequest.getClientDocument() ==null){
+            if(saleRequest.getClientDocument() == null){
                 sale.setClient(new Client(
                     "nombre de prueba",
                     "direccion de prueba",
@@ -1004,19 +1004,29 @@ public class SaleService {
         // Como un combo puede tener varias tapas, recorremos la lista de tapas
         List<ComboCap> caps = combo.getCaps();
 
-        /*
-         * String[] colors = saleItem.getColor().trim().split(",");
-         * String[] capComboQuantity = saleItem.getComboCapQuantity().trim().split(",");
-         */
-
         int totalCheckedQuantity = 0;
+
+        // Como normalmente en los goteros se venden los envases tapa y pitorro como uno
+        // creamos una variable para contar cuantos pitorros se estan vendiendo
+        // esta puede ser igual o menor a la cantidad de envases vendidos
+        int totalPitorrosQuantity = 0;
         for (ComboItemOrder comboOrder : saleItem.getComboItemOrder()) {
-            totalCheckedQuantity += comboOrder.getQuantity();
+            if(comboOrder.getColor().getCap().getName().toLowerCase().contains("pitorro")) {
+                totalPitorrosQuantity += comboOrder.getQuantity();
+            }else{ 
+                totalCheckedQuantity += comboOrder.getQuantity();
+            }
         }
 
         if (totalCheckedQuantity != saleItem.getQuantity()) {
             throw new IllegalArgumentException(
-                    "La suma de las cantidades de tapas no coincide con la cantidad de tapas del combo: "
+                    "La suma de las cantidades de tapas no coincide con la cantidad de envases del combo: "
+                            + combo.getName());
+        }
+
+        if( totalPitorrosQuantity > saleItem.getQuantity()) {
+            throw new IllegalArgumentException(
+                    "La cantidad de pitorros no puede ser mayor a la cantidad de envases del combo: "
                             + combo.getName());
         }
 
