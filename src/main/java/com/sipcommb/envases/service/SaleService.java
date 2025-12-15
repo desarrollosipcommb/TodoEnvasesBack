@@ -168,45 +168,47 @@ public class SaleService {
 
         sale.setNotes(saleRequest.getDescription());
 
-        if(!saveSale){
-            if(saleRequest.getClientDocument() == null){
+        if (!saveSale) {
+            if (saleRequest.getClientDocument() == null) {
                 sale.setClient(new Client(
-                    "nombre de prueba",
-                    "direccion de prueba",
-                    "telefono de prueba",
-                    "descripcion de prueba",
-                    "0"
-                ));
-                //return new SaleDTO(sale, new ArrayList<>());
+                        "nombre de prueba",
+                        "direccion de prueba",
+                        "telefono de prueba",
+                        "descripcion de prueba",
+                        "0"));
+                // return new SaleDTO(sale, new ArrayList<>());
+            } else {
+                Optional<Client> client = clientService.findClientByDocument(saleRequest.getClientDocument());
+                if (client.isPresent()) {
+                    sale.setClient(client.get());
+                } else {
+                    sale.setClient(new Client(
+                            "nombre de prueba",
+                            "direccion de prueba",
+                            "telefono de prueba",
+                            "descripcion de prueba",
+                            "0"));
+                }
             }
+        } else {
             Optional<Client> client = clientService.findClientByDocument(saleRequest.getClientDocument());
-            if(client.isPresent()){
+            if (client.isPresent()) {
                 sale.setClient(client.get());
-            }else{
-                sale.setClient(new Client(
-                    "nombre de prueba",
-                    "direccion de prueba",
-                    "telefono de prueba",
-                    "descripcion de prueba",
-                    "0"
-                ));
-            }
-        }else{
-            Optional<Client> client = clientService.findClientByDocument(saleRequest.getClientDocument());
-            if(client.isPresent()){
-                sale.setClient(client.get());
-            }else{
+            } else {
 
-                if(args.length < 4) {
-                    throw new IllegalArgumentException("El cliente con documento " + saleRequest.getClientDocument() + " no existe. Proporcione los datos necesarios para crearlo automáticamente.");
+                if (args.length < 4) {
+                    throw new IllegalArgumentException("El cliente con documento " + saleRequest.getClientDocument()
+                            + " no existe. Proporcione los datos necesarios para crearlo automáticamente.");
                 }
 
-                if(args[1] == null || args[1].isEmpty() || args[1]=="") {
-                    throw new IllegalArgumentException("El documento del cliente no puede estar vacío para la creación automática.");
+                if (args[1] == null || args[1].isEmpty() || args[1] == "") {
+                    throw new IllegalArgumentException(
+                            "El documento del cliente no puede estar vacío para la creación automática.");
                 }
 
-                if(args[0] == null || args[0].isEmpty() || args[0]=="") {
-                    throw new IllegalArgumentException("El nombre del cliente no puede estar vacío para la creación automática.");
+                if (args[0] == null || args[0].isEmpty() || args[0] == "") {
+                    throw new IllegalArgumentException(
+                            "El nombre del cliente no puede estar vacío para la creación automática.");
                 }
 
                 ClientDTO newClientDTO = new ClientDTO(
@@ -219,7 +221,7 @@ public class SaleService {
                 );
                 clientService.addClient(newClientDTO);
                 Client newClient = clientService.getClientByDocument(saleRequest.getClientDocument());
-                sale.setClient(newClient); 
+                sale.setClient(newClient);
             }
         }
 
@@ -382,8 +384,6 @@ public class SaleService {
                             "Extracto no encontrado: " + saleItemRequest.getExtractoName()));
             return createSaleItem(extracto, saleItemRequest);
         }
-
-
 
         if (saleItemRequest.getCapName() != null) {
             Cap cap = manageCap(saleItemRequest.getCapName());
@@ -1011,9 +1011,9 @@ public class SaleService {
         // esta puede ser igual o menor a la cantidad de envases vendidos
         int totalPitorrosQuantity = 0;
         for (ComboItemOrder comboOrder : saleItem.getComboItemOrder()) {
-            if(comboOrder.getColor().getCap().getName().toLowerCase().contains("pitorro")) {
+            if (comboOrder.getColor().getCap().getName().toLowerCase().contains("pitorro")) {
                 totalPitorrosQuantity += comboOrder.getQuantity();
-            }else{ 
+            } else {
                 totalCheckedQuantity += comboOrder.getQuantity();
             }
         }
@@ -1024,7 +1024,7 @@ public class SaleService {
                             + combo.getName());
         }
 
-        if( totalPitorrosQuantity > saleItem.getQuantity()) {
+        if (totalPitorrosQuantity > saleItem.getQuantity()) {
             throw new IllegalArgumentException(
                     "La cantidad de pitorros no puede ser mayor a la cantidad de envases del combo: "
                             + combo.getName());
