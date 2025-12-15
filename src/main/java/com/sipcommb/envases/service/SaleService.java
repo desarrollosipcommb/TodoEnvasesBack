@@ -196,7 +196,7 @@ public class SaleService {
                 sale.setClient(client.get());
             } else {
                 String document = saleRequest.getClientDocument();
-                if (args.length < 4) {
+                if (args.length < 3) {
                     throw new IllegalArgumentException("El cliente con documento " + saleRequest.getClientDocument()
                             + " no existe. Proporcione los datos necesarios para crearlo automáticamente.");
                 }
