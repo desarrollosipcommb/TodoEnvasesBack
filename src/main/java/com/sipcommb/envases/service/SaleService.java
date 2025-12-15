@@ -177,7 +177,7 @@ public class SaleService {
                     "descripcion de prueba",
                     "0"
                 ));
-                return new SaleDTO(sale, new ArrayList<>());
+                //return new SaleDTO(sale, new ArrayList<>());
             }
             Optional<Client> client = clientService.findClientByDocument(saleRequest.getClientDocument());
             if(client.isPresent()){
