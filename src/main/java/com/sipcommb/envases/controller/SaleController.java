@@ -55,7 +55,6 @@ public class SaleController {
         @RequestHeader("Authorization") String authHeader, 
         @RequestBody SaleRequest sale,
         @RequestParam(defaultValue = "") String clientName,  
-        @RequestParam(defaultValue = "") String clientDocument,
         @RequestParam(defaultValue = "") String clientPhone,
         @RequestParam(defaultValue = "") String clientAddress
     ) {
@@ -64,7 +63,7 @@ public class SaleController {
         }
 
         try {
-            SaleDTO saleDTO = saleService.addSale(sale, authHeader.trim().replace("Bearer ", ""), true, clientName, clientDocument, clientPhone, clientAddress);
+            SaleDTO saleDTO = saleService.addSale(sale, authHeader.trim().replace("Bearer ", ""), true, clientName, clientPhone, clientAddress);
             return ResponseEntity.ok(saleDTO);
         } catch (Exception e) {
 

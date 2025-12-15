@@ -195,13 +195,13 @@ public class SaleService {
             if (client.isPresent()) {
                 sale.setClient(client.get());
             } else {
-
+                String document = saleRequest.getClientDocument();
                 if (args.length < 4) {
                     throw new IllegalArgumentException("El cliente con documento " + saleRequest.getClientDocument()
                             + " no existe. Proporcione los datos necesarios para crearlo automáticamente.");
                 }
 
-                if (args[1] == null || args[1].isEmpty() || args[1] == "") {
+                if (document == null || document.isEmpty() || document == "") {
                     throw new IllegalArgumentException(
                             "El documento del cliente no puede estar vacío para la creación automática.");
                 }
@@ -213,11 +213,11 @@ public class SaleService {
 
                 ClientDTO newClientDTO = new ClientDTO(
                         args[0], // name
-                        args[3], // address
-                        args[2], // phone
+                        args[2], // address
+                        args[1], // phone
                         "Cliente agregado automáticamente al crear la venta", // description
                         true, // isActive
-                        args[1] // document
+                        document // document
                 );
                 clientService.addClient(newClientDTO);
                 Client newClient = clientService.getClientByDocument(saleRequest.getClientDocument());
