@@ -343,6 +343,16 @@ CREATE TABLE bodega_extractos (
     UNIQUE (bodega_id, extracto_id)
 );
 
+CREATE TABLE bodega_sales (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    sale_id INT NOT NULL,
+    bodega_id INT NOT NULL,
+    item_name VARCHAR(100) NOT NULL,
+    quantity INT NOT NULL,
+    FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
+    FOREIGN KEY (bodega_id) REFERENCES bodega(id) ON DELETE RESTRICT
+);
+
 -- ============================================
 -- INSERT DEFAULT DATA
 -- ============================================

@@ -1,5 +1,6 @@
 package com.sipcommb.envases.service;
 
+import com.sipcommb.envases.dto.BodegaSaleDTO;
 import com.sipcommb.envases.dto.ClientDTO;
 import com.sipcommb.envases.dto.ComboCapOrderDTO;
 import com.sipcommb.envases.dto.PriceSearchRequest;
@@ -12,6 +13,7 @@ import com.sipcommb.envases.entity.BodegaCapColor;
 import com.sipcommb.envases.entity.BodegaExtractos;
 import com.sipcommb.envases.entity.BodegaJar;
 import com.sipcommb.envases.entity.BodegaQuimicos;
+import com.sipcommb.envases.entity.BodegaSale;
 import com.sipcommb.envases.entity.Cap;
 import com.sipcommb.envases.entity.CapColor;
 import com.sipcommb.envases.entity.Client;
@@ -30,6 +32,7 @@ import com.sipcommb.envases.repository.BodegaExtractoRepository;
 import com.sipcommb.envases.repository.BodegaJarRepository;
 import com.sipcommb.envases.repository.BodegaQuimicoRepository;
 import com.sipcommb.envases.repository.BodegaRepository;
+import com.sipcommb.envases.repository.BodegaSaleRepository;
 import com.sipcommb.envases.repository.CapColorRepository;
 import com.sipcommb.envases.repository.CapRepository;
 import com.sipcommb.envases.repository.ComboRepository;
@@ -45,7 +48,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,6 +129,9 @@ public class SaleService {
 
     @Autowired
     private BodegaQuimicoRepository bodegaQuimicoRepository;
+
+    @Autowired
+    private BodegaSaleRepository bodegaSaleRepository;
 
     /**
      * Planea o añade un venta en el sistema, dependiendo del parámetro saveSale.
@@ -304,6 +312,30 @@ public class SaleService {
 
         // modifica o verifica el invenvtario, se aprovecha para ir sumando el total de
         // la venta
+        List<BodegaSale> bodegaSales = new ArrayList<>();
+        for(int c=0; c<saleItemList.size(); c++) {
+            SaleItem si = saleItemList.get(c);
+            
+            if(saveSale){
+                bodegaSales.addAll(modifyInventory(si, saleItemList, userOpt.get().getId().intValue()));
+            }else{
+                bodegaSales.addAll(validateInventory(si, saleItemList));
+            }
+            sale.addPrice(si.getSubtotal());
+        }
+
+        bodegaSales = consolidateList(bodegaSales);
+
+        List<BodegaSaleDTO> bodegaSaleDTOs = new ArrayList<>();
+        for(BodegaSale bs : bodegaSales){
+            bs.setSale(sale);
+            bodegaSaleDTOs.add(new BodegaSaleDTO(bs));
+        }
+
+        sale.setBodegaSales(bodegaSales);
+        
+
+        /* 
         for (SaleItem saleItem : saleItemList) {
 
             if (saveSale) {
@@ -315,6 +347,7 @@ public class SaleService {
             sale.addPrice(saleItem.getSubtotal());
 
         }
+            */
 
         // crea la venta y añade a la base de datos si es necesario
         if (saveSale) {
@@ -324,7 +357,7 @@ public class SaleService {
             saleItemRepository.saveAll(saleItemList);
         }
 
-        return new SaleDTO(sale, saleItemDTOList);
+        return new SaleDTO(sale, saleItemDTOList, bodegaSaleDTOs);
     }
 
     /**
@@ -395,7 +428,6 @@ public class SaleService {
     }
 
     /**
-     * TODO
      * Crea un SaleItem de tipo Combo basado en el Combo y el SaleItemRequest
      * proporcionados.
      *
@@ -837,9 +869,10 @@ public class SaleService {
      *
      * @param saleItem el item de venta a validar
      */
-    private void validateInventory(SaleItem saleItem, List<SaleItem> existingItems) {
+    private List<BodegaSale> validateInventory(SaleItem saleItem, List<SaleItem> existingItems) {
+        List<BodegaSale> bodegaSales = new ArrayList<>();
         if (saleItem.getItemType() == ItemType.COMBO) {
-            validateInventoryCombo(saleItem, existingItems);
+            bodegaSales = validateInventoryCombo(saleItem, existingItems, bodegaSales);
         } else if (saleItem.getItemType() == ItemType.JAR) {
 
             Jar jar = saleItem.getJar();
@@ -859,6 +892,7 @@ public class SaleService {
 
                 int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
                 quantityToDeduct -= deductQuantity;
+                bodegaSales.add(new BodegaSale(bj.getBodega(), null, jar.getName(), deductQuantity));
             }
 
             if (quantityToDeduct > 0) {
@@ -884,6 +918,7 @@ public class SaleService {
 
                 int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
                 quantityToDeduct -= deductQuantity;
+                bodegaSales.add(new BodegaSale(bodegaCapColor.getBodega(), null, capColor.getCap().getName()+ " "+capColor.getColor(), deductQuantity));
             }
 
             if (quantityToDeduct > 0) {
@@ -909,6 +944,7 @@ public class SaleService {
 
                 int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
                 quantityToDeduct -= deductQuantity;
+                bodegaSales.add(new BodegaSale(bq.getBodega(), null, quimico.getName(), deductQuantity));
             }
 
             if (quantityToDeduct > 0) {
@@ -935,6 +971,7 @@ public class SaleService {
 
                 int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
                 quantityToDeduct -= deductQuantity;
+                bodegaSales.add(new BodegaSale(be.getBodega(), null, extracto.getName(), deductQuantity));
             }
 
             if (quantityToDeduct > 0) {
@@ -945,6 +982,8 @@ public class SaleService {
         } else {
             throw new IllegalArgumentException("Tipo de item de venta no reconocido: " + saleItem.getItemType());
         }
+
+        return bodegaSales;
     }
 
     /**
@@ -955,7 +994,7 @@ public class SaleService {
      * @param saleItem      el Combo a vender
      * @param existingItems los items ya existentes en la venta
      */
-    private void validateInventoryCombo(SaleItem saleItem, List<SaleItem> existingItems) {
+    private List<BodegaSale> validateInventoryCombo(SaleItem saleItem, List<SaleItem> existingItems, List<BodegaSale> bodegaSales) {
 
         // Sacamos el combo del saleItem para luego sacar el tarro y las tapas
         Combo combo = saleItem.getCombo();
@@ -992,6 +1031,7 @@ public class SaleService {
 
             int deductQuantity = Math.min(availableInBodega, requestedQuantity);
             requestedQuantity -= deductQuantity;
+            bodegaSales.add(new BodegaSale(bj.getBodega(), null, jar.getName(), deductQuantity));
         }
 
         if (requestedQuantity > 0) {
@@ -1078,6 +1118,9 @@ public class SaleService {
 
                 int deductQuantity = Math.min(availableInBodega, requestedCapQuantity);
                 requestedCapQuantity -= deductQuantity;
+                bodegaSales.add(new BodegaSale(bodegaCapColor.getBodega(), null, 
+                        capColor.getCap().getName() + " " + capColor.getColor(), deductQuantity));
+
             }
 
             if (requestedCapQuantity > 0) {
@@ -1087,59 +1130,8 @@ public class SaleService {
             }
 
         }
-
-        /*
-         * // Recorremos las tapas para validar su inventario
-         * for (int i = 0; i < caps.size(); i++) {
-         * ComboCap comboCap = caps.get(i);
-         * capComboQuantity[i] = capComboQuantity[i].trim();
-         * colors[i] = colors[i].trim();
-         * if (capComboQuantity[i] == null || capComboQuantity[i].isEmpty() ||
-         * capComboQuantity[i].equals("0")) {
-         * continue;
-         * }
-         * // Verificamos que el color de la tapa si exista
-         * CapColor capColor = capColorRepository.findByCapAndColor(comboCap.getCap(),
-         * colors[i])
-         * .orElseThrow(() -> new IllegalArgumentException(
-         * "El color " + saleItem.getColor() + " no existe en el tipo de tapa: "
-         * + comboCap.getCap().getName()));
-         * 
-         * // Sacamos todas las bodegas donde tengamos esta tapa de este color y las
-         * // ordenamos segun su prioridad
-         * List<BodegaCapColor> bodegaCapColors =
-         * capColorService.sortBodegas(capColor.getBodegas());
-         * int requestedCapQuantity = saleItem.getQuantity();
-         * // Sumar cantidades de combos existentes en la lista
-         * for (SaleItem item : existingItems) {
-         * if (item.getItemType() == ItemType.CAP &&
-         * item.getCapColor().getId().equals(capColor.getId())) {
-         * requestedCapQuantity += item.getQuantity();
-         * }
-         * }
-         * for (BodegaCapColor bodegaCapColor : bodegaCapColors) {
-         * if (requestedCapQuantity <= 0) {
-         * break;
-         * }
-         * 
-         * int availableInBodega = bodegaCapColor.getQuantity();
-         * if (availableInBodega <= 0) {
-         * continue;
-         * }
-         * 
-         * int deductQuantity = Math.min(availableInBodega, requestedCapQuantity);
-         * requestedCapQuantity -= deductQuantity;
-         * }
-         * 
-         * // Si al final nos queda una cantidad pendiente, lanzamos el error
-         * if (requestedCapQuantity > 0) {
-         * throw new IllegalArgumentException(
-         * "No hay suficiente inventario para la tapa del combo: " + combo.getName()
-         * + ", se necesitan " + requestedCapQuantity + " unidades más.");
-         * }
-         * 
-         * }
-         */
+        System.out.println("Bodega Sales: " + bodegaSales.size());
+        return bodegaSales;
 
     }
 
@@ -1149,10 +1141,10 @@ public class SaleService {
      * @param saleItem el item de venta que se va a procesar
      * @param userId   el ID del usuario que realiza la venta
      */
-    private void modifyInventory(SaleItem saleItem, List<SaleItem> existingItems, int userId) {
-
+    private List<BodegaSale> modifyInventory(SaleItem saleItem, List<SaleItem> existingItems, int userId) {
+        List<BodegaSale> bodegaSales = new ArrayList<>();
         if (saleItem.getItemType() == ItemType.COMBO) {
-            modifyInventoryCombo(saleItem, existingItems, userId);
+            bodegaSales =modifyInventoryCombo(saleItem, existingItems, userId);
         } else if (saleItem.getItemType() == ItemType.JAR) {
             Jar jar = saleItem.getJar();
             List<BodegaJar> bodegaJar = jarService.sortBodegaJar(jar.getBodegas());
@@ -1172,6 +1164,7 @@ public class SaleService {
                 int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
                 bj.setQuantity(availableInBodega - deductQuantity);
                 quantityToDeduct -= deductQuantity;
+                bodegaSales.add(new BodegaSale(bj.getBodega(), null, jar.getName(), deductQuantity));
                 inventoryService.newItem(
                         jar.getId(),
                         "jar",
@@ -1206,6 +1199,9 @@ public class SaleService {
                 int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
                 bodegaCapColor.setQuantity(availableInBodega - deductQuantity);
                 quantityToDeduct -= deductQuantity;
+                bodegaSales.add(new BodegaSale(bodegaCapColor.getBodega(), null,
+                        capColor.getCap().getName() + " " + capColor.getColor(), deductQuantity));
+
                 inventoryService.newItem(
                         capColor.getId(),
                         "cap",
@@ -1241,6 +1237,8 @@ public class SaleService {
                 int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
                 bq.setQuantity(availableInBodega - deductQuantity);
                 quantityToDeduct -= deductQuantity;
+                bodegaSales.add(new BodegaSale(bq.getBodega(), null, quimico.getName(), deductQuantity));
+
                 inventoryService.newItem(
                         Long.valueOf(quimico.getId()),
                         "quimico",
@@ -1276,6 +1274,8 @@ public class SaleService {
                 int deductQuantity = Math.min(availableInBodega, quantityToDeduct);
                 be.setQuantity(availableInBodega - deductQuantity);
                 quantityToDeduct -= deductQuantity;
+                bodegaSales.add(new BodegaSale(be.getBodega(), null, extracto.getName(), deductQuantity));
+
                 inventoryService.newItem(
                         Long.valueOf(extracto.getId()),
                         "extracto",
@@ -1294,7 +1294,7 @@ public class SaleService {
         } else {
             throw new IllegalArgumentException("Tipo de item de venta no reconocido: " + saleItem.getItemType());
         }
-
+        return bodegaSales;
     }
 
     /**
@@ -1307,7 +1307,8 @@ public class SaleService {
      * @param existingItems los items ya existentes en la venta
      * @param userId        el ID del usuario que realiza la venta
      */
-    private void modifyInventoryCombo(SaleItem saleItem, List<SaleItem> existingItems, int userId) {
+    private List<BodegaSale> modifyInventoryCombo(SaleItem saleItem, List<SaleItem> existingItems, int userId) {
+        List<BodegaSale> bodegaSales = new ArrayList<>();
         // Sacamos el combo del saleItem para luego sacar el tarro y las tapas
         Combo combo = saleItem.getCombo();
 
@@ -1344,6 +1345,8 @@ public class SaleService {
             int deductQuantity = Math.min(availableInBodega, requestedQuantity);
             bj.setQuantity(availableInBodega - deductQuantity);
             requestedQuantity -= deductQuantity;
+            bodegaSales.add(new BodegaSale(bj.getBodega(), null, jar.getName(), deductQuantity));
+
             inventoryService.newItem(
                     jar.getId(),
                     "jar",
@@ -1364,13 +1367,26 @@ public class SaleService {
         // Hacemos la sumatoria para ver que tengan la misma cantidad de tapas que el
         // envase
         int totalCheckedQuantity = 0;
+
+        // Revisamos los pitorros por separado
+        int totalPitorrosQuantity = 0;
         for (ComboItemOrder order : comboItemOrder) {
-            totalCheckedQuantity += order.getQuantity();
+            if( order.getColor().getCap().getName().toLowerCase().contains("pitorro")) {
+                totalPitorrosQuantity += order.getQuantity();
+            } else {
+                totalCheckedQuantity += order.getQuantity();
+            }
         }
 
         if (totalCheckedQuantity != saleItem.getQuantity()) {
             throw new IllegalArgumentException(
                     "La suma de las cantidades de tapas no coincide con la cantidad de tapas del combo: "
+                            + combo.getName());
+        }
+
+        if (totalPitorrosQuantity > saleItem.getQuantity()) {
+            throw new IllegalArgumentException(
+                    "La cantidad de pitorros no puede ser mayor a la cantidad de envases del combo: "
                             + combo.getName());
         }
 
@@ -1423,6 +1439,9 @@ public class SaleService {
                 int deductQuantity = Math.min(availableInBodega, requestedCapQuantity);
                 bodegaCapColor.setQuantity(availableInBodega - deductQuantity);
                 requestedCapQuantity -= deductQuantity;
+                bodegaSales.add(new BodegaSale(bodegaCapColor.getBodega(), null,
+                        capColor.getCap().getName() + " " + capColor.getColor(), deductQuantity));
+
                 inventoryService.newItem(
                         capColor.getId(),
                         "cap",
@@ -1441,6 +1460,8 @@ public class SaleService {
             }
 
         }
+
+        return bodegaSales;
 
     }
 
@@ -1562,6 +1583,7 @@ public class SaleService {
      */
     private SaleDTO toSaleDTO(Sale sale) {
         List<SaleItem> saleItems = saleItemRepository.findBySale(sale.getId());
+        List<BodegaSale> bodegaSales = bodegaSaleRepository.findBySaleId(sale.getId());
         List<SaleItemDTO> saleItemDTOs = new ArrayList<>();
         for (SaleItem saleItem : saleItems) {
             if (saleItem.getItemType() == ItemType.COMBO) {
@@ -1582,7 +1604,12 @@ public class SaleService {
                         extractosRepository.findById(saleItem.getExtracto().getId()).orElse(null).getName(), saleItem));
             }
         }
-        SaleDTO saleDTO = new SaleDTO(sale, saleItemDTOs);
+        List<BodegaSaleDTO> bodegaSaleDTOs = new ArrayList<>();
+        for (BodegaSale bodegaSale : bodegaSales) {
+            bodegaSaleDTOs.add(new BodegaSaleDTO(bodegaSale));
+        }
+
+        SaleDTO saleDTO = new SaleDTO(sale, saleItemDTOs, bodegaSaleDTOs);
         return saleDTO;
     }
 
@@ -1761,6 +1788,29 @@ public class SaleService {
             saleDTOs.add(saleDTO);
         }
         return new PageImpl<>(saleDTOs, pageable, sales.getTotalElements());
+    }
+
+
+    private List<BodegaSale> consolidateList(List<BodegaSale> bodegaSales) {
+        Map<String, BodegaSale> consolidatedMap = new HashMap<>();
+
+        for (BodegaSale bodegaSale : bodegaSales) {
+            String key = bodegaSale.getItemName() + "|" + bodegaSale.getBodega().getName();
+            if (consolidatedMap.containsKey(key)) {
+                BodegaSale existingBodegaSale = consolidatedMap.get(key);
+
+                int higherQuantity = Math.max(existingBodegaSale.getQuantity(), bodegaSale.getQuantity());
+                existingBodegaSale.setQuantity(higherQuantity);
+            } else {
+                consolidatedMap.put(key, new BodegaSale(
+                        bodegaSale.getBodega(),
+                        null,
+                        bodegaSale.getItemName(),
+                        bodegaSale.getQuantity()));
+            }
+        }
+
+        return new ArrayList<>(consolidatedMap.values());
     }
 
 }

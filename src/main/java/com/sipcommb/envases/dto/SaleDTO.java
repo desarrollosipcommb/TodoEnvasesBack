@@ -20,6 +20,8 @@ public class SaleDTO {
 
     private List<SaleItemDTO> saleItems;
 
+    private List<BodegaSaleDTO> bodegaSales;
+
     private String type;
 
     private String notes;
@@ -37,7 +39,7 @@ public class SaleDTO {
         this.notes = notes;
     }
 
-    public SaleDTO(Sale sale, List<SaleItemDTO> saleItems) {
+    public SaleDTO(Sale sale, List<SaleItemDTO> saleItems, List<BodegaSaleDTO> bodegaSales) {
         this.id = sale.getId();
         this.clientName = sale.getClient().getName();
         this.clientPhone = sale.getClient().getPhone();
@@ -47,6 +49,7 @@ public class SaleDTO {
         this.type = sale.getType().name();
         this.notes = sale.getNotes();
         this.saleItems = saleItems;
+        this.bodegaSales = bodegaSales;
         
     }
 
@@ -122,6 +125,14 @@ public class SaleDTO {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public List<BodegaSaleDTO> getBodegaSales() {
+        return bodegaSales;
+    }
+
+    public void setBodegaSales(List<BodegaSaleDTO> bodegaSales) {
+        this.bodegaSales = bodegaSales;
     }
 
 }
