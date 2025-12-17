@@ -228,9 +228,11 @@ public class UserService {
 
         // Update user details
         user.setEmail(userRequestDTO.getEmail());
+
         if (userRequestDTO.getPassword() != null && !userRequestDTO.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
         }
+
         user.setFirstName(userRequestDTO.getFirstName());
         user.setLastName(userRequestDTO.getLastName());
         user.setPhoneNumber(userRequestDTO.getPhoneNumber());
