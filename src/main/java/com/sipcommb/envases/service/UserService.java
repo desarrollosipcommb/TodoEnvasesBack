@@ -98,34 +98,32 @@ public class UserService {
         return userRepository.findByRoleNameAndIsActive(roleName, true);
     }
 
-
     // FUNCIONALIDADES DE LOGIN Y AUTENTICACIÓN
 
     /**
-     *  Login user with username and password
+     * Login user with username and password
      */
     public LoginResponse login(String username, String password) {
-        if(!userFound(username)) {
+        if (!userFound(username)) {
             throw new BadCredentialsException("El usuario no existe");
         }
         Optional<User> userOptional = userRepository.findByUsername(username);
         User user = userOptional.get();
-        if(!passwordEncoder.matches(password, user.getPassword())) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new BadCredentialsException("Contraseña incorrecta");
         }
 
-        if(!user.getIsActive()) {
+        if (!user.getIsActive()) {
             throw new BadCredentialsException("El usuario está desactivado");
         }
 
         user.setLastLogin(LocalDateTime.now());
         String token = jwtService.generateToken(user);
         return new LoginResponse(
-            token,
-            user.getUsername(),
-            user.getRole().getName(),
-            user.getRole().getPermissions()
-        ); 
+                token,
+                user.getUsername(),
+                user.getRole().getName(),
+                user.getRole().getPermissions());
     }
 
     /**
@@ -147,9 +145,9 @@ public class UserService {
             throw new RuntimeException("Role not found: " + userRequestDTO.getRoleName());
         }
 
-        if(roleOptional.get().getName().toLowerCase().equals("admin")) {
+        if (roleOptional.get().getName().toLowerCase().equals("admin")) {
             throw new RuntimeException("Solo un administrador puede crear usuarios con el rol de administrador");
-        }   
+        }
 
         // Create user
         User user = new User();
@@ -165,14 +163,13 @@ public class UserService {
         user = userRepository.save(user);
         return new UserDTO(user);
     }
-       
 
     private boolean userFound(String userName) {
         return userRepository.existsByUsername(userName);
     }
 
     public UserDTO registerAdmin(UserRequestDTO userRequestDTO, String authHeader) {
-        
+
         if (!jwtService.getRoleFromToken(authHeader).equals("admin")) {
             throw new RuntimeException("Este usuario no tiene permiso para crear administradores");
         }
@@ -202,14 +199,14 @@ public class UserService {
         user.setPhoneNumber(userRequestDTO.getPhoneNumber());
         user.setRole(roleOptional.get());
         user.setIsActive(true);
-        
+
         // Save user
         user = userRepository.save(user);
-        
+
         return new UserDTO(user);
     }
 
-    public UserDTO updateUser(UserRequestDTO userRequestDTO){
+    public UserDTO updateUser(UserRequestDTO userRequestDTO) {
         Optional<User> userOptional = userRepository.findByUsername(userRequestDTO.getUsername());
         if (!userOptional.isPresent()) {
             throw new RuntimeException("no se encontró el usuario");
@@ -218,7 +215,8 @@ public class UserService {
         User user = userOptional.get();
 
         // Check if email is being updated and if it already exists
-        if (!user.getEmail().equals(userRequestDTO.getEmail()) && userRepository.existsByEmail(userRequestDTO.getEmail())) {
+        if (!user.getEmail().equals(userRequestDTO.getEmail())
+                && userRepository.existsByEmail(userRequestDTO.getEmail())) {
             throw new RuntimeException("ya existe un usuario con este email");
         }
 
@@ -230,9 +228,11 @@ public class UserService {
 
         // Update user details
         user.setEmail(userRequestDTO.getEmail());
+
         if (userRequestDTO.getPassword() != null && !userRequestDTO.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
         }
+
         user.setFirstName(userRequestDTO.getFirstName());
         user.setLastName(userRequestDTO.getLastName());
         user.setPhoneNumber(userRequestDTO.getPhoneNumber());
@@ -242,7 +242,6 @@ public class UserService {
         user = userRepository.save(user);
         return new UserDTO(user);
     }
-
 
     public Page<UserResponseDTO> getAllUsers(Pageable pageable) {
         Page<User> users = userRepository.findAll(pageable);
@@ -259,7 +258,7 @@ public class UserService {
         return users.map(UserResponseDTO::new);
     }
 
-    public UserResponseDTO deActivateUser(String username){
+    public UserResponseDTO deActivateUser(String username) {
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (!userOptional.isPresent()) {
             throw new RuntimeException("no se encontró el usuario");
@@ -271,7 +270,7 @@ public class UserService {
         return new UserResponseDTO(user);
     }
 
-    public UserResponseDTO activateUser(String username){
+    public UserResponseDTO activateUser(String username) {
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (!userOptional.isPresent()) {
             throw new RuntimeException("no se encontró el usuario");
@@ -282,6 +281,5 @@ public class UserService {
         userRepository.save(user);
         return new UserResponseDTO(user);
     }
-
 
 }

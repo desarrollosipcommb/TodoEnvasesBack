@@ -19,9 +19,18 @@ public interface BodegaRepository extends JpaRepository<Bodega, Long> {
     @Query("SELECT b.name FROM Bodega b")
     List<String> findAllBodegasNames();
 
+    @Query("SELECT b.name FROM Bodega b WHERE b.name LIKE %:nameFilter%")
+    List<String> findBodegasByNameFilter(@Param("nameFilter") String nameFilter);
+
+    @Query("SELECT b FROM Bodega b WHERE b.name LIKE %:nameFilter% ORDER BY b.priority DESC")
+    Page<Bodega> findBodegasByNameFilter(@Param("nameFilter") String nameFilter, Pageable pageable);
+
     @Query("SELECT b.name FROM Bodega b")
     Page<String> findAllBodegasNames(Pageable pageable);
 
-    
+    @Query("SELECT b FROM Bodega b ORDER BY b.priority ASC")
+    Page<Bodega> findAllBodegas(Pageable pageable);
 
+    @Query("SELECT b FROM Bodega b WHERE b.priority = :priority")
+    Optional<Bodega> findByPriority(@Param("priority") Long priority);
 }

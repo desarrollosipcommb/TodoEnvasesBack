@@ -4,61 +4,43 @@ import java.util.List;
 
 public class SaleRequest {
     
-    private String clientName;
+    private String clientDocument;
 
-    private String clientEmail;
-
-    private String clientPhone;
-
-    private String descripion;
+    private String description;
 
     private String paymentMethod;
 
     private String saleDate;
 
+    private String type;
+
     private List<SaleItemRequest> items;
 
     public SaleRequest() {
     }
-    public SaleRequest(String clientName, String clientEmail, String clientPhone, String descripion, String paymentMethod, List<SaleItemRequest> items) {
-        this.clientName = clientName;
-        this.clientEmail = clientEmail;
-        this.clientPhone = clientPhone;
-        this.descripion = descripion;
+    public SaleRequest(String clientDocument, String description, String paymentMethod, String saleDate, List<SaleItemRequest> items, String type) {
+        this.clientDocument = clientDocument;
+        this.description = description;
         this.paymentMethod = paymentMethod;
+        this.saleDate = saleDate;
         this.items = items;
+        this.type = type;
     }
 
-    public String getClientName() {
-        return clientName;
+    public String getClientDocument() {
+        return clientDocument;
     }
 
-    public void setClientName(String clientName) {
-        this.clientName = clientName;
+    public void setClientDocument(String clientDocument) {
+        this.clientDocument = clientDocument;
     }
 
-    public String getClientEmail() {
-        return clientEmail;
+    public String getDescription() {
+        return description;
     }
 
-    public void setClientEmail(String clientEmail) {
-        this.clientEmail = clientEmail;
-    }
-
-    public String getClientPhone() {
-        return clientPhone;
-    }
-
-    public void setClientPhone(String clientPhone) {
-        this.clientPhone = clientPhone;
-    }
-
-    public String getDescripion() {
-        return descripion;
-    }
-
-    public void setDescripion(String descripion) {
-        this.descripion = descripion;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getPaymentMethod() {
@@ -83,6 +65,14 @@ public class SaleRequest {
 
     public void setSaleDate(String saleDate) {
         this.saleDate = saleDate;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
 }

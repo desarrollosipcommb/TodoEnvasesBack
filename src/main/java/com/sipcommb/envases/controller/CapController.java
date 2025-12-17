@@ -8,6 +8,8 @@ import com.sipcommb.envases.service.CapService;
 import com.sipcommb.envases.service.PermissionService;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,7 +38,7 @@ public class CapController {
 
     @PostMapping("/add")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tapa creada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Tapa creada exitosamente", content = @Content(schema = @Schema(implementation = CapDTO.class))),
             @ApiResponse(responseCode = "403", description = "Permiso denegado"),
             @ApiResponse(responseCode = "400", description = "Error al crear la tapa")
     })
@@ -58,7 +60,7 @@ public class CapController {
 
     @GetMapping("/all")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lista de tapas obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Lista de tapas obtenida exitosamente", content = @Content(schema = @Schema(implementation = CapDTO.class))),
             @ApiResponse(responseCode = "403", description = "Permiso denegado"),
             @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tapas")
     })
@@ -80,7 +82,7 @@ public class CapController {
 
     @GetMapping("/all/active")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lista de tapas activas obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Lista de tapas activas obtenida exitosamente", content = @Content(schema = @Schema(implementation = CapDTO.class))),
             @ApiResponse(responseCode = "403", description = "Permiso denegado"),
             @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tapas activas")
     })
@@ -102,7 +104,7 @@ public class CapController {
 
     @GetMapping("/all/inactive")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lista de tapas inactivas obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Lista de tapas inactivas obtenida exitosamente", content = @Content(schema = @Schema(implementation = CapDTO.class))),
             @ApiResponse(responseCode = "403", description = "Permiso denegado"),
             @ApiResponse(responseCode = "400", description = "Error al obtener la lista de tapas inactivas")
     })
@@ -124,7 +126,7 @@ public class CapController {
 
     @GetMapping("/by-diameter")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tapa obtenida exitosamente por diámetro", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Tapa obtenida exitosamente por diámetro", content = @Content(schema = @Schema(implementation = CapDTO.class))),
             @ApiResponse(responseCode = "403", description = "Permiso denegado"),
             @ApiResponse(responseCode = "404", description = "Tapa no encontrada")
     })
@@ -148,7 +150,7 @@ public class CapController {
 
     @GetMapping("/by-name")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tapa obtenida exitosamente por nombre", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Tapa obtenida exitosamente por nombre", content = @Content(schema = @Schema(implementation = CapDTO.class))),
             @ApiResponse(responseCode = "403", description = "Permiso denegado"),
             @ApiResponse(responseCode = "404", description = "Tapa no encontrada")
     })
@@ -172,7 +174,7 @@ public class CapController {
 
     @PutMapping("/update")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tapa actualizada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Tapa actualizada exitosamente", content = @Content(schema = @Schema(implementation = CapDTO.class))),
             @ApiResponse(responseCode = "403", description = "Permiso denegado"),
             @ApiResponse(responseCode = "400", description = "Error al actualizar la tapa")
     })
@@ -193,7 +195,7 @@ public class CapController {
 
     @PutMapping("/delete")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tapa eliminada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Tapa eliminada exitosamente", content = @Content(schema = @Schema(implementation = CapDTO.class))),
             @ApiResponse(responseCode = "403", description = "Permiso denegado"),
             @ApiResponse(responseCode = "400", description = "Error al eliminar la tapa")
     })
@@ -212,7 +214,7 @@ public class CapController {
 
     @PutMapping("/activate")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tapa activada exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Tapa activada exitosamente", content = @Content(schema = @Schema(implementation = CapDTO.class))),
             @ApiResponse(responseCode = "403", description = "Permiso denegado"),
             @ApiResponse(responseCode = "400", description = "Error al activar la tapa")
     })
@@ -231,7 +233,7 @@ public class CapController {
 
     @GetMapping("/by-name-diameter")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tapa obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Tapa obtenida exitosamente", content = @Content(schema = @Schema(implementation = CapDTO.class))),
             @ApiResponse(responseCode = "403", description = "Permiso denegado"),
             @ApiResponse(responseCode = "404", description = "Tapa no encontrada")
     })
@@ -256,7 +258,7 @@ public class CapController {
 
     @GetMapping("/by-name-diameter/active")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tapa obtenida exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Tapa obtenida exitosamente", content = @Content(schema = @Schema(implementation = CapDTO.class))),
             @ApiResponse(responseCode = "403", description = "Permiso denegado"),
             @ApiResponse(responseCode = "404", description = "Tapa no encontrada")
     })
@@ -281,7 +283,7 @@ public class CapController {
 
     @PutMapping("/add/bodega")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Tapa agregada a bodega exitosamente", content = @io.swagger.v3.oas.annotations.media.Content(schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = CapDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Tapa agregada a bodega exitosamente", content = @Content(schema = @Schema(implementation = CapDTO.class))),
             @ApiResponse(responseCode = "403", description = "Permiso denegado"),
             @ApiResponse(responseCode = "400", description = "Error al agregar la tapa a la bodega")
     })

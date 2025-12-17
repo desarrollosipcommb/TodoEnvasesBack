@@ -23,15 +23,27 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
     @Query("SELECT s FROM Sale s WHERE s.totalAmount BETWEEN :minPrice AND :maxPrice")
     Page<Sale> findByPriceBetween(@Param("minPrice") BigDecimal minPrice, @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
 
-  @Query("SELECT s FROM Sale s "+
-        "WHERE (s.saleDate BETWEEN :fechaInicio AND :fechaFin) "+
-        "AND (:nombreVendedor IS NULL OR LOWER(s.seller.username) LIKE LOWER(CONCAT('%', :nombreVendedor, '%'))) ")
-  Page<Sale> findByFechaAndVendedor(
-      @Param("fechaInicio") LocalDate fechaInicio,
-      @Param("fechaFin") LocalDate fechaFin,
-      @Param("nombreVendedor") String nombreVendedor,
-      Pageable pageable
-  );
+    @Query("SELECT s FROM Sale s " +
+            "WHERE (s.saleDate BETWEEN :fechaInicio AND :fechaFin) " +
+            "AND (:nombreVendedor IS NULL OR LOWER(s.seller.username) LIKE LOWER(CONCAT('%', :nombreVendedor, '%'))) ")
+    Page<Sale> findByFechaAndVendedor(
+            @Param("fechaInicio") LocalDate fechaInicio,
+            @Param("fechaFin") LocalDate fechaFin,
+            @Param("nombreVendedor") String nombreVendedor,
+            Pageable pageable
+    );
+
+    @Query("SELECT s FROM Sale s " +
+            "WHERE s.saleDate BETWEEN :fechaInicio AND :fechaFin " +
+            "AND (:nombreVendedor IS NULL OR LOWER(s.seller.username) LIKE LOWER(CONCAT('%', :nombreVendedor, '%'))) " +
+            "AND (:nombreComprador IS NULL OR LOWER(s.client.name) LIKE LOWER(CONCAT('%', :nombreComprador, '%')))")
+    Page<Sale> findByFechaAndVendedorAndComprador(
+            @Param("fechaInicio") LocalDate fechaInicio,
+            @Param("fechaFin") LocalDate fechaFin,
+            @Param("nombreVendedor") String nombreVendedor,
+            @Param("nombreComprador") String nombreComprador,
+            Pageable pageable
+    );
 
   @Query("SELECT SUM(s.totalAmount) FROM Sale s "+
         "WHERE (s.saleDate BETWEEN :fechaInicio AND :fechaFin) "+
@@ -41,5 +53,17 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
       @Param("fechaFin") LocalDate fechaFin,
       @Param("nombreVendedor") String nombreVendedor
   );
+
+    @Query("SELECT s FROM Sale s WHERE LOWER(s.client.name) = LOWER(:clientName)")
+    Page<Sale> findByClient(@Param("clientName") String clientName, Pageable pageable);
+
+    @Query("SELECT s FROM Sale s WHERE s.saleDate BETWEEN :startDate AND :endDate AND LOWER(s.client.name) = LOWER(:clientName) ORDER BY s.saleDate DESC")
+    List<Sale> findByDateRangeAndClient(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("clientName") String clientName);
+
+    @Query("SELECT s FROM Sale s WHERE LOWER(s.client.name) = LOWER(:clientName)")
+    List<Sale> findAllByClientName(@Param("clientName") String clientName);
 
 }

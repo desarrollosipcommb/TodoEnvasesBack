@@ -13,6 +13,8 @@ public class Bodega {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private Long priority;
     
     private String name;
 
@@ -38,6 +40,14 @@ public class Bodega {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Long getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Long priority) {
+        this.priority = priority;
     }
     
 }

@@ -93,5 +93,4 @@ public class UserRequestDTO {
         this.roleName = roleName;
     }
 
-
 }

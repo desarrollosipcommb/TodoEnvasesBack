@@ -11,7 +11,15 @@ public class BodegaDTO {
 
     private Integer quantity;
 
+    private Long priority;
+
     public BodegaDTO() {
+    }
+
+    public BodegaDTO(String name, Integer quantity, Long priority) {
+        this.name = name;
+        this.quantity = quantity;
+        this.priority = priority;
     }
 
     public BodegaDTO(String name, Integer quantity) {
@@ -22,21 +30,25 @@ public class BodegaDTO {
     public BodegaDTO(BodegaCapColor bodegaCapColor) {
         this.name = bodegaCapColor.getBodega().getName();
         this.quantity = bodegaCapColor.getQuantity();
+        this.priority = bodegaCapColor.getBodega().getPriority();
     }
 
     public BodegaDTO(BodegaExtractos bodegaExtractos) {
         this.name = bodegaExtractos.getBodega().getName();
         this.quantity = bodegaExtractos.getQuantity();
+        this.priority = bodegaExtractos.getBodega().getPriority();
     }
 
     public BodegaDTO(BodegaQuimicos bodegaQuimicos) {
         this.name = bodegaQuimicos.getBodega().getName();
         this.quantity = bodegaQuimicos.getQuantity();
+        this.priority = bodegaQuimicos.getBodega().getPriority();
     }
 
     public BodegaDTO(BodegaJar bodegaJar) {
         this.name = bodegaJar.getBodega().getName();
         this.quantity = bodegaJar.getQuantity();
+        this.priority = bodegaJar.getBodega().getPriority();
     }
 
     public String getName() {
@@ -53,6 +65,14 @@ public class BodegaDTO {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    public Long getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Long priority) {
+        this.priority = priority;
     }
 
 }

@@ -79,5 +79,4 @@ public class SaleItemDTO {
     public void setColor(String color) {
         this.color = color;
     }
-    
 }
