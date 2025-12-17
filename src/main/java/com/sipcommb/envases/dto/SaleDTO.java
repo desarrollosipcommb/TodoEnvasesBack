@@ -14,6 +14,8 @@ public class SaleDTO {
 
     private String clientPhone;
 
+    private String clientAddress;
+
     private BigDecimal totalPrice;
 
     private String saleDate;
@@ -25,6 +27,8 @@ public class SaleDTO {
     private String type;
 
     private String notes;
+
+    private boolean active;
 
     public SaleDTO() {
     }
@@ -43,6 +47,7 @@ public class SaleDTO {
         this.id = sale.getId();
         this.clientName = sale.getClient().getName();
         this.clientPhone = sale.getClient().getPhone();
+        this.clientAddress = sale.getClient().getAddress();
         this.totalPrice = sale.getTotalAmount();
         this.saleDate = sale.getSaleDate().toString();
         this.sellerName = sale.getSeller() != null ? sale.getSeller().getFirstName() + " " + sale.getSeller().getLastName() : "N/A";
@@ -50,6 +55,7 @@ public class SaleDTO {
         this.notes = sale.getNotes();
         this.saleItems = saleItems;
         this.bodegaSales = bodegaSales;
+        this.active = sale.isActive();
         
     }
 
@@ -133,6 +139,22 @@ public class SaleDTO {
 
     public void setBodegaSales(List<BodegaSaleDTO> bodegaSales) {
         this.bodegaSales = bodegaSales;
+    }
+
+    public String getClientAddress() {
+        return clientAddress;
+    }
+
+    public void setClientAddress(String clientAddress) {
+        this.clientAddress = clientAddress;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
 }

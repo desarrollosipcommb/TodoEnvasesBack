@@ -1130,7 +1130,7 @@ public class SaleService {
             }
 
         }
-        System.out.println("Bodega Sales: " + bodegaSales.size());
+
         return bodegaSales;
 
     }
