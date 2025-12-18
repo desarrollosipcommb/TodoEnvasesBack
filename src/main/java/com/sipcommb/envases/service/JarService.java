@@ -405,20 +405,20 @@ public class JarService {
             }
 
             if (quantityJar < 0) {
-                bodegaJar.setQuantity(bodegaJar.getQuantity());
+                bodegaJar.setQuantity(quantityJar);
                 bodegaJarRepository.save(bodegaJar);
-                inventoryService.newItem(jar.getId(), "jar", bodegaJar.getQuantity(),
+                inventoryService.newItem(jar.getId(), "jar", quantityJar,
                         "damage", jwtService.getUserIdFromToken(token).intValue(),
                         "Se reporto un daño en " + jar.getName() + " su inventario ahora es: "
-                                + bodegaJar.getQuantity());
+                                + quantityJar);
                 continue;
             }
 
-            bodegaJar.setQuantity(quantityJar + bodegaJar.getQuantity());
+            bodegaJar.setQuantity(quantityJar);
             bodegaJarRepository.save(bodegaJar);
-            inventoryService.newItem(jar.getId(), "jar", bodegaJar.getQuantity(),
+            inventoryService.newItem(jar.getId(), "jar", quantityJar,
                     "restock", jwtService.getUserIdFromToken(token).intValue(),
-                    "Se actualizo " + jar.getName() + " su inventario ahora es: " + bodegaJar.getQuantity());
+                    "Se actualizo " + jar.getName() + " su inventario ahora es: " + quantityJar);
 
         }
         return new JarDTO(jarRepository.save(jar));
