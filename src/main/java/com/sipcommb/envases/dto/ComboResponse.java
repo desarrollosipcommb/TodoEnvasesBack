@@ -10,7 +10,6 @@ public class ComboResponse {
     private String jarName;
     private List<CapDTO> caps;
     private String diameter;
-    private String color;
     private Double unitPrice;
     private Double docenaPrice; // Price for a dozen combos
     private Double cienPrice; // Price for a hundred combos
@@ -23,14 +22,13 @@ public class ComboResponse {
     public ComboResponse() {
     }
 
-    public ComboResponse(String name, String jarName, List<CapDTO> caps, String diameter, String color,
+    public ComboResponse(String name, String jarName, List<CapDTO> caps, String diameter,
             Double unitPrice, Double docenaPrice, Double cienPrice, String description,
             Integer cap_quantity, List<BodegaDTO> jar_quantity) {
         this.name = name;
         this.jarName = jarName;
         this.caps = caps;
         this.diameter = diameter;
-        this.color = color;
         this.unitPrice = unitPrice;
         this.docenaPrice = docenaPrice;
         this.cienPrice = cienPrice;
@@ -84,14 +82,6 @@ public class ComboResponse {
 
     public void setDiameter(String diameter) {
         this.diameter = diameter;
-    }
-
-    public String getColor() {
-        return color;
-    }
-
-    public void setColor(String color) {
-        this.color = color;
     }
 
     public Double getUnitPrice() {
