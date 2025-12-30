@@ -98,15 +98,12 @@ public class CapColorService {
 
         capColorRepository.save(newColor);
 
+        List<BodegaCapColor> bodegasCapColor = new ArrayList<>();
         for (BodegaDTO bodega : request.getBodega()) {
             Bodega bodegaEntity = bodegaService.getBodegaByName(bodega.getName());
-            BodegaCapColor bodegaCapColor = bodegaCapColorRepository
-                    .save(new BodegaCapColor(bodegaEntity, newColor, bodega.getQuantity()));
-
+            BodegaCapColor bodegaCapColor = new BodegaCapColor(bodegaEntity, newColor, bodega.getQuantity());
+            bodegasCapColor.add(bodegaCapColor);
             newColor.getBodegas().add(bodegaCapColor);
-
-            capColorRepository.save(newColor);
-
             inventoryService.newItem(
                     newColor.getId() != null ? newColor.getId().longValue() : null,
                     "cap",
@@ -117,7 +114,83 @@ public class CapColorService {
                             + bodega.getName() + ", su inventario ahora es: " + bodegaCapColor.getQuantity());
         }
 
+        bodegaCapColorBatchSave(bodegasCapColor);
+        capColorRepository.save(newColor);
+
         return newColor.getCap();
+    }
+
+    public CapColor addCapColorExcel(Cap cap, CapColorRequest request, String token) {
+
+        List<CapColor> existingColors = cap.getColors();
+
+        for (CapColor color : existingColors) {
+            if (color.getColor().equalsIgnoreCase(request.getColor())) {
+                throw new IllegalArgumentException(
+                        "El color ya existe el color: " + request.getColor() + " en el tipo de tapa: " + cap.getName());
+            }
+        }
+
+        if (request.getUnitPrice() == null || request.getUnitPrice() <= 0) {
+            throw new IllegalArgumentException("El precio unitario no puede ser negativo o cero.");
+        }
+
+        if (request.getDocenaPrice() != null && request.getDocenaPrice() < 0) {
+            throw new IllegalArgumentException("El precio por docena no puede ser negativo.");
+        }
+
+        if (request.getCienPrice() != null && request.getCienPrice() < 0) {
+            throw new IllegalArgumentException("El precio por cien no puede ser negativo.");
+        }
+
+        if (request.getPacaPrice() != null && request.getPacaPrice() < 0) {
+            throw new IllegalArgumentException("El precio por paca no puede ser negativo.");
+        }
+
+        if (request.getUnitsInPaca() != null && request.getUnitsInPaca() < 0) {
+            throw new IllegalArgumentException("El numero de unidades en una paca no puede ser negativo.");
+        }
+
+        for (BodegaDTO bodegaDTO : request.getBodega()) {
+            bodegaService.getBodegaByName(bodegaDTO.getName());
+            if (bodegaDTO.getQuantity() == null) {
+                throw new IllegalArgumentException(
+                        "La cantidad de tapas en la bodega " + bodegaDTO.getName() + " no puede ser vacía.");
+            }
+        }
+
+        CapColor newColor = new CapColor(
+                request.getColor(),
+                cap,
+                request.getUnitPrice() != null ? request.getUnitPrice() : 0.00,
+                request.getDocenaPrice() != null ? request.getDocenaPrice() : 0.00,
+                request.getCienPrice() != null ? request.getCienPrice() : 0.00,
+                request.getPacaPrice() != null ? request.getPacaPrice() : 0.00,
+                request.getUnitsInPaca() != null ? request.getUnitsInPaca() : 0,
+                new ArrayList<>());
+
+        capColorRepository.save(newColor);
+
+        List<BodegaCapColor> bodegasCapColor = new ArrayList<>();
+        for (BodegaDTO bodega : request.getBodega()) {
+            Bodega bodegaEntity = bodegaService.getBodegaByName(bodega.getName());
+            BodegaCapColor bodegaCapColor = new BodegaCapColor(bodegaEntity, newColor, bodega.getQuantity());
+            bodegasCapColor.add(bodegaCapColor);
+            newColor.getBodegas().add(bodegaCapColor);
+            inventoryService.newItem(
+                    newColor.getId() != null ? newColor.getId().longValue() : null,
+                    "cap",
+                    bodega.getQuantity().intValue(),
+                    "restock",
+                    jwtService.getUserIdFromToken(token).intValue(),
+                    "Se añadió " + newColor.getCap().getName() + " " + newColor.getColor() + " al inventario en la bodega: "
+                            + bodega.getName() + ", su inventario ahora es: " + bodegaCapColor.getQuantity());
+        }
+
+        bodegaCapColorBatchSave(bodegasCapColor);
+        capColorRepository.save(newColor);
+
+        return newColor;
     }
 
     public CapColorDTO updateCapColor(Cap cap, CapColorRequest request) {
@@ -450,6 +523,20 @@ public class CapColorService {
                     .collect(Collectors.toList());
         } catch (Exception e) {
             throw new RuntimeException("Error al ordenar las bodegas por prioridad: " + e.getMessage());
+        }
+    }
+
+    private void bodegaCapColorBatchSave(List<BodegaCapColor> bodegasCapColor) {
+        List<BodegaCapColor> batch = new ArrayList<>();
+        for (BodegaCapColor bodegaCapColor : bodegasCapColor) {
+            batch.add(bodegaCapColor);
+            if (batch.size() == 50) {
+                bodegaCapColorRepository.saveAll(batch);
+                batch.clear();
+            }
+        }
+        if (!batch.isEmpty()) {
+            bodegaCapColorRepository.saveAll(batch);
         }
     }
 

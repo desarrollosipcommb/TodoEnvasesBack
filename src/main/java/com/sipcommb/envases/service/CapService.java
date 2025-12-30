@@ -64,8 +64,6 @@ public class CapService {
         return capDTO;
     }
 
-    // TODO: probar.
-
     public CapDTO addCapColor(CapColorRequest capColorRequest, String token) {
         Optional<Cap> capOptional = capRepository.findByNameAndDiameter(capColorRequest.getName(),
                 capColorRequest.getDiameter());
@@ -79,6 +77,36 @@ public class CapService {
         return new CapDTO(cap);
 
     }
+
+    public Cap addCapsExcel(CapRequest capRequest) {
+
+        if (capRequest.getName().isEmpty()) {
+            throw new IllegalArgumentException("El nombre de la tapa no puede estar vacío.");
+        }
+
+        if (capRequest.getDiameter().isEmpty()) {
+            capRequest.setDiameter("");
+        }
+
+        if (capRepository.findByNameAndDiameter(capRequest.getName(), capRequest.getDiameter()).isPresent()) {
+            throw new RuntimeException("Ya existe una tapa con el mismo nombre y diametro");
+        }
+
+        Cap cap = new Cap();
+
+        if (!capRequest.getDiameter().equals("")
+                && !jarTypeRepository.getTypeByDiameter(capRequest.getDiameter()).isPresent()) {
+            throw new RuntimeException("No existe un tipo de frasco con el diámetro especificado.");
+        } else {
+            JarType jarType = jarTypeRepository.getTypeByDiameter(capRequest.getDiameter()).get();
+            cap.setJarType(jarType);
+        }
+
+        cap.setName(capRequest.getName().toLowerCase().trim());
+        cap.setDescription(capRequest.getDescription());
+        return cap;
+    }
+
 
     public Page<CapDTO> getAllCaps(Pageable pageable) {
         Page<Cap> caps = capRepository.findAll(pageable);
@@ -236,6 +264,18 @@ public class CapService {
         capRepository.save(cap);
 
         return new CapDTO(cap);
+    }
+
+    public Cap updateCapInventoryBatch(CapColorRequest capColorRequest, String token) {
+        Optional<Cap> capOptional = capRepository.findByNameAndDiameterIncludingInactive(capColorRequest.getName(), capColorRequest.getDiameter());
+        if (!capOptional.isPresent()) {
+            throw new RuntimeException("No existe una tapa con estas especificaciones.");
+        }
+
+        Cap cap = capOptional.get();
+        capColorService.updateCapColorInventory(cap, capColorRequest, token);
+        capRepository.save(cap);
+        return cap;
     }
 
     public CapDTO addCapToBodega(CapColorRequest capColorRequest) {

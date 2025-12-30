@@ -73,6 +73,30 @@ public class BodegaService {
         return bodegaResponse;
     }
 
+    public Bodega addBodegaExcel(String name, Long priority) {
+
+        if (bodegaExists(name)) {
+            throw new IllegalArgumentException("La bodega con nombre " + name + " ya existe.");
+        }
+
+        Optional<Bodega> existingPriority = bodegaRepository.findByPriority(priority);
+        if (existingPriority.isPresent()) {
+            throw new IllegalArgumentException("Bodega con la prioridad " + priority + " ya existe.");
+        }
+
+        if (name.toLowerCase().equals("devoluciones")) {
+            priority = 0L;
+        } else if (priority <= 0) {
+            throw new IllegalArgumentException("La prioridad debe ser un número positivo.");
+        }
+
+        Bodega newBodega = new Bodega();
+        newBodega.setName(name.toLowerCase());
+        newBodega.setPriority(priority);
+
+        return newBodega;
+    }
+
     public BodegaResponse changePriority(String name, Long newPriority) {
         Bodega bodega = getBodegaByName(name);
 

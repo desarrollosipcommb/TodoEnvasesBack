@@ -101,6 +101,7 @@ public class JarService {
         jar.setUnitsInPaca(jarRequest.getUnitsInPaca());
         jarRepository.save(jar);
 
+        List<BodegaJar> bodegaJars = new ArrayList<>();
         for (BodegaDTO bodegaDTO : jarRequest.getBodega()) {
             Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
 
@@ -108,7 +109,8 @@ public class JarService {
             if (bodegaJarOpt.isPresent()) {
                 throw new IllegalArgumentException("El frasco ya está asociado a la bodega: " + bodega.getName());
             }
-            bodegaJarRepository.save(new BodegaJar(bodega, jar, bodegaDTO.getQuantity()));
+            BodegaJar bodegaJar = new BodegaJar(bodega, jar, bodegaDTO.getQuantity());
+            bodegaJars.add(bodegaJar);
 
             inventoryService.newItem(
                     jar.getId(),
@@ -119,7 +121,7 @@ public class JarService {
                     "Se añadio " + jar.getName() + " al inventario");
 
         }
-
+        bodegaBatchSave(bodegaJars);
         jarRepository.save(jar);
         manageCompatibility(jarRequest.getCompatibleCaps(), jarRequest.getUnCompatibleCaps(), jar);
 
@@ -424,6 +426,56 @@ public class JarService {
         return new JarDTO(jarRepository.save(jar));
     }
 
+    public Jar updateInventoryJarBatch(String nameJar, List<BodegaDTO> bodegaDTOs, String token) {
+        Optional<Jar> jarOptional = jarRepository.getByName(nameJar.trim().toLowerCase());
+
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        Jar jar = jarOptional.get();
+
+        List<BodegaJar> bodegaJars = new ArrayList<>();
+
+        for (BodegaDTO bodegaDTO : bodegaDTOs) {
+            Integer quantityJar = bodegaDTO.getQuantity();
+            bodegaService.getBodegaByName(bodegaDTO.getName());
+            Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository
+                    .findByBodegaAndJar(bodegaService.getBodegaByName(bodegaDTO.getName()), jar);
+
+            BodegaJar bodegaJar = null;
+
+            if (!bodegaJarOpt.isPresent()) {
+                bodegaJar = new BodegaJar(bodegaService.getBodegaByName(bodegaDTO.getName()), jar, 0);
+            } else {
+                bodegaJar = bodegaJarOpt.get();
+            }
+
+            if (bodegaDTO.getQuantity() == null) {
+                throw new IllegalArgumentException("La cantidad no puede ser nula.");
+            }
+
+            bodegaJar.setQuantity(quantityJar);
+            bodegaJars.add(bodegaJar);
+
+            if (quantityJar < 0) {
+                inventoryService.newItem(jar.getId(), "jar", quantityJar,
+                        "damage", jwtService.getUserIdFromToken(token).intValue(),
+                        "Se reporto un daño en " + jar.getName() + " su inventario ahora es: "
+                                + quantityJar);
+                continue;
+            }
+
+            inventoryService.newItem(jar.getId(), "jar", quantityJar,
+                    "restock", jwtService.getUserIdFromToken(token).intValue(),
+                    "Se actualizo " + jar.getName() + " su inventario ahora es: " + quantityJar);
+
+        }
+
+        bodegaBatchSave(bodegaJars);
+
+        return jar;
+    }
+
     public JarDTO changeInventory(JarRequestDTO jarRequestDTO, String token) {
         Optional<Jar> jarOptional = jarRepository.getByName(jarRequestDTO.getName().trim().toLowerCase());
 
@@ -627,6 +679,20 @@ public class JarService {
                     .collect(Collectors.toList());
         } catch (Exception e) {
             throw new RuntimeException("Error al ordenar las bodegas por prioridad: " + e.getMessage());
+        }
+    }
+
+    private void bodegaBatchSave(List<BodegaJar> bodegaJars) {
+        List<BodegaJar> batch = new ArrayList<>();
+        for (BodegaJar bodegaJar : bodegaJars) {
+            batch.add(bodegaJar);
+            if (batch.size() == 50) {
+                bodegaJarRepository.saveAll(batch);
+                batch.clear();
+            }
+        }
+        if (!batch.isEmpty()) {
+            bodegaJarRepository.saveAll(batch);
         }
     }
 

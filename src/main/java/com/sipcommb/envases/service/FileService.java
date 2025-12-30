@@ -8,6 +8,18 @@ import com.sipcommb.envases.dto.FileResponse;
 import com.sipcommb.envases.dto.JarRequestDTO;
 import com.sipcommb.envases.dto.JarTypeDTO;
 import com.sipcommb.envases.dto.QuimicoRequestDTO;
+import com.sipcommb.envases.entity.Bodega;
+import com.sipcommb.envases.entity.Cap;
+import com.sipcommb.envases.entity.CapColor;
+import com.sipcommb.envases.entity.Jar;
+import com.sipcommb.envases.entity.JarType;
+import com.sipcommb.envases.entity.Quimicos;
+import com.sipcommb.envases.repository.BodegaRepository;
+import com.sipcommb.envases.repository.CapColorRepository;
+import com.sipcommb.envases.repository.CapRepository;
+import com.sipcommb.envases.repository.JarRepository;
+import com.sipcommb.envases.repository.JarTypeRepository;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +31,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -42,6 +55,22 @@ public class FileService {
     @Autowired
     BodegaService bodegaService;
 
+    @Autowired
+    JarTypeRepository jarTypeRepository;
+
+    @Autowired
+    JarRepository jarRepository;
+
+    @Autowired
+    BodegaRepository bodegaRepository;
+
+    @Autowired
+    CapRepository capRepository;
+
+    @Autowired
+    CapColorRepository capColorRepository;
+
+    @Transactional
     public List<FileResponse> readFile(MultipartFile file, String token) {
         token = token.replace("Bearer ", "");
         List<FileResponse> fileResponses = new ArrayList<>();
@@ -80,6 +109,7 @@ public class FileService {
     public List<FileResponse> readJarType(Sheet sheet) {
         boolean firstRow = true;
         List<FileResponse> fileResponses = new ArrayList<>();
+        List<JarType> jarTypes = new ArrayList<>();
         for (Row row : sheet) {
             if (firstRow) {
                 firstRow = false;
@@ -92,10 +122,11 @@ public class FileService {
 
             try {
 
-                jarTypeService.addJarTypes(new JarTypeDTO(
+                JarType diamaters = jarTypeService.addJarTypeExcel(new JarTypeDTO(
                         nameCell.getStringCellValue(),
                         descriptionCell.getStringCellValue(),
                         getCellAsString(diameterCell), true));
+                jarTypes.add(diamaters);
 
                 fileResponses
                         .add(new FileResponse(nameCell.getStringCellValue(), "Tipo de envase agregado correctamente"));
@@ -105,12 +136,14 @@ public class FileService {
             }
 
         }
+        jarTypeBatch(jarTypes);
         return fileResponses;
     }
 
     public List<FileResponse> readBodegas(Sheet sheet) {
         boolean firstRow = true;
         List<FileResponse> fileResponses = new ArrayList<>();
+        List<Bodega> bodegas = new ArrayList<>();
         for (Row row : sheet) {
             if (firstRow) {
                 firstRow = false;
@@ -122,7 +155,9 @@ public class FileService {
 
             try {
 
-                bodegaService.addBodega(nameCell.getStringCellValue(), (long) priorityCell.getNumericCellValue());
+                Bodega bodega = bodegaService.addBodegaExcel(nameCell.getStringCellValue(),
+                        (long) priorityCell.getNumericCellValue());
+                bodegas.add(bodega);
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Bodega agregada correctamente"));
 
@@ -131,12 +166,15 @@ public class FileService {
             }
 
         }
+        bodegaService.bodegaBatch(bodegas);
         return fileResponses;
     }
 
     public List<FileResponse> readCap(Sheet sheet, String token) {
         boolean firstRow = true;
         List<FileResponse> fileResponses = new ArrayList<>();
+        List<Cap> caps = new ArrayList<>();
+        List<CapColor> capColors = new ArrayList<>();
         for (Row row : sheet) {
             if (firstRow) {
                 firstRow = false;
@@ -388,6 +426,7 @@ public class FileService {
     private List<FileResponse> JarInventory(Sheet sheet, String token) {
         boolean firstRow = true;
         List<FileResponse> fileResponses = new ArrayList<>();
+        List<Jar> jars = new ArrayList<>();
         for (Row row : sheet) {
             if (firstRow) {
                 firstRow = false;
@@ -407,11 +446,10 @@ public class FileService {
                 }
 
                 List<BodegaDTO> bodegaDTOs = generateBodegas(bodegaCell, quantityCell);
-                
-                jarService.updateInventoryJar(
+                jars.add(jarService.updateInventoryJarBatch(
                         nameCell.getStringCellValue(),
                         bodegaDTOs,
-                        token);
+                        token));
 
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Inventario del envase actualizado"));
             } catch (Exception e) {
@@ -419,12 +457,13 @@ public class FileService {
                 fileResponses.add(new FileResponse(getCellAsString(nameCell), errorStart + e.getMessage()));
             }
         }
+        jarBatch(jars);
         return fileResponses;
     }
 
     private List<FileResponse> CapInventory(Sheet sheet, String token) {
         boolean firstRow = true;
-
+        List<Cap> caps = new ArrayList<>();
         List<FileResponse> fileResponses = new ArrayList<>();
         for (Row row : sheet) {
             if (firstRow) {
@@ -458,7 +497,7 @@ public class FileService {
 
                 List<BodegaDTO> bodegaDTOs = generateBodegas(bodegaCell, quantityCell);
 
-                capService.updateCapInventory(new CapColorRequest(
+                Cap cap = capService.updateCapInventoryBatch(new CapColorRequest(
                         nameCell.getStringCellValue(),
                         getCellAsString(diameterCell),
                         colorCell.getStringCellValue(),
@@ -468,7 +507,7 @@ public class FileService {
                         getCellAsNullableDouble(pacaCell),
                         getCellAsNullableDouble(unitsInPacaCell).intValue(),
                         bodegaDTOs), token);
-
+                caps.add(cap);
                 fileResponses.add(new FileResponse(getCellAsString(nameCell) + " " + getCellAsString(colorCell),
                         "Inventario de la tapa ha sido actualizado"));
             } catch (Exception e) {
@@ -477,12 +516,14 @@ public class FileService {
                         errorStart + e.getMessage()));
             }
         }
+        capBatch(caps);
         return fileResponses;
     }
 
     private List<FileResponse> QuimicoInventory(Sheet sheet, String token) {
         boolean firstRow = true;
         List<FileResponse> fileResponses = new ArrayList<>();
+        List<Quimicos> quimicosList = new ArrayList<>();
         for (Row row : sheet) {
             if (firstRow) {
                 firstRow = false;
@@ -500,11 +541,11 @@ public class FileService {
                 }
 
                 List<BodegaDTO> bodegaDTOs = generateBodegas(bodegaCell, quantityCell);
-
-                quimicosService.updateInventoryQuimico(
-                        nameCell.getStringCellValue(),
-                        bodegaDTOs,
-                        token);
+                quimicosList.add(
+                        quimicosService.updateInventoryQuimicoBatch(
+                                nameCell.getStringCellValue(),
+                                bodegaDTOs,
+                                token));
 
                 fileResponses
                         .add(new FileResponse(nameCell.getStringCellValue(), "Inventario del químico actualizado"));
@@ -567,7 +608,8 @@ public class FileService {
                         getCellAsNullableDouble(ml250cell),
                         getCellAsNullableDouble(ml500cell),
                         getCellAsNullableDouble(ml1000cell)), token);
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Inventario del extracto actualizado"));
+                fileResponses
+                        .add(new FileResponse(nameCell.getStringCellValue(), "Inventario del extracto actualizado"));
             } catch (Exception e) {
                 String errorStart = erroStartMessage(e.getMessage(), "inventario a extracto");
                 fileResponses.add(new FileResponse(getCellAsString(nameCell), errorStart + e.getMessage()));
@@ -660,5 +702,61 @@ public class FileService {
             errorStart = "Error al agregar el " + elementType + ", ";
         }
         return errorStart;
+    }
+
+    private void jarTypeBatch(List<JarType> jarTypes) {
+        List<JarType> batch = new ArrayList<>();
+        for (JarType jarType : jarTypes) {
+            batch.add(jarType);
+            if (batch.size() == 50) {
+                jarTypeRepository.saveAll(batch);
+                batch.clear();
+            }
+        }
+        if (!batch.isEmpty()) {
+            jarTypeRepository.saveAll(batch);
+        }
+    }
+
+    private void bodegaBatch(List<Bodega> bodegas) {
+        List<Bodega> batch = new ArrayList<>();
+        for (Bodega bodega : bodegas) {
+            batch.add(bodega);
+            if (batch.size() == 50) {
+                bodegaService.bodegaRepository.saveAll(batch);
+                batch.clear();
+            }
+        }
+        if (!batch.isEmpty()) {
+            bodegaService.bodegaRepository.saveAll(batch);
+        }
+    }
+
+    private void jarBatch(List<Jar> jars) {
+        List<Jar> batch = new ArrayList<>();
+        for (Jar jar : jars) {
+            batch.add(jar);
+            if (batch.size() == 50) {
+                jarRepository.saveAll(batch);
+                batch.clear();
+            }
+        }
+        if (!batch.isEmpty()) {
+            jarRepository.saveAll(batch);
+        }
+    }
+
+    private void capBatch(List<Cap> caps) {
+        List<Cap> batch = new ArrayList<>();
+        for (Cap cap : caps) {
+            batch.add(cap);
+            if (batch.size() == 50) {
+                capRepository.saveAll(batch);
+                batch.clear();
+            }
+        }
+        if (!batch.isEmpty()) {
+            capRepository.saveAll(batch);
+        }
     }
 }

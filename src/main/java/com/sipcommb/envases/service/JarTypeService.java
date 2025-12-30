@@ -56,6 +56,25 @@ public class JarTypeService {
         return jarTypeDTO;
     }
 
+    public JarType addJarTypeExcel(JarTypeDTO jarTypeDTO){
+         JarType jarType = new JarType();
+        String diameter = jarTypeDTO.getDiameter().trim().toLowerCase();
+        // Assuming diameter is a unique identifier for JarType
+        if (jarTypeRepository.getTypeByDiameter(diameter).isPresent()) {
+            throw new RuntimeException("Ya existe este diametro: " + diameter);
+        }
+
+        if (jarTypeRepository.getTypeByName(jarTypeDTO.getName()).isPresent()) {
+            throw new RuntimeException("Ya existe un tipo de tapa con el nombre: " + jarTypeDTO.getName());
+        }
+
+        jarType.setName(jarTypeDTO.getName());
+        jarType.setDescription(jarTypeDTO.getDescription());
+        jarType.setDiameter(diameter);
+        jarType.setCreatedAt(java.time.LocalDateTime.now());
+        return jarType;
+    }
+
     public JarTypeDTO updateJarType(String diameter, JarTypeDTO jarTypeDTO) {
         Optional<JarType> jarTypeOpt = jarTypeRepository.getTypeByDiameter(diameter);
 

@@ -11,6 +11,7 @@ import com.sipcommb.envases.entity.Extractos;
 import com.sipcommb.envases.repository.BodegaExtractoRepository;
 import com.sipcommb.envases.repository.ExtractosRepository;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -81,11 +82,12 @@ public class ExtractosService {
 
         extractosRepository.save(newExtracto);
         String cleanToken = token.trim().replace("Bearer ", "");
+        List<BodegaExtractos> bodegaExtractosList = new ArrayList<>();
         for (BodegaDTO extractosBodegaDTO : extractosDTO.getBodega()) {
             Bodega bodega = bodegaService.getBodegaByName(extractosBodegaDTO.getName());
             BodegaExtractos bodegaExtractos = bodegaExtractoRepository
                     .save(new BodegaExtractos(bodega, newExtracto, extractosBodegaDTO.getQuantity()));
-            bodegaExtractoRepository.save(bodegaExtractos);
+            bodegaExtractosList.add(bodegaExtractos);
             newExtracto.getBodegas().add(bodegaExtractos);
 
             inventoryService.newItem(
@@ -96,7 +98,7 @@ public class ExtractosService {
                     jwtService.getUserIdFromToken(cleanToken).intValue(),
                     "Se añadió " + newExtracto.getName() + " al inventario");
         }
-
+        batchSaveBodegaExtractos(bodegaExtractosList);
         extractosRepository.save(newExtracto);
         ExtractosDTO extractosReturn = new ExtractosDTO(newExtracto);
         return extractosReturn;
@@ -502,6 +504,20 @@ public class ExtractosService {
                     .collect(Collectors.toList());
         } catch (Exception e) {
             throw new RuntimeException("Error al ordenar las bodegas por prioridad: " + e.getMessage());
+        }
+    }
+
+    public void batchSaveBodegaExtractos(List<BodegaExtractos> bodegaExtractosList) {
+        List<BodegaExtractos> batchList = new ArrayList<>();
+        for(BodegaExtractos bodegaExtractos : bodegaExtractosList) {
+            batchList.add(bodegaExtractos);
+            if(batchList.size() == 50) {
+                bodegaExtractoRepository.saveAll(batchList);
+                batchList.clear();
+            }
+        }
+        if(!batchList.isEmpty()) {
+            bodegaExtractoRepository.saveAll(batchList);
         }
     }
 

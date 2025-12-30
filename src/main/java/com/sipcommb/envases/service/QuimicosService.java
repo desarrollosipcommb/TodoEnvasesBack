@@ -11,6 +11,7 @@ import com.sipcommb.envases.entity.Quimicos;
 import com.sipcommb.envases.repository.BodegaQuimicoRepository;
 import com.sipcommb.envases.repository.QuimicosRepository;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -75,11 +76,11 @@ public class QuimicosService {
         quimico.setUnitPrice(BigDecimal.valueOf(quimicoDTO.getUnitPrice()));
 
         quimicosRepository.save(quimico);
-
+        List<BodegaQuimicos> bodegaQuimicosList = new ArrayList<>();
         for (BodegaDTO bodegaDTO : quimicoDTO.getBodegaName()) {
             Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
             BodegaQuimicos bodegaQuimicos = new BodegaQuimicos(bodega, quimico, bodegaDTO.getQuantity());
-            bodegaQuimicoRepository.save(bodegaQuimicos);
+            bodegaQuimicosList.add(bodegaQuimicos);
 
             inventoryService.newItem(
                     quimico.getId().longValue(),
@@ -89,7 +90,7 @@ public class QuimicosService {
                     jwtService.getUserIdFromToken(token).intValue(),
                     "Se creo el quimico " + quimico.getName());
         }
-
+        batchSaveBodegaQuimicos(bodegaQuimicosList);
         quimicosRepository.save(quimico);
 
         return new QuimicosDTO(quimico);
@@ -247,6 +248,66 @@ public class QuimicosService {
         }
 
         return new QuimicosDTO(quimicosRepository.save(quimico));
+    }
+
+    public Quimicos updateInventoryQuimicoBatch(String nameJar, List<BodegaDTO> bodegaDTOs, String token) {
+
+        Optional<Quimicos> quimicoOpt = quimicosRepository.findByName(nameJar.trim().toLowerCase());
+
+        if (!quimicoOpt.isPresent()) {
+            throw new IllegalArgumentException("No existe un químico con ese nombre.");
+        }
+
+        Quimicos quimico = quimicoOpt.get();
+
+        for (BodegaDTO bodegaDTO : bodegaDTOs) {
+            if (bodegaDTO.getName() == null || bodegaDTO.getName().trim().isEmpty()) {
+                throw new IllegalArgumentException("El nombre de la bodega no puede estar vacío.");
+            }
+            if (bodegaDTO.getQuantity() == null) {
+                throw new IllegalArgumentException("La cantidad en la bodega " + bodegaDTO.getName() + " nula.");
+            }
+
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
+            Optional<BodegaQuimicos> bodegaQuimicosOpt = bodegaQuimicoRepository.findByBodegaAndQuimico(bodega,
+                    quimico);
+
+            if (!bodegaQuimicosOpt.isPresent()) {
+                bodegaQuimicoRepository.save(
+                        new BodegaQuimicos(bodega, quimico, 0));
+            }
+        }
+
+        for (BodegaDTO bodegaDTO : bodegaDTOs) {
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
+            Optional<BodegaQuimicos> bodegaQuimicosOpt = bodegaQuimicoRepository.findByBodegaAndQuimico(bodega,
+                    quimico);
+            BodegaQuimicos bodegaQuimicos = bodegaQuimicosOpt.get();
+
+            if (bodegaDTO.getQuantity() < 0) {
+                bodegaQuimicos.setQuantity(bodegaDTO.getQuantity());
+                bodegaQuimicoRepository.save(bodegaQuimicos);
+                inventoryService.newItem(
+                        quimico.getId().longValue(),
+                        "quimico",
+                        bodegaQuimicos.getQuantity().intValue(),
+                        "damage",
+                        jwtService.getUserIdFromToken(token).intValue(),
+                        "Se actualizo el inventario del quimico " + quimico.getName());
+            } else {
+                bodegaQuimicos.setQuantity(bodegaDTO.getQuantity());
+                bodegaQuimicoRepository.save(bodegaQuimicos);
+                inventoryService.newItem(
+                        quimico.getId().longValue(),
+                        "quimico",
+                        bodegaQuimicos.getQuantity().intValue(),
+                        "restock",
+                        jwtService.getUserIdFromToken(token).intValue(),
+                        "Se actualizo el inventario del quimico " + quimico.getName());
+            }
+        }
+
+        return quimico;
     }
 
     public QuimicosDTO changeInventory(QuimicoRequestDTO quimicoDTO, String token) {
@@ -468,4 +529,17 @@ public class QuimicosService {
         }
     }
 
+    public void batchSaveBodegaQuimicos(List<BodegaQuimicos> bodegaQuimicosList) {
+        List<BodegaQuimicos> batchList = new ArrayList<>();
+        for (BodegaQuimicos bodegaQuimicos : bodegaQuimicosList) {
+            batchList.add(bodegaQuimicos);
+            if (batchList.size() == 50) {
+                bodegaQuimicoRepository.saveAll(batchList);
+                batchList.clear();
+            }
+        }
+        if (!batchList.isEmpty()) {
+            bodegaQuimicoRepository.saveAll(batchList);
+        }
+    }
 }
