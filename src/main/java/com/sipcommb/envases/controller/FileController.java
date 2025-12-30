@@ -48,6 +48,7 @@ public class FileController {
             }
             return ResponseEntity.ok(fileService.readFile(file, authHeader));
         } catch (Exception e) {
+            System.out.println("error: " + e.getMessage());
             return ResponseEntity.status(500).body(new CustomApiResponse("Error al subir el archivo: " + e.getMessage()));
         }
     }

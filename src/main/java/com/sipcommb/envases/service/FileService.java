@@ -11,7 +11,6 @@ import com.sipcommb.envases.dto.JarTypeDTO;
 import com.sipcommb.envases.dto.QuimicoRequestDTO;
 import com.sipcommb.envases.entity.Bodega;
 import com.sipcommb.envases.entity.Cap;
-import com.sipcommb.envases.entity.CapColor;
 import com.sipcommb.envases.entity.Jar;
 import com.sipcommb.envases.entity.JarType;
 import com.sipcommb.envases.entity.Quimicos;
@@ -32,7 +31,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -74,7 +72,7 @@ public class FileService {
     @Autowired
     CapColorRepository capColorRepository;
 
-    @Transactional
+    
     public List<FileResponse> readFile(MultipartFile file, String token) {
         token = token.replace("Bearer ", "");
         List<FileResponse> fileResponses = new ArrayList<>();
@@ -173,15 +171,13 @@ public class FileService {
             }
 
         }
-        bodegaService.bodegaBatch(bodegas);
+        bodegaBatch(bodegas);
         return fileResponses;
     }
 
     public List<FileResponse> readCap(Sheet sheet, String token) {
         boolean firstRow = true;
         List<FileResponse> fileResponses = new ArrayList<>();
-        List<Cap> caps = new ArrayList<>();
-        List<CapColor> capColors = new ArrayList<>();
         for (Row row : sheet) {
             if (firstRow) {
                 firstRow = false;
@@ -494,8 +490,9 @@ public class FileService {
 
                 fileResponses.add(new FileResponse(getCellAsString(nameCell), "Combo agregado correctamente"));
             } catch (Exception e) {
-                fileResponses.add(new FileResponse("Combo: " + getCellAsString(nameCell),
-                        "Error en la fila " + row.getRowNum() + ", " + e.getMessage()));
+                String errorStart = erroStartMessage(e.getMessage(), "combo");
+                fileResponses.add(new FileResponse(getCellAsString(nameCell),
+                       errorStart + e.getMessage()));
             }
         }
         return fileResponses;
@@ -834,12 +831,12 @@ public class FileService {
         for (Bodega bodega : bodegas) {
             batch.add(bodega);
             if (batch.size() == 50) {
-                bodegaService.bodegaRepository.saveAll(batch);
+                bodegaRepository.saveAll(batch);
                 batch.clear();
             }
         }
         if (!batch.isEmpty()) {
-            bodegaService.bodegaRepository.saveAll(batch);
+            bodegaRepository.saveAll(batch);
         }
     }
 
