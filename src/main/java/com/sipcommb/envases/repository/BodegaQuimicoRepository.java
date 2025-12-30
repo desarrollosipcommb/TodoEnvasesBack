@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.sipcommb.envases.entity.Bodega;
@@ -18,5 +19,11 @@ public interface BodegaQuimicoRepository extends JpaRepository<BodegaQuimicos, L
 
     @Query("SELECT bq.bodega.name, bq.quimico.name, bq.quantity FROM BodegaQuimicos bq")
     List<Object[]> getGroupedByBodega();
+
+    @Query("SELECT bq FROM BodegaQuimicos bq WHERE bq.bodega.name LIKE %:bodegaName% AND bq.quimico.name LIKE %:itemName%")
+    List<BodegaQuimicos> findByBodegaNameContaining(@Param("bodegaName") String bodegaName, @Param("itemName") String itemName);
+
+    @Query("SELECT bq FROM BodegaQuimicos bq WHERE bq.bodega.name LIKE %:bodegaName% AND bq.quimico.name LIKE %:itemName%")
+    Optional<BodegaQuimicos> findBodegaItem(@Param("bodegaName") String bodegaName, @Param("itemName") String itemName);
 
 }

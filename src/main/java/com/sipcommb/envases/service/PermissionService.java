@@ -12,7 +12,7 @@ public class PermissionService {
 
     public boolean hasPermission(String token, String permission) {
         token = token.replace("Bearer ", "").trim();
-        
+
         Set<String> permissions = jwtService.getAuthoritiesFromToken(token);
         return permissions.contains(permission);
     }

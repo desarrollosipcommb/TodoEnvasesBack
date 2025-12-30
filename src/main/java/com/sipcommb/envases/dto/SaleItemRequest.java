@@ -1,5 +1,8 @@
 package com.sipcommb.envases.dto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SaleItemRequest {
 
     private String comboName;
@@ -10,23 +13,25 @@ public class SaleItemRequest {
 
     private String capColor;
 
-    private String diameter;
-
     private Integer quantity;
 
     private String quimicoName;
 
     private String extractoName;
 
+    //private String comboCapQuantity;
+
+    private List<ComboCapOrderDTO> comboCapOrderDTO = new ArrayList<>();
+
     public SaleItemRequest() {
     }
 
-    public SaleItemRequest(String comboName, String jarName, String capName, String capColor, String diameter, Integer quantity, String quimicoName, String extractoName) {
+    public SaleItemRequest(String comboName, String jarName, String capName, String capColor, 
+    Integer quantity, String quimicoName, String extractoName) {
         this.comboName = comboName;
         this.jarName = jarName;
         this.capName = capName;
         this.capColor = capColor;
-        this.diameter = diameter;
         this.quantity = quantity;
         this.quimicoName = quimicoName;
         this.extractoName = extractoName;
@@ -64,14 +69,6 @@ public class SaleItemRequest {
         this.capColor = capColor;
     }
 
-    public String getDiameter() {
-        return diameter;
-    }
-
-    public void setDiameter(String diameter) {
-        this.diameter = diameter;
-    }
-
     public Integer getQuantity() {
         return quantity;
     }
@@ -95,6 +92,21 @@ public class SaleItemRequest {
     public void setExtractoName(String extractoName) {
         this.extractoName = extractoName;
     }
+    /* 
+    public String getComboCapQuantity() {
+        return comboCapQuantity;
+    }
 
-    
+    public void setComboCapQuantity(String comboCapQuantity) {
+        this.comboCapQuantity = comboCapQuantity;
+    }
+    */
+    public List<ComboCapOrderDTO> getComboCapOrderDTO() {
+        return comboCapOrderDTO;
+    }
+
+    public void setComboCapOrderDTO(List<ComboCapOrderDTO> comboCapOrderDTO) {
+        this.comboCapOrderDTO = comboCapOrderDTO;
+    }
+
 }

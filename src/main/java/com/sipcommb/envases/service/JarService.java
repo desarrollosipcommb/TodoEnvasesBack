@@ -20,6 +20,7 @@ import com.sipcommb.envases.repository.JarTypeRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -375,7 +376,7 @@ public class JarService {
         return new JarDTO(jarOptional.get());
     }
 
-    //Se usa solo en fileservice para manejar el excel
+    // Se usa solo en fileservice para manejar el excel
     public JarDTO updateInventoryJar(String nameJar, List<BodegaDTO> bodegaDTOs, String token) {
         Optional<Jar> jarOptional = jarRepository.getByName(nameJar.trim().toLowerCase());
 
@@ -389,7 +390,7 @@ public class JarService {
             bodegaService.getBodegaByName(bodegaDTO.getName());
             Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository
                     .findByBodegaAndJar(bodegaService.getBodegaByName(bodegaDTO.getName()), jar);
-           
+
             BodegaJar bodegaJar = null;
 
             if (!bodegaJarOpt.isPresent()) {
@@ -404,20 +405,20 @@ public class JarService {
             }
 
             if (quantityJar < 0) {
-                bodegaJar.setQuantity(bodegaJar.getQuantity());
+                bodegaJar.setQuantity(quantityJar);
                 bodegaJarRepository.save(bodegaJar);
-                inventoryService.newItem(jar.getId(), "jar", bodegaJar.getQuantity(),
+                inventoryService.newItem(jar.getId(), "jar", quantityJar,
                         "damage", jwtService.getUserIdFromToken(token).intValue(),
                         "Se reporto un daño en " + jar.getName() + " su inventario ahora es: "
-                                + bodegaJar.getQuantity());
+                                + quantityJar);
                 continue;
             }
 
-            bodegaJar.setQuantity(quantityJar + bodegaJar.getQuantity());
+            bodegaJar.setQuantity(quantityJar);
             bodegaJarRepository.save(bodegaJar);
-            inventoryService.newItem(jar.getId(), "jar", bodegaJar.getQuantity(),
+            inventoryService.newItem(jar.getId(), "jar", quantityJar,
                     "restock", jwtService.getUserIdFromToken(token).intValue(),
-                    "Se actualizo " + jar.getName() + " su inventario ahora es: " + bodegaJar.getQuantity());
+                    "Se actualizo " + jar.getName() + " su inventario ahora es: " + quantityJar);
 
         }
         return new JarDTO(jarRepository.save(jar));
@@ -613,6 +614,20 @@ public class JarService {
         bodegaJarRepository.save(toBodegaJar);
 
         return new JarDTO(jarRepository.save(jar));
+    }
+
+    public List<BodegaJar> sortBodegaJar(List<BodegaJar> bodegaJars) {
+        try {
+            return bodegaJars.stream()
+                    .filter(bj -> bj.getBodega() != null && bj.getBodega().getPriority() != null
+                            && bj.getBodega().getPriority() > 0)
+                    .sorted(Comparator.comparing(
+                            bj -> bj.getBodega() != null ? bj.getBodega().getPriority() : null,
+                            Comparator.nullsLast(Comparator.naturalOrder())))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Error al ordenar las bodegas por prioridad: " + e.getMessage());
+        }
     }
 
 }

@@ -10,7 +10,12 @@ import com.sipcommb.envases.entity.BodegaExtractos;
 import com.sipcommb.envases.entity.Extractos;
 import com.sipcommb.envases.repository.BodegaExtractoRepository;
 import com.sipcommb.envases.repository.ExtractosRepository;
+
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -268,7 +273,7 @@ public class ExtractosService {
         return new ExtractosDTO(extractosRepository.save(extractoToRestock));
     }
 
-    //el que se usa para excel
+    // el que se usa para excel
     public ExtractosDTO updateExtractoInventorys(ExtractoRequest extractosDTO, String token) {
 
         if (extractosDTO.getName() == null || extractosDTO.getName().trim().isEmpty()) {
@@ -484,6 +489,20 @@ public class ExtractosService {
         bodegaExtractoRepository.save(toBodegaExtracto);
         extractosRepository.save(extracto);
         return new ExtractosDTO(extracto);
+    }
+
+    public List<BodegaExtractos> sortBodegaExtractos(List<BodegaExtractos> bodegaExtractosList) {
+        try {
+            return bodegaExtractosList.stream()
+                    .filter(be -> be.getBodega() != null && be.getBodega().getPriority() != null
+                            && be.getBodega().getPriority() > 0)
+                    .sorted(Comparator.comparing(
+                            be -> be.getBodega() != null ? be.getBodega().getPriority() : null,
+                            Comparator.nullsLast(Comparator.naturalOrder())))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Error al ordenar las bodegas por prioridad: " + e.getMessage());
+        }
     }
 
 }

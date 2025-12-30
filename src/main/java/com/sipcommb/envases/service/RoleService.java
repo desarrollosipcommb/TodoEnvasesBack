@@ -38,7 +38,7 @@ public class RoleService {
     }
 
     /**
-     * Get permissions 
+     * Get permissions
      */
     public Set<String> getPermissionsByRole(String roleName) {
         Optional<Role> roleOptional = roleRepository.findByName(roleName);
@@ -75,7 +75,7 @@ public class RoleService {
         }
 
         Role role = roleOptional.get();
-        
+
         // Check if new name is already taken by another role
         if (!role.getName().equals(name) && roleRepository.existsByName(name)) {
             throw new RuntimeException("Role name already exists");

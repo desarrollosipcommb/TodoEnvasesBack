@@ -14,7 +14,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<CustomApiResponse> handleIllegalArgumentException(IllegalArgumentException ex,
                                                                           WebRequest webRequest) {
 
-    System.out.println("prin");
+
     CustomApiResponse response=new CustomApiResponse(ex.getMessage(), webRequest.getDescription(false));
     return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
   }
