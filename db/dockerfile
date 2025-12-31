@@ -2,9 +2,9 @@ FROM mariadb:latest
 
 # Set environment variables for MariaDB
 ENV MYSQL_ROOT_PASSWORD=root
-ENV MYSQL_DATABASE=envases_inventory
-ENV MYSQL_USER=test_user
-ENV MYSQL_PASSWORD=pass
+ENV MYSQL_DATABASE=todoenvases
+ENV MYSQL_USER=bdserver
+ENV MYSQL_PASSWORD=asl121mde3v-@
 
 # Expose MariaDB port
 EXPOSE 3306

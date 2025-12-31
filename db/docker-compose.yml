@@ -6,9 +6,9 @@ services:
     container_name: mariadb_envases
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: envases_inventory
-      MYSQL_USER: test_user
-      MYSQL_PASSWORD: pass
+      MYSQL_DATABASE: todoenvases
+      MYSQL_USER: bdserver
+      MYSQL_PASSWORD: asl121mde3v-@
     ports:
       - "3306:3306"
     volumes:

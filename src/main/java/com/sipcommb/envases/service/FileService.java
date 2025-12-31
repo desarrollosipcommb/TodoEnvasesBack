@@ -89,6 +89,7 @@ public class FileService {
             fileResponses.addAll(readCombos(workbook.getSheetAt(6), token));
             return fileResponses;
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("Error al leer el archivo: " + e.getMessage());
         }
     }
@@ -105,6 +106,7 @@ public class FileService {
             fileResponses.addAll(extractosInventory(workbook.getSheetAt(5), token));
             return fileResponses;
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("Error al leer el archivo: " + e.getMessage());
         }
     }
@@ -806,8 +808,10 @@ public class FileService {
 
     private String erroStartMessage(String message, String elementType) {
         String errorStart = "Error, ";
-        if (message.contains("bodega")) {
+        if (message != null && message.contains("bodega")) {
             errorStart = "Error al agregar el " + elementType + ", ";
+        }else if (message == null ) {
+            errorStart = "El mensaje de error es nulo al agregar el " + elementType ;
         }
         return errorStart;
     }
