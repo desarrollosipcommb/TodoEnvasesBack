@@ -89,8 +89,13 @@ public class FileService {
             fileResponses.addAll(readCombos(workbook.getSheetAt(6), token));
             return fileResponses;
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error al leer el archivo: " + e.getMessage());
+            String message = "";
+            if(e.getMessage().equals("Sheet index (6) is out of range (0..5)")) {
+                message = "Al archivo le faltan hojas.";
+            }else {
+                message = e.getMessage();
+            }
+            throw new RuntimeException("Error al leer el archivo: " + message);
         }
     }
 
@@ -422,7 +427,11 @@ public class FileService {
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Extracto agregado correctamente"));
             } catch (Exception e) {
                 String errorStart = erroStartMessage(e.getMessage(), "extracto");
-                fileResponses.add(new FileResponse(nameCell.getStringCellValue(), errorStart + e.getMessage()));
+                String name = getCellAsString(bodegaCell);
+                if(name.isEmpty()) {
+                    name = "Sin nombre";
+                }
+                fileResponses.add(new FileResponse(name, errorStart + e.getMessage()));
             }
         }
         return fileResponses;

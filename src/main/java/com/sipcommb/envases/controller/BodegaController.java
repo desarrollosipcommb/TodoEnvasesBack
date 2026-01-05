@@ -68,6 +68,7 @@ public class BodegaController {
         @RequestParam(defaultValue = "") String nameFilter
 
     ) {
+        System.out.println("Fetching all bodegas with filter: " + nameFilter);
         if(!permissionService.hasPermission(authHeader, "read")) {
             return ResponseEntity.status(403).body(new CustomApiResponse("Este usuario no tiene permiso para ver las bodegas"));
         }
@@ -75,6 +76,8 @@ public class BodegaController {
             List<String> bodegas = bodegaService.getAllBodegas(nameFilter);
             return ResponseEntity.ok(bodegas);
         } catch (Exception e) {
+            System.out.println("Error fetching bodegas: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(new CustomApiResponse("Error: " + e.getMessage()));
         }
     }
