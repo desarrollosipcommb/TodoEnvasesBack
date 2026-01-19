@@ -235,7 +235,7 @@ public class QuimicosService {
                         jwtService.getUserIdFromToken(token).intValue(),
                         "Se actualizo el inventario del quimico " + quimico.getName());
             } else {
-                bodegaQuimicos.setQuantity(bodegaDTO.getQuantity());
+                bodegaQuimicos.setQuantity(bodegaDTO.getQuantity() + bodegaQuimicos.getQuantity());
                 bodegaQuimicoRepository.save(bodegaQuimicos);
                 inventoryService.newItem(
                         quimico.getId().longValue(),

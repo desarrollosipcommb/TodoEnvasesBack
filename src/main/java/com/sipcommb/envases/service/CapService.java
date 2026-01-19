@@ -273,7 +273,7 @@ public class CapService {
         }
 
         Cap cap = capOptional.get();
-        capColorService.updateCapColorInventory(cap, capColorRequest, token);
+        capColorService.changeInventory(cap, capColorRequest, token);
         capRepository.save(cap);
         return cap;
     }

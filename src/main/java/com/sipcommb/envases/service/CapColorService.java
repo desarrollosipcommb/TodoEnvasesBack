@@ -301,13 +301,12 @@ public class CapColorService {
 
             Optional<BodegaCapColor> bodegaCapColorOpt = bodegaCapColorRepository
                     .findByBodegaIdAndCapColorId(bodega.getId(), capColor.getId());
-
+             BodegaCapColor bodegaCapColor = null;
             if (!bodegaCapColorOpt.isPresent()) {
-                throw new IllegalArgumentException(
-                        "El color " + request.getColor() + " no existe en la bodega " + bodegaDTO.getName() + ".");
+                bodegaCapColor = new BodegaCapColor(bodega, capColor, 0);
+            }else{
+                bodegaCapColor = bodegaCapColorOpt.get();
             }
-
-            BodegaCapColor bodegaCapColor = bodegaCapColorOpt.get();
 
             if (bodegaDTO.getQuantity() < 0) {
                 bodegaCapColor.setQuantity((bodegaDTO.getQuantity()));
@@ -318,7 +317,7 @@ public class CapColorService {
                                 ", su inventario ahora es: " + bodegaCapColor.getQuantity()+ ", en la bodega: " + bodega.getName());
 
             } else {
-                bodegaCapColor.setQuantity(bodegaDTO.getQuantity());
+                bodegaCapColor.setQuantity(bodegaDTO.getQuantity() + bodegaCapColor.getQuantity());
                 inventoryService.newItem(
                         cap.getId(),
                         "cap",

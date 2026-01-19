@@ -2,18 +2,20 @@ package com.sipcommb.envases.service;
 
 import com.sipcommb.envases.dto.BodegaDTO;
 import com.sipcommb.envases.dto.CapColorRequest;
+import com.sipcommb.envases.dto.CapDTO;
 import com.sipcommb.envases.dto.CapRequest;
 import com.sipcommb.envases.dto.ComboRequest;
 import com.sipcommb.envases.dto.ExtractoRequest;
 import com.sipcommb.envases.dto.FileResponse;
+import com.sipcommb.envases.dto.JarDTO;
 import com.sipcommb.envases.dto.JarRequestDTO;
 import com.sipcommb.envases.dto.JarTypeDTO;
 import com.sipcommb.envases.dto.QuimicoRequestDTO;
+import com.sipcommb.envases.dto.QuimicosDTO;
 import com.sipcommb.envases.entity.Bodega;
 import com.sipcommb.envases.entity.Cap;
 import com.sipcommb.envases.entity.Jar;
 import com.sipcommb.envases.entity.JarType;
-import com.sipcommb.envases.entity.Quimicos;
 import com.sipcommb.envases.repository.BodegaRepository;
 import com.sipcommb.envases.repository.CapColorRepository;
 import com.sipcommb.envases.repository.CapRepository;
@@ -303,8 +305,6 @@ public class FileService {
                     throw new RuntimeException("el nombre del frasco es obligatorio");
                 }
 
-                bodegaService.getBodegaByName(bodegaCell.getStringCellValue());
-
                 List<BodegaDTO> bodegaDTOs = generateBodegas(bodegaCell, quantityCell);
 
                 jarService.addJar(new JarRequestDTO(
@@ -427,7 +427,7 @@ public class FileService {
                 fileResponses.add(new FileResponse(nameCell.getStringCellValue(), "Extracto agregado correctamente"));
             } catch (Exception e) {
                 String errorStart = erroStartMessage(e.getMessage(), "extracto");
-                String name = getCellAsString(bodegaCell);
+                String name = getCellAsString(nameCell);
                 if(name.isEmpty()) {
                     name = "Sin nombre";
                 }
@@ -512,7 +512,7 @@ public class FileService {
     private List<FileResponse> JarInventory(Sheet sheet, String token) {
         boolean firstRow = true;
         List<FileResponse> fileResponses = new ArrayList<>();
-        List<Jar> jars = new ArrayList<>();
+        List<JarDTO> jars = new ArrayList<>();
         for (Row row : sheet) {
             if (firstRow) {
                 firstRow = false;
@@ -532,7 +532,7 @@ public class FileService {
                 }
 
                 List<BodegaDTO> bodegaDTOs = generateBodegas(bodegaCell, quantityCell);
-                jars.add(jarService.updateInventoryJarBatch(
+                jars.add(jarService.updateInventoryJar(
                         nameCell.getStringCellValue(),
                         bodegaDTOs,
                         token));
@@ -543,13 +543,12 @@ public class FileService {
                 fileResponses.add(new FileResponse(getCellAsString(nameCell), errorStart + e.getMessage()));
             }
         }
-        jarBatch(jars);
         return fileResponses;
     }
 
     private List<FileResponse> CapInventory(Sheet sheet, String token) {
         boolean firstRow = true;
-        List<Cap> caps = new ArrayList<>();
+        List<CapDTO> caps = new ArrayList<>();
         List<FileResponse> fileResponses = new ArrayList<>();
         for (Row row : sheet) {
             if (firstRow) {
@@ -583,7 +582,7 @@ public class FileService {
 
                 List<BodegaDTO> bodegaDTOs = generateBodegas(bodegaCell, quantityCell);
 
-                Cap cap = capService.updateCapInventoryBatch(new CapColorRequest(
+                CapDTO cap = capService.updateCapInventory(new CapColorRequest(
                         nameCell.getStringCellValue(),
                         getCellAsString(diameterCell),
                         colorCell.getStringCellValue(),
@@ -602,14 +601,13 @@ public class FileService {
                         errorStart + e.getMessage()));
             }
         }
-        capBatch(caps);
         return fileResponses;
     }
 
     private List<FileResponse> QuimicoInventory(Sheet sheet, String token) {
         boolean firstRow = true;
         List<FileResponse> fileResponses = new ArrayList<>();
-        List<Quimicos> quimicosList = new ArrayList<>();
+        List<QuimicosDTO> quimicosList = new ArrayList<>();
         for (Row row : sheet) {
             if (firstRow) {
                 firstRow = false;
@@ -628,7 +626,7 @@ public class FileService {
 
                 List<BodegaDTO> bodegaDTOs = generateBodegas(bodegaCell, quantityCell);
                 quimicosList.add(
-                        quimicosService.updateInventoryQuimicoBatch(
+                        quimicosService.updateInventoryQuimico(
                                 nameCell.getStringCellValue(),
                                 bodegaDTOs,
                                 token));
@@ -740,6 +738,10 @@ public class FileService {
             bodegaNames = bodegaCell.getStringCellValue().split(",");
         } else {
             bodegaNames = new String[] { bodegaCell.getStringCellValue() };
+        }
+
+        for(String bodegaName : bodegaNames) {
+            bodegaName = bodegaName.trim();
         }
 
         switch (quantityCell.getCellType()) {

@@ -416,7 +416,7 @@ public class JarService {
                 continue;
             }
 
-            bodegaJar.setQuantity(quantityJar);
+            bodegaJar.setQuantity(quantityJar + bodegaJar.getQuantity());
             bodegaJarRepository.save(bodegaJar);
             inventoryService.newItem(jar.getId(), "jar", quantityJar,
                     "restock", jwtService.getUserIdFromToken(token).intValue(),

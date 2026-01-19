@@ -322,7 +322,7 @@ public class ExtractosService {
                 continue;
             }
 
-            bodegaExtractos.setQuantity(bodegaDTO.getQuantity());
+            bodegaExtractos.setQuantity(bodegaDTO.getQuantity() + bodegaExtractos.getQuantity());
             bodegaExtractoRepository.save(bodegaExtractos);
             inventoryService.newItem(
                     extractoToRestock.getId().longValue(),
