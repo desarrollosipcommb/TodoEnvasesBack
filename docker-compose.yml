@@ -11,6 +11,8 @@ services:
     networks:
       - db_default
       - proxy-public
+    mem_limit: 800m      # Límite máximo (Hard limit)
+    mem_reservation: 400m # Reserva garantizada (Soft limit)
     logging:
       driver: "json-file"
       options:
