@@ -4,7 +4,7 @@ services:
     container_name: todoenvases-back
     restart: unless-stopped
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb_envases:3306/todoenvases?rewriteBatchedStatements=true
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/todoenvases?rewriteBatchedStatements=true
       - SPRING_DATASOURCE_USERNAME=bdserver
       - SPRING_DATASOURCE_PASSWORD=asl121mde3v-@
       - JAVA_OPTS=-Xms256m -Xmx512m
