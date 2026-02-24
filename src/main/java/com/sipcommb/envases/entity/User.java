@@ -1,10 +1,20 @@
 package com.sipcommb.envases.entity;
 
-import javax.persistence.*;
+import java.time.LocalDateTime;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+import javax.persistence.Table;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -13,42 +23,51 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @NotBlank
     @Size(max = 50)
     @Column(unique = true)
     private String username;
-    
-    @NotBlank
+
     @Size(max = 100)
     @Email
     @Column(unique = true)
     private String email;
-    
+
     @NotBlank
-    @Size(max = 100)
+    @Size(max = 255)
+    @Column(name = "password_hash")
     private String password;
-    
+
     @Size(max = 100)
     @Column(name = "first_name")
     private String firstName;
-    
+
     @Size(max = 100)
     @Column(name = "last_name")
     private String lastName;
-    
+
+    @Size(max = 20)
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
-    
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-    
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-    
+
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
+
+ 
     
     // Constructors
     public User() {}
@@ -103,4 +122,18 @@ public class User {
     
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
+    }
+    public void setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
+    }
 }

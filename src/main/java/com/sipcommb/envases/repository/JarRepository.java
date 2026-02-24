@@ -1,42 +1,82 @@
 package com.sipcommb.envases.repository;
 
 import com.sipcommb.envases.entity.Jar;
-import com.sipcommb.envases.entity.JarType;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
 @Repository
 public interface JarRepository extends JpaRepository<Jar, Long> {
-    
-    // Find jar by name
-    Optional<Jar> findByName(String name);
-    
-    // Find all active jars
-    List<Jar> findByIsActiveTrue();
-    
-    // Find jars by jar type
-    List<Jar> findByJarType(JarType jarType);
-    
-    // Find jars by jar type and active status
-    List<Jar> findByJarTypeAndIsActiveTrue(JarType jarType);
-    
-    // Find jars with low stock (quantity <= threshold)
-    @Query("SELECT j FROM Jar j WHERE j.quantity <= :threshold AND j.isActive = true")
-    List<Jar> findLowStockJars(@Param("threshold") Integer threshold);
-    
-    // Find jars within price range
-    @Query("SELECT j FROM Jar j WHERE j.unitPrice BETWEEN :minPrice AND :maxPrice AND j.isActive = true")
-    List<Jar> findByPriceRange(@Param("minPrice") BigDecimal minPrice, @Param("maxPrice") BigDecimal maxPrice);
-    
-    // Find jars by size
-    List<Jar> findBySizeAndIsActiveTrue(String size);
-    
-    // Check if jar name already exists
-    boolean existsByName(String name);
+
+    Optional<Jar> getByName(String name);
+
+    @Query("SELECT j FROM Jar j WHERE j.name LIKE %:name%")
+    Optional<Page<Jar>> getFromNameLike(String name, Pageable pageable);
+
+    @Query("SELECT j FROM Jar j WHERE j.jarType.diameter = :diameter")
+    Optional<List<Jar>> getFromDiameter(@Param("diameter") String diameter);
+
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND (:name IS NULL OR j.name LIKE %:name%)")
+    Optional<List<Jar>> getAllActiveJars(@Param("name") String name);
+
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 1")
+    Optional<Page<Jar>> getAllActiveJars(Pageable pageable);
+
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 0 AND (:name IS NULL OR j.name LIKE %:name%)")
+    Optional<List<Jar>> getAllInactiveJars(@Param("name") String name);
+
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 0")
+    Optional<Page<Jar>> getAllInactiveJars(Pageable pageable);
+
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.cienPrice = :exactPrice")
+    Page<Jar> findByCienPrice(@Param("exactPrice") BigDecimal exactPrice, Pageable pageable);
+
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.cienPrice BETWEEN :minPrice AND :maxPrice")
+    Page<Jar> findByCienPriceBetween(@Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
+
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.docenaPrice = :exactPrice")
+    Page<Jar> findByDocenaPrice(@Param("exactPrice") BigDecimal exactPrice, Pageable pageable);
+
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.docenaPrice BETWEEN :minPrice AND :maxPrice")
+    Page<Jar> findByDocenaPriceBetween(@Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
+
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.unitPrice = :exactPrice")
+    Page<Jar> findByUnidadPrice(@Param("exactPrice") BigDecimal exactPrice,
+            Pageable pageable);
+
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.unitPrice BETWEEN :minPrice AND :maxPrice")
+    Page<Jar> findByUnidadPriceBetween(@Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
+
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.pacaPrice = :exactPrice")
+    Page<Jar> findByPacaPrice(@Param("exactPrice") BigDecimal exactPrice,
+            Pageable pageable);
+
+    @Query("SELECT j FROM Jar j WHERE j.isActive = 1 AND j.pacaPrice BETWEEN :minPrice AND :maxPrice")
+    Page<Jar> findByPacaPriceBetween(@Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice, Pageable pageable);
+
+    @Query("SELECT j FROM Jar j " +
+            "JOIN j.jarType jt " +
+            "WHERE (:name IS NULL OR j.name LIKE %:name%) " +
+            "AND (:diameter IS NULL OR jt.diameter LIKE %:diameter%) ")
+    Page<Jar> getFromNameLikeAndDiameter(@Param("name") String name,
+            @Param("diameter") String diameter, Pageable pageable);
+
+    @Query("SELECT j FROM Jar j " +
+            "JOIN j.jarType jt " +
+            "WHERE (:name IS NULL OR j.name LIKE %:name%) " +
+            "AND (:diameter IS NULL OR jt.diameter LIKE %:diameter%) " +
+            "AND j.isActive = 1")
+    Page<Jar> getFromNameLikeAndDiameterActive(@Param("name") String name,
+            @Param("diameter") String diameter, Pageable pageable);
+
 }

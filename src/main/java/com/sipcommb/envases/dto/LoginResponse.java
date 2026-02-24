@@ -1,17 +1,19 @@
 package com.sipcommb.envases.dto;
 
+import java.util.Set;
+
 public class LoginResponse {
     
     private String token;
     private String type = "Bearer";
     private String username;
     private String role;
-    private String[] permissions;
+    private Set<String> permissions;
     
     // Constructors
     public LoginResponse() {}
     
-    public LoginResponse(String token, String username, String role, String[] permissions) {
+    public LoginResponse(String token, String username, String role, Set<String> permissions) {
         this.token = token;
         this.username = username;
         this.role = role;
@@ -31,6 +33,6 @@ public class LoginResponse {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
     
-    public String[] getPermissions() { return permissions; }
-    public void setPermissions(String[] permissions) { this.permissions = permissions; }
+    public Set<String> getPermissions() { return permissions; }
+    public void setPermissions(Set<String> permissions) { this.permissions = permissions; }
 }

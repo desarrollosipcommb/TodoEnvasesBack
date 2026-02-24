@@ -1,16 +1,37 @@
 package com.sipcommb.envases.service;
 
+import com.sipcommb.envases.dto.BodegaDTO;
+import com.sipcommb.envases.dto.BodegaMovementDTO;
+import com.sipcommb.envases.dto.CapDTO;
+import com.sipcommb.envases.dto.JarDTO;
+import com.sipcommb.envases.dto.JarRequestDTO;
+import com.sipcommb.envases.dto.PriceSearchRequest;
+import com.sipcommb.envases.entity.Bodega;
+import com.sipcommb.envases.entity.BodegaJar;
+import com.sipcommb.envases.entity.Cap;
 import com.sipcommb.envases.entity.Jar;
-import com.sipcommb.envases.entity.JarType;
+import com.sipcommb.envases.entity.JarCapCompatibility;
+import com.sipcommb.envases.repository.BodegaJarRepository;
+import com.sipcommb.envases.repository.CapRepository;
+import com.sipcommb.envases.repository.JarCapCompatibilityRepository;
 import com.sipcommb.envases.repository.JarRepository;
 import com.sipcommb.envases.repository.JarTypeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -22,137 +43,657 @@ public class JarService {
     @Autowired
     private JarTypeRepository jarTypeRepository;
 
-    // ============ JAR OPERATIONS ============
+    @Autowired
+    private JarCapCompatibilityRepository jarCapCompatibilityRepository;
 
-    /**
-     * Get all active jars
-     */
-    public List<Jar> getAllActiveJars() {
-        return jarRepository.findByIsActiveTrue();
-    }
+    @Autowired
+    private CapRepository capRepository;
 
-    /**
-     * Get jar by ID
-     */
-    public Optional<Jar> getJarById(Long id) {
-        return jarRepository.findById(id);
-    }
+    @Autowired
+    private InventoryService inventoryService;
 
-    /**
-     * Create new jar
-     */
-    public Jar createJar(String name, String description, JarType jarType, Integer quantity, BigDecimal unitPrice) {
-        // Check if jar name already exists
-        if (jarRepository.existsByName(name)) {
-            throw new RuntimeException("Jar name already exists");
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private PriceService priceService;
+
+    @Autowired
+    private BodegaService bodegaService;
+
+    @Autowired
+    private BodegaJarRepository bodegaJarRepository;
+
+    public JarDTO addJar(JarRequestDTO jarRequest, String token) {
+
+        if (jarRepository.getByName(jarRequest.getName().trim()).isPresent()) {
+            throw new IllegalArgumentException("Ya existe un envase con ese nombre.");
+        }
+
+        // hay que validar que el envase si tenga un diametro asociado, dado que algunos
+        // vienen con tapa propia asi que el diametro no es obligatorio
+        if (!jarRequest.getDiameter().isEmpty()
+                && !jarTypeRepository.getTypeByDiameter(jarRequest.getDiameter()).isPresent()) {
+            throw new IllegalArgumentException("No existe un tipo de envase con ese diámetro.");
+        }
+
+        if (jarRequest.getUnitPrice() == null || jarRequest.getUnitPrice() <= 0) {
+            throw new IllegalArgumentException("El precio unitario no puede ser negativo o cero.");
+        }
+
+        for (BodegaDTO bodegaDTO : jarRequest.getBodega()) {
+            bodegaService.getBodegaByName(bodegaDTO.getName());
         }
 
         Jar jar = new Jar();
-        jar.setName(name);
-        jar.setDescription(description);
-        jar.setJarType(jarType);
-        jar.setQuantity(quantity);
-        jar.setUnitPrice(unitPrice);
+
+        if (!jarRequest.getDiameter().isEmpty()) {
+            jar.setJarType(jarTypeRepository.getTypeByDiameter(jarRequest.getDiameter()).get());
+        }
+
+        jar.setName(jarRequest.getName().trim().toLowerCase());
+        jar.setDescription(jarRequest.getDescription().trim());
+
+        jar.setUnitPrice(BigDecimal.valueOf(jarRequest.getUnitPrice()));
+        jar.setDocenaPrice(BigDecimal.valueOf(jarRequest.getDocenaPrice()));
+        jar.setCienPrice(BigDecimal.valueOf(jarRequest.getCienPrice()));
+        jar.setPacaPrice(BigDecimal.valueOf(jarRequest.getPacaPrice()));
+        jar.setUnitsInPaca(jarRequest.getUnitsInPaca());
+        jarRepository.save(jar);
+
+        List<BodegaJar> bodegaJars = new ArrayList<>();
+        for (BodegaDTO bodegaDTO : jarRequest.getBodega()) {
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
+
+            Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository.findByBodegaAndJar(bodega, jar);
+            if (bodegaJarOpt.isPresent()) {
+                throw new IllegalArgumentException("El frasco ya está asociado a la bodega: " + bodega.getName());
+            }
+            BodegaJar bodegaJar = new BodegaJar(bodega, jar, bodegaDTO.getQuantity());
+            bodegaJars.add(bodegaJar);
+
+            inventoryService.newItem(
+                    jar.getId(),
+                    "jar",
+                    bodegaDTO.getQuantity().intValue(),
+                    "restock",
+                    jwtService.getUserIdFromToken(token).intValue(),
+                    "Se añadio " + jar.getName() + " al inventario");
+
+        }
+        bodegaBatchSave(bodegaJars);
+        jarRepository.save(jar);
+        manageCompatibility(jarRequest.getCompatibleCaps(), jarRequest.getUnCompatibleCaps(), jar);
+
+        return new JarDTO(jar);
+    }
+
+    // Re visa que si tenga un tipo de frasco asociado, dado que algunos vienen con
+    // tapa propia asi que el diametro no es obligatorio
+    private void manageCompatibility(String[] compatibleCaps, String[] unCompatibleCaps, Jar jar) {
+        if (jar.getJarType() != null) {
+            if (compatibleCaps != null && compatibleCaps.length > 0) {
+
+                // se crean dos listas, una con todas las tapas compatibles y otra con todas las
+                // tapas del diametro del frasco, le restamos las tapas compatibles a las del
+                // diametro del frasco
+                // y asi tenemos las tapas incompatibles
+                List<Cap> compatible = getCaps(compatibleCaps, jar);
+                List<Cap> inCompatible = capRepository.getFromCapDiameter(jar.getJarType().getDiameter()).get();
+                inCompatible.removeAll(compatible);
+                addToCompatible(compatible, jar, true);
+                addToCompatible(inCompatible, jar, false);
+
+            } else if (unCompatibleCaps != null && unCompatibleCaps.length > 0) {
+
+                List<Cap> unCompatible = getCaps(unCompatibleCaps, jar);
+
+                List<Cap> compatible = capRepository.getFromCapDiameter(jar.getJarType().getDiameter()).get();
+
+                compatible.removeAll(unCompatible);
+                addToCompatible(compatible, jar, true);
+                addToCompatible(unCompatible, jar, false);
+            }
+        }
+    }
+
+    // Trae todas las tapas que coincidan con los nombres y el diametro del frasco
+    private List<Cap> getCaps(String[] caps, Jar jar) {
+        Set<Cap> capList = new HashSet<>();
+
+        if (caps != null && caps.length > 0) {
+            for (String capName : caps) {
+                Optional<List<Cap>> capOptional = capRepository.getFromNameAndDiameter(capName,
+                        jar.getJarType().getDiameter());
+                if (capOptional.isPresent()) {
+                    capList.addAll(capOptional.get());
+                }
+            }
+        }
+
+        return new ArrayList<Cap>(capList);
+
+    }
+
+    // Agrega las tapas a la lista de compatibilidad del frasco, si es compatible o
+    // no
+    private void addToCompatible(List<Cap> compatible, Jar jar, boolean isCompatible) {
+        for (Cap cap : compatible) {
+            if (jarCapCompatibilityRepository.findByJarAndCap(jar.getId(), cap.getId()).isPresent()) {
+                JarCapCompatibility existingCompatibility = jarCapCompatibilityRepository
+                        .findByJarAndCap(jar.getId(), cap.getId()).get();
+
+                existingCompatibility.setCompatible(isCompatible);
+                jarCapCompatibilityRepository.save(existingCompatibility);
+                continue;
+            }
+            jarCapCompatibilityRepository.save(new JarCapCompatibility(jar, cap, isCompatible));
+        }
+
+    }
+
+    public Page<JarDTO> getAllJars(Pageable pageable) {
+        Page<Jar> jars = jarRepository.findAll(pageable);
+        return jars.map(JarDTO::new);
+    }
+
+    public Page<JarDTO> getAllActiveJars(Pageable pageable) {
+        Page<Jar> jars = jarRepository.getAllActiveJars(pageable).get();
+        return jars.map(JarDTO::new);
+    }
+
+    public List<JarDTO> getAllActiveJars(String name) {
+        List<Jar> jars = jarRepository.getAllActiveJars(name).get();
+        return jars.stream().map(JarDTO::new).collect(Collectors.toList());
+    }
+
+    public Page<JarDTO> getAllInactiveJars(Pageable pageable) {
+        Page<Jar> jars = jarRepository.getAllInactiveJars(pageable).get();
+        return jars.map(JarDTO::new);
+    }
+
+    public Page<JarDTO> getFromNameLikeAndNameDiameter(String name, String diameter, Pageable pageable) {
+        Page<Jar> jars = jarRepository.getFromNameLikeAndDiameter(name, diameter, pageable);
+        return jars.map(JarDTO::new);
+    }
+
+    public Page<JarDTO> getFromNameLikeAndNameDiameterActive(String name, String diameter, Pageable pageable) {
+        Page<Jar> jars = jarRepository.getFromNameLikeAndDiameterActive(name, diameter, pageable);
+        return jars.map(JarDTO::new);
+    }
+
+    public JarDTO updateJar(JarRequestDTO jarRequestDTO, String token) {
+        Optional<Jar> jarOptional = jarRepository.getByName(jarRequestDTO.getName().trim().toLowerCase());
+
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con el nombre: " + jarRequestDTO.getName());
+        }
+        Jar jar = jarOptional.get();
+
+        if (jarRequestDTO.getDescription() != null) {
+            jar.setDescription(jarRequestDTO.getDescription().trim());
+        }
+
+        if (jarRequestDTO.getUnitPrice() != null) {
+            if (jarRequestDTO.getUnitPrice() <= 0) {
+                throw new IllegalArgumentException("El precio unitario no puede ser negativo o cero.");
+            }
+            jar.setUnitPrice(BigDecimal.valueOf(jarRequestDTO.getUnitPrice()));
+        }
+        if (jarRequestDTO.getDocenaPrice() != null) {
+            if (jarRequestDTO.getDocenaPrice() < 0) {
+                throw new IllegalArgumentException("El precio de docena no puede ser negativo o cero.");
+            }
+            jar.setDocenaPrice(BigDecimal.valueOf(jarRequestDTO.getDocenaPrice()));
+        }
+        if (jarRequestDTO.getCienPrice() != null) {
+            if (jarRequestDTO.getCienPrice() < 0) {
+                throw new IllegalArgumentException("El precio de cien no puede ser negativo o cero.");
+            }
+            jar.setCienPrice(BigDecimal.valueOf(jarRequestDTO.getCienPrice()));
+        }
+        if (jarRequestDTO.getPacaPrice() != null) {
+            if (jarRequestDTO.getPacaPrice() < 0) {
+                throw new IllegalArgumentException("El precio de pacas no puede ser negativo o cero.");
+            }
+            jar.setPacaPrice(BigDecimal.valueOf(jarRequestDTO.getPacaPrice()));
+        }
+        if (jarRequestDTO.getUnitsInPaca() != null) {
+            if (jarRequestDTO.getUnitsInPaca() <= 0) {
+                throw new IllegalArgumentException("Las unidades en paca no pueden ser cero o negativas.");
+            }
+            jar.setUnitsInPaca(jarRequestDTO.getUnitsInPaca());
+        }
+
+        for (BodegaDTO bodegaDTO : jarRequestDTO.getBodega()) {
+            bodegaService.getBodegaByName(bodegaDTO.getName());
+            Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository
+                    .findByBodegaAndJar(bodegaService.getBodegaByName(bodegaDTO.getName()), jar);
+            if (!bodegaJarOpt.isPresent()) {
+                throw new IllegalArgumentException("El frasco no está asociado a la bodega: " + bodegaDTO.getName());
+            }
+
+            if (bodegaDTO.getQuantity() != null) {
+                bodegaJarOpt.get().setQuantity(bodegaDTO.getQuantity());
+            }
+
+            bodegaJarRepository.save(bodegaJarOpt.get());
+
+            if (bodegaDTO.getQuantity() < 0) {
+                inventoryService.newItem(
+                        jar.getId().longValue(),
+                        "jar",
+                        bodegaDTO.getQuantity().intValue(),
+                        "damage",
+                        jwtService.getUserIdFromToken(token).intValue(),
+                        "Se reporto un daño en " + jar.getName() + ", su inventario ahora es: "
+                                + bodegaJarOpt.get().getQuantity());
+            } else {
+                inventoryService.newItem(
+                        jar.getId().longValue(),
+                        "jar",
+                        bodegaDTO.getQuantity().intValue(),
+                        "restock",
+                        jwtService.getUserIdFromToken(token).intValue(),
+                        "Se actualizo " + jar.getName() + ", su inventario ahora es: "
+                                + bodegaJarOpt.get().getQuantity());
+            }
+        }
+
+        return new JarDTO(jarRepository.save(jar));
+
+    }
+
+    public JarDTO updateCompatible(String[] capNames, String jarName, boolean isCompatible) {
+        Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
+
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+
+        // Okay, que pasa aqui,
+        // Tenemos que trear todas las tapas nuevas que concidan con el arreglo de tapas
+        // que nos diernon, ese es el caps =getCaps(capNames, jar);
+        // Luego tenemos que trear todas las tapas que no estan presentes en el arreglo
+        // pero que concidan en diametro
+        // luego tenemos que trear todas las tapas que ya estan con la compatibilidad
+        // del frasco, porque no deseamos sobre escribirlas (a menos que esten en caps)
+        // Luego tenemos que restar las tapas que ya estan presentes en el frasco, y las
+        // de caps
+        // Y hacemos algo parecido al inicial, asumimos que todo es caps es lo que diga
+        // la variable isCompatible
+        // y todo lo que no este en caps o ya en el frasco es lo contrario a
+        // isCompatible
+        // de esta manera, si se añaden 30 tapas nuevas y solo 1 es compatible, se envia
+        // un arreglo solo con la tapa compatible y se asume que las otras 29 son
+        // incompatibles
+        Jar jar = jarOptional.get();
+        List<Cap> caps = getCaps(capNames, jar);
+        List<Cap> capsNotPresent = capRepository.getFromCapDiameter(jar.getJarType().getDiameter()).get();
+        capsNotPresent.removeAll(caps);
+        List<Cap> existingCaps = jarCapCompatibilityRepository.findByJarId(jar.getId()).get();
+        capsNotPresent.removeAll(existingCaps);
+
+        jar.setUpdatedAt(LocalDateTime.now());
+        addToCompatible(caps, jar, isCompatible);
+        addToCompatible(capsNotPresent, jar, !isCompatible);
+        return new JarDTO(jar);
+
+    }
+
+    public JarDTO activateJar(String jarName) {
+        Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
+
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        Jar jar = jarOptional.get();
+
+        if (jar.getJarType() != null && jar.getJarType().getIsActive() == false) {
+            throw new IllegalArgumentException(
+                    "No se puede activar el frasco porque el tipo de frasco asociado está inactivo.");
+        }
+
         jar.setIsActive(true);
-
-        return jarRepository.save(jar);
+        return new JarDTO(jarRepository.save(jar));
     }
 
-    /**
-     * Update jar information
-     */
-    public Jar updateJar(Long jarId, String name, String description, Integer quantity, BigDecimal unitPrice) {
-        Optional<Jar> jarOptional = jarRepository.findById(jarId);
-        if (jarOptional.isEmpty()) {
-            throw new RuntimeException("Jar not found");
+    public JarDTO deleteJar(String jarName) {
+        Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
+
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
         }
-
-        Jar jar = jarOptional.get();
-        
-        // Check if new name is already taken by another jar
-        if (!jar.getName().equals(name) && jarRepository.existsByName(name)) {
-            throw new RuntimeException("Jar name already exists");
-        }
-
-        jar.setName(name);
-        jar.setDescription(description);
-        jar.setQuantity(quantity);
-        jar.setUnitPrice(unitPrice);
-
-        return jarRepository.save(jar);
-    }
-
-    /**
-     * Update jar stock
-     */
-    public Jar updateJarStock(Long jarId, Integer newQuantity) {
-        Optional<Jar> jarOptional = jarRepository.findById(jarId);
-        if (jarOptional.isEmpty()) {
-            throw new RuntimeException("Jar not found");
-        }
-
-        Jar jar = jarOptional.get();
-        jar.setQuantity(newQuantity);
-        return jarRepository.save(jar);
-    }
-
-    /**
-     * Get jars with low stock
-     */
-    public List<Jar> getLowStockJars(Integer threshold) {
-        return jarRepository.findLowStockJars(threshold);
-    }
-
-    /**
-     * Get jars by jar type
-     */
-    public List<Jar> getJarsByType(JarType jarType) {
-        return jarRepository.findByJarTypeAndIsActiveTrue(jarType);
-    }
-
-    /**
-     * Deactivate jar (soft delete)
-     */
-    public void deactivateJar(Long jarId) {
-        Optional<Jar> jarOptional = jarRepository.findById(jarId);
-        if (jarOptional.isEmpty()) {
-            throw new RuntimeException("Jar not found");
-        }
-
         Jar jar = jarOptional.get();
         jar.setIsActive(false);
-        jarRepository.save(jar);
+        return new JarDTO(jarRepository.save(jar));
     }
 
-    // ============ JAR TYPE OPERATIONS ============
+    public JarDTO getJarByName(String jarName) {
+        Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
 
-    /**
-     * Get all jar types
-     */
-    public List<JarType> getAllJarTypes() {
-        return jarTypeRepository.findAllByOrderByNameAsc();
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        return new JarDTO(jarOptional.get());
     }
 
-    /**
-     * Get jar type by ID
-     */
-    public Optional<JarType> getJarTypeById(Long id) {
-        return jarTypeRepository.findById(id);
+    // Se usa solo en fileservice para manejar el excel
+    public JarDTO updateInventoryJar(String nameJar, List<BodegaDTO> bodegaDTOs, String token) {
+        Optional<Jar> jarOptional = jarRepository.getByName(nameJar.trim().toLowerCase());
+
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        Jar jar = jarOptional.get();
+
+        for (BodegaDTO bodegaDTO : bodegaDTOs) {
+            Integer quantityJar = bodegaDTO.getQuantity();
+            bodegaService.getBodegaByName(bodegaDTO.getName());
+            Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository
+                    .findByBodegaAndJar(bodegaService.getBodegaByName(bodegaDTO.getName()), jar);
+
+            BodegaJar bodegaJar = null;
+
+            if (!bodegaJarOpt.isPresent()) {
+                bodegaJar = bodegaJarRepository
+                        .save(new BodegaJar(bodegaService.getBodegaByName(bodegaDTO.getName()), jar, 0));
+            } else {
+                bodegaJar = bodegaJarOpt.get();
+            }
+
+            if (bodegaDTO.getQuantity() == null) {
+                throw new IllegalArgumentException("La cantidad no puede ser nula.");
+            }
+
+            if (quantityJar < 0) {
+                bodegaJar.setQuantity(quantityJar);
+                bodegaJarRepository.save(bodegaJar);
+                inventoryService.newItem(jar.getId(), "jar", quantityJar,
+                        "damage", jwtService.getUserIdFromToken(token).intValue(),
+                        "Se reporto un daño en " + jar.getName() + " su inventario ahora es: "
+                                + quantityJar);
+                continue;
+            }
+
+            bodegaJar.setQuantity(quantityJar + bodegaJar.getQuantity());
+            bodegaJarRepository.save(bodegaJar);
+            inventoryService.newItem(jar.getId(), "jar", quantityJar,
+                    "restock", jwtService.getUserIdFromToken(token).intValue(),
+                    "Se actualizo " + jar.getName() + " su inventario ahora es: " + quantityJar);
+
+        }
+        return new JarDTO(jarRepository.save(jar));
     }
 
-    /**
-     * Create new jar type
-     */
-    public JarType createJarType(String name, String description) {
-        // Check if jar type name already exists
-        if (jarTypeRepository.existsByName(name)) {
-            throw new RuntimeException("Jar type name already exists");
+    public Jar updateInventoryJarBatch(String nameJar, List<BodegaDTO> bodegaDTOs, String token) {
+        Optional<Jar> jarOptional = jarRepository.getByName(nameJar.trim().toLowerCase());
+
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        Jar jar = jarOptional.get();
+
+        List<BodegaJar> bodegaJars = new ArrayList<>();
+
+        for (BodegaDTO bodegaDTO : bodegaDTOs) {
+            Integer quantityJar = bodegaDTO.getQuantity();
+            bodegaService.getBodegaByName(bodegaDTO.getName());
+            Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository
+                    .findByBodegaAndJar(bodegaService.getBodegaByName(bodegaDTO.getName()), jar);
+
+            BodegaJar bodegaJar = null;
+
+            if (!bodegaJarOpt.isPresent()) {
+                bodegaJar = new BodegaJar(bodegaService.getBodegaByName(bodegaDTO.getName()), jar, 0);
+            } else {
+                bodegaJar = bodegaJarOpt.get();
+            }
+
+            if (bodegaDTO.getQuantity() == null) {
+                throw new IllegalArgumentException("La cantidad no puede ser nula.");
+            }
+
+            bodegaJar.setQuantity(quantityJar);
+            bodegaJars.add(bodegaJar);
+
+            if (quantityJar < 0) {
+                inventoryService.newItem(jar.getId(), "jar", quantityJar,
+                        "damage", jwtService.getUserIdFromToken(token).intValue(),
+                        "Se reporto un daño en " + jar.getName() + " su inventario ahora es: "
+                                + quantityJar);
+                continue;
+            }
+
+            inventoryService.newItem(jar.getId(), "jar", quantityJar,
+                    "restock", jwtService.getUserIdFromToken(token).intValue(),
+                    "Se actualizo " + jar.getName() + " su inventario ahora es: " + quantityJar);
+
         }
 
-        JarType jarType = new JarType();
-        jarType.setName(name);
-        jarType.setDescription(description);
+        bodegaBatchSave(bodegaJars);
 
-        return jarTypeRepository.save(jarType);
+        return jar;
     }
+
+    public JarDTO changeInventory(JarRequestDTO jarRequestDTO, String token) {
+        Optional<Jar> jarOptional = jarRepository.getByName(jarRequestDTO.getName().trim().toLowerCase());
+
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        Jar jar = jarOptional.get();
+
+        for (BodegaDTO bodegaDTO : jarRequestDTO.getBodega()) {
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
+
+            Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository.findByBodegaAndJar(bodega, jar);
+
+            BodegaJar bodegaJar = null;
+            if (!bodegaJarOpt.isPresent()) {
+                bodegaJar = bodegaJarRepository.save(new BodegaJar(bodega, jar, 0));
+            } else {
+                bodegaJar = bodegaJarOpt.get();
+            }
+
+            if (bodegaDTO.getQuantity() == null) {
+                throw new IllegalArgumentException("La cantidad no puede ser nula.");
+            }
+
+            if (bodegaDTO.getQuantity() < 0) {
+                bodegaJar.setQuantity(bodegaJar.getQuantity() + bodegaDTO.getQuantity());
+                bodegaJarRepository.save(bodegaJar);
+                inventoryService.newItem(jar.getId(), "jar", bodegaJar.getQuantity().intValue(), "damage",
+                        jwtService.getUserIdFromToken(token).intValue(), "Se reporto un daño en " + jar.getName()
+                                + " su inventario ahora es: " + bodegaJar.getQuantity());
+                continue;
+            }
+
+            bodegaJar.setQuantity(bodegaDTO.getQuantity() + bodegaJar.getQuantity());
+            bodegaJarRepository.save(bodegaJar);
+            inventoryService.newItem(jar.getId(), "jar", bodegaJar.getQuantity().intValue(), "restock",
+                    jwtService.getUserIdFromToken(token).intValue(),
+                    "Se actualizo " + jar.getName() + " su inventario ahora es: " + bodegaJar.getQuantity());
+        }
+
+        return new JarDTO(jarRepository.save(jar));
+    }
+
+    public Page<JarDTO> getJarLikeName(String name, Pageable pageable) {
+        Page<Jar> jars = jarRepository.getFromNameLike(name, pageable).get();
+        return jars.map(JarDTO::new);
+    }
+
+    public Page<JarDTO> getPriceRange(PriceSearchRequest priceSearchRequest, Pageable pageable) {
+
+        boolean exactSearch = priceService.verifyPriceSearchRequest(priceSearchRequest);
+
+        switch (priceSearchRequest.getPriceDeal()) {
+            case CIEN:
+                if (exactSearch) {
+                    return jarRepository.findByCienPrice(priceSearchRequest.getExactPrice(), pageable).map(JarDTO::new);
+                } else {
+                    return jarRepository.findByCienPriceBetween(priceSearchRequest.getMinPrice(),
+                            priceSearchRequest.getMaxPrice(), pageable).map(JarDTO::new);
+                }
+            case DOCENA:
+                if (exactSearch) {
+                    return jarRepository.findByDocenaPrice(priceSearchRequest.getExactPrice(), pageable)
+                            .map(JarDTO::new);
+                } else {
+                    return jarRepository.findByDocenaPriceBetween(priceSearchRequest.getMinPrice(),
+                            priceSearchRequest.getMaxPrice(), pageable).map(JarDTO::new);
+                }
+            case UNIDAD:
+                if (exactSearch) {
+                    return jarRepository.findByUnidadPrice(priceSearchRequest.getExactPrice(), pageable)
+                            .map(JarDTO::new);
+                } else {
+                    return jarRepository.findByUnidadPriceBetween(priceSearchRequest.getMinPrice(),
+                            priceSearchRequest.getMaxPrice(), pageable).map(JarDTO::new);
+                }
+            case PACA:
+                if (exactSearch) {
+                    return jarRepository.findByPacaPrice(priceSearchRequest.getExactPrice(), pageable).map(JarDTO::new);
+                } else {
+                    return jarRepository.findByPacaPriceBetween(priceSearchRequest.getMinPrice(),
+                            priceSearchRequest.getMaxPrice(), pageable).map(JarDTO::new);
+                }
+            default:
+                throw new IllegalArgumentException("Tipo de trato de precio no soportado.");
+        }
+
+    }
+
+    public List<CapDTO> getCompatibleCaps(String jarName, Pageable pageable) {
+        Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
+
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        Jar jar = jarOptional.get();
+        List<Cap> compatibilities = jarCapCompatibilityRepository.findByJarIdAndIsCompatibleUnique(jar.getId(), true);
+        return compatibilities.stream().map(cap -> new CapDTO(cap)).collect(Collectors.toList());
+    }
+
+    public List<CapDTO> getIncompatibleCaps(String jarName, Pageable pageable) {
+        Optional<Jar> jarOptional = jarRepository.getByName(jarName.trim());
+
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+
+        Jar jar = jarOptional.get();
+
+        Optional<List<Cap>> diameterCaps = capRepository.getFromCapDiameter(jar.getJarType().getDiameter());
+
+        if (!diameterCaps.isPresent() || diameterCaps.get().isEmpty()) {
+            throw new IllegalArgumentException("No existen tapas con el diámetro del frasco.");
+        }
+
+        List<Cap> allCaps = diameterCaps.get();
+
+        List<Cap> compatibilities = jarCapCompatibilityRepository.findByJarIdAndIsCompatibleList(jar.getId(), true)
+                .get();
+
+        allCaps.removeAll(compatibilities);
+
+        List<Cap> finalIncompatibles = new ArrayList<>(allCaps);
+
+        return new ArrayList<>(finalIncompatibles.stream()
+                .map(CapDTO::new)
+                .collect(Collectors.toMap(
+                        CapDTO::getName, // clave: el nombre
+                        cap -> cap, // valor: el propio objeto
+                        (existing, replacement) -> existing // si hay duplicado, conserva el primero
+                ))
+                .values());
+    }
+
+    public JarDTO addBodega(JarRequestDTO jarRequestDTO) {
+        Optional<Jar> jarOptional = jarRepository.getByName(jarRequestDTO.getName().trim().toLowerCase());
+
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        Jar jar = jarOptional.get();
+
+        for (BodegaDTO bodegaDTO : jarRequestDTO.getBodega()) {
+            Bodega bodega = bodegaService.getBodegaByName(bodegaDTO.getName());
+
+            Optional<BodegaJar> bodegaJarOpt = bodegaJarRepository.findByBodegaAndJar(bodega, jar);
+            if (bodegaJarOpt.isPresent()) {
+                throw new IllegalArgumentException("El frasco ya está asociado a la bodega: " + bodega.getName());
+            }
+            bodegaJarRepository.save(new BodegaJar(bodega, jar, bodegaDTO.getQuantity()));
+        }
+
+        return new JarDTO(jarRepository.save(jar));
+    }
+
+    public JarDTO bodegaTransfer(BodegaMovementDTO request) {
+        Optional<Jar> jarOptional = jarRepository.getByName(request.getItemName().trim().toLowerCase());
+
+        if (!jarOptional.isPresent()) {
+            throw new IllegalArgumentException("No existe un frasco con ese nombre.");
+        }
+        Jar jar = jarOptional.get();
+
+        if (request.getBodegaFrom().equalsIgnoreCase(request.getBodegaTo())) {
+            throw new IllegalArgumentException("La bodega de origen y destino no pueden ser la misma.");
+        }
+
+        Bodega fromBodega = bodegaService.getBodegaByName(request.getBodegaFrom());
+        Bodega toBodega = bodegaService.getBodegaByName(request.getBodegaTo());
+
+        BodegaJar fromBodegaJar = bodegaJarRepository.findByBodegaAndJar(fromBodega, jar)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "El frasco no está asociado a la bodega de origen especificada."));
+
+        BodegaJar toBodegaJar = bodegaJarRepository.findByBodegaAndJar(toBodega, jar)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "El frasco no está asociado a la bodega de destino especificada."));
+
+        if (fromBodegaJar.getQuantity() < request.getQuantity()) {
+            throw new IllegalArgumentException(
+                    "No hay suficiente inventario en la bodega de origen para completar la transferencia.");
+        }
+
+        fromBodegaJar.setQuantity(fromBodegaJar.getQuantity() - request.getQuantity());
+        toBodegaJar.setQuantity(toBodegaJar.getQuantity() + request.getQuantity());
+
+        bodegaJarRepository.save(fromBodegaJar);
+        bodegaJarRepository.save(toBodegaJar);
+
+        return new JarDTO(jarRepository.save(jar));
+    }
+
+    public List<BodegaJar> sortBodegaJar(List<BodegaJar> bodegaJars) {
+        try {
+            return bodegaJars.stream()
+                    .filter(bj -> bj.getBodega() != null && bj.getBodega().getPriority() != null
+                            && bj.getBodega().getPriority() > 0)
+                    .sorted(Comparator.comparing(
+                            bj -> bj.getBodega() != null ? bj.getBodega().getPriority() : null,
+                            Comparator.nullsLast(Comparator.naturalOrder())))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Error al ordenar las bodegas por prioridad: " + e.getMessage());
+        }
+    }
+
+    private void bodegaBatchSave(List<BodegaJar> bodegaJars) {
+        List<BodegaJar> batch = new ArrayList<>();
+        for (BodegaJar bodegaJar : bodegaJars) {
+            batch.add(bodegaJar);
+            if (batch.size() == 50) {
+                bodegaJarRepository.saveAll(batch);
+                batch.clear();
+            }
+        }
+        if (!batch.isEmpty()) {
+            bodegaJarRepository.saveAll(batch);
+        }
+    }
+
 }

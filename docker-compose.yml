@@ -1,0 +1,26 @@
+services:
+  todoenvases-back:
+    build: .
+    container_name: todoenvases-back
+    restart: unless-stopped
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/todoenvases?rewriteBatchedStatements=true
+      - SPRING_DATASOURCE_USERNAME=bdserver
+      - SPRING_DATASOURCE_PASSWORD=asl121mde3v-@
+      - JAVA_OPTS=-Xms256m -Xmx512m
+    networks:
+      - db_default
+      - proxy-public
+    mem_limit: 800m      # Límite máximo (Hard limit)
+    mem_reservation: 400m # Reserva garantizada (Soft limit)
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+networks:
+  db_default:
+    external: true
+  proxy-public:
+    external: true

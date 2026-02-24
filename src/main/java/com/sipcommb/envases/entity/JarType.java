@@ -1,18 +1,35 @@
 package com.sipcommb.envases.entity;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.List;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "jar_types")
 public class JarType {
+
+    /*
+
+    CREATE TABLE jar_types (
+    diameter TEXT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    );
+      
+    */
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String diameter;
     
     @NotBlank
     @Size(max = 100)
@@ -27,9 +44,15 @@ public class JarType {
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "is_active")
+    private Boolean isActive = true;
     
     @OneToMany(mappedBy = "jarType")
     private List<Jar> jars;
+
+    @OneToMany(mappedBy = "jarType")
+    private List<Cap> caps;
     
     // Constructors
     public JarType() {}
@@ -51,8 +74,8 @@ public class JarType {
     }
     
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getDiameter() { return diameter; }
+    public void setDiameter(String diameter) { this.diameter = diameter; }
     
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -68,4 +91,10 @@ public class JarType {
     
     public List<Jar> getJars() { return jars; }
     public void setJars(List<Jar> jars) { this.jars = jars; }
+
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public List<Cap> getCaps() { return caps; }
+    public void setCaps(List<Cap> caps) { this.caps = caps; }
 }

@@ -1,19 +1,31 @@
-version: '3.8'
-
 services:
   mariadb:
     image: mariadb:latest
-    container_name: mariadb_envases
+    container_name: mariadb
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: envases_inventory
-      MYSQL_USER: test_user
-      MYSQL_PASSWORD: pass
+      MYSQL_DATABASE: todoenvases
+      MYSQL_USER: bdserver
+      MYSQL_PASSWORD: asl121mde3v-@
     ports:
       - "3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
     restart: always
+    mem_limit: 1000m      # Límite máximo (Hard limit)
+    mem_reservation: 400m # Reserva garantizada (Soft limit)
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5" # Guardamos un poco más (50MB total) por seguridad.
+    networks:
+      - db_default
+
+networks:
+  db_default:
+    external: true
 
 volumes:
   mariadb_data:
+

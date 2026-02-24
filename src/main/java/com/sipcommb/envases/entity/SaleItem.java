@@ -1,9 +1,24 @@
 package com.sipcommb.envases.entity;
 
-import javax.persistence.*;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Min;
-import java.math.BigDecimal;
 
 @Entity
 @Table(name = "sale_items")
@@ -12,57 +27,77 @@ public class SaleItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sale_id", nullable = false)
     private Sale sale;
-    
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "item_type", nullable = false)
+    private ItemType itemType;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "jar_id")
     private Jar jar;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cap_id")
-    private Cap cap;
-    
+    @JoinColumn(name = "cap_color_id")
+    private CapColor capColor;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quimico_id")
+    private Quimicos quimico;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "extracto_id")
+    private Extractos extracto;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "combo_id")
+    private Combo combo;
+
     @Min(1)
     @Column(nullable = false)
     private Integer quantity;
-    
+
     @DecimalMin("0.0")
     @Column(name = "unit_price", precision = 10, scale = 2, nullable = false)
     private BigDecimal unitPrice;
-    
+
     @DecimalMin("0.0")
-    @Column(name = "total_price", precision = 10, scale = 2, nullable = false)
-    private BigDecimal totalPrice;
+    @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
+    private BigDecimal subtotal;
+
+    //private String color;
+
+    //private String comboCapQuantity;
+
+    @OneToMany(mappedBy = "saleItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ComboItemOrder> comboItemOrder = new ArrayList<>();
     
     // Constructors
     public SaleItem() {}
-    
-    public SaleItem(Sale sale, Jar jar, Integer quantity, BigDecimal unitPrice) {
+
+    public SaleItem(Sale sale, Jar jar, Integer quantity, Combo combo, BigDecimal unitPrice) {
         this.sale = sale;
         this.jar = jar;
         this.quantity = quantity;
+        this.combo = combo;
         this.unitPrice = unitPrice;
-        this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
+        
     }
     
-    public SaleItem(Sale sale, Cap cap, Integer quantity, BigDecimal unitPrice) {
+    public SaleItem(Sale sale, CapColor capColor, Integer quantity, BigDecimal unitPrice, Quimicos quimico, Extractos extracto) {
         this.sale = sale;
-        this.cap = cap;
+        this.capColor = capColor;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
-        this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
+        this.quimico = quimico;
+        this.extracto = extracto;
+    
     }
     
-    @PrePersist
-    @PreUpdate
-    private void calculateTotalPrice() {
-        if (unitPrice != null && quantity != null) {
-            this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
-        }
-    }
+    
     
     // Getters and Setters
     public Long getId() { return id; }
@@ -73,31 +108,49 @@ public class SaleItem {
     
     public Jar getJar() { return jar; }
     public void setJar(Jar jar) { this.jar = jar; }
-    
-    public Cap getCap() { return cap; }
-    public void setCap(Cap cap) { this.cap = cap; }
-    
+
+    public CapColor getCapColor() { return capColor; }
+    public void setCapColor(CapColor capColor) { this.capColor = capColor; }
+
     public Integer getQuantity() { return quantity; }
-    public void setQuantity(Integer quantity) { 
-        this.quantity = quantity;
-        calculateTotalPrice();
-    }
-    
+
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+
     public BigDecimal getUnitPrice() { return unitPrice; }
-    public void setUnitPrice(BigDecimal unitPrice) { 
-        this.unitPrice = unitPrice;
-        calculateTotalPrice();
+    public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice;}
+
+    public BigDecimal getSubtotal() { return subtotal; }
+    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
+
+    public ItemType getItemType() { return itemType; }
+    public void setItemType(ItemType itemType) { this.itemType = itemType;}
+
+    public Quimicos getQuimico() { return quimico; }
+    public void setQuimico(Quimicos quimico) {
+        this.quimico = quimico;
     }
-    
-    public BigDecimal getTotalPrice() { return totalPrice; }
-    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
-    
-    // Helper methods
-    public String getItemType() {
-        return jar != null ? "JAR" : "CAP";
+
+    public Extractos getExtracto() { return extracto; }
+    public void setExtracto(Extractos extracto) {
+        this.extracto = extracto;
     }
-    
-    public String getItemName() {
-        return jar != null ? jar.getName() : (cap != null ? cap.getName() : "Unknown");
+
+    public Combo getCombo() { return combo; }
+    public void setCombo(Combo combo) { this.combo = combo; }
+
+    /* 
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
+
+    public String getComboCapQuantity() { return comboCapQuantity; }
+    public void setComboCapQuantity(String comboCapQuantity) { this.comboCapQuantity = comboCapQuantity; }
+    */
+
+    public List<ComboItemOrder> getComboItemOrder() {
+        return comboItemOrder;
+    }
+
+    public void setComboItemOrder(List<ComboItemOrder> comboItemOrder) {
+        this.comboItemOrder = comboItemOrder;
     }
 }

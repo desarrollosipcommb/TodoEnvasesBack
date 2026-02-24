@@ -1,10 +1,19 @@
 package com.sipcommb.envases.entity;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.Set;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "roles")
@@ -22,8 +31,9 @@ public class Role {
     @Column(columnDefinition = "TEXT")
     private String description;
     
-    @Column(columnDefinition = "JSON")
-    private String permissions;
+    @Convert(converter = com.sipcommb.envases.converter.StringSetToJsonConverter.class)
+    @Column(name = "permissions", columnDefinition = "json")
+    private Set<String> permissions; // Store permissions as a set of strings
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -37,7 +47,7 @@ public class Role {
     // Constructors
     public Role() {}
     
-    public Role(String name, String description, String permissions) {
+    public Role(String name, String description, Set<String> permissions) {
         this.name = name;
         this.description = description;
         this.permissions = permissions;
@@ -64,8 +74,8 @@ public class Role {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
     
-    public String getPermissions() { return permissions; }
-    public void setPermissions(String permissions) { this.permissions = permissions; }
+    public Set<String> getPermissions() { return permissions; }
+    public void setPermissions(Set<String> permissions) { this.permissions = permissions; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

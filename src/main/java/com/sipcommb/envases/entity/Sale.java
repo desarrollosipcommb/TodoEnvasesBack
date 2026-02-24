@@ -1,200 +1,148 @@
 package com.sipcommb.envases.entity;
 
-import javax.persistence.*;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+import javax.persistence.Table;
+import javax.validation.constraints.DecimalMin;
+
+
 @Entity
 @Table(name = "sales")
 public class Sale {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @NotBlank
-    @Size(max = 50)
-    @Column(name = "sale_number", unique = true, nullable = false)
-    private String saleNumber;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User seller;
-    
-    @Size(max = 100)
-    @Column(name = "customer_name")
-    private String customerName;
-    
-    @Size(max = 100)
-    @Column(name = "customer_email")
-    private String customerEmail;
-    
-    @Size(max = 20)
-    @Column(name = "customer_phone")
-    private String customerPhone;
-    
-    @DecimalMin("0.0")
-    @Column(name = "subtotal", precision = 10, scale = 2, nullable = false)
-    private BigDecimal subtotal = BigDecimal.ZERO;
-    
-    @DecimalMin("0.0")
-    @Column(name = "tax_amount", precision = 10, scale = 2)
-    private BigDecimal taxAmount = BigDecimal.ZERO;
-    
-    @DecimalMin("0.0")
-    @Column(name = "discount_amount", precision = 10, scale = 2)
-    private BigDecimal discountAmount = BigDecimal.ZERO;
-    
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id", nullable = false) // Relación con la entidad Client
+    private Client client;
+
     @DecimalMin("0.0")
     @Column(name = "total_amount", precision = 10, scale = 2, nullable = false)
-    private BigDecimal totalAmount = BigDecimal.ZERO;
-    
+    private BigDecimal totalAmount;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_method")
+    @Column(name = "payment_method", nullable = false)
     private PaymentMethod paymentMethod;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(name = "sale_status", nullable = false)
-    private SaleStatus saleStatus = SaleStatus.PENDING;
-    
+
     @Column(columnDefinition = "TEXT")
     private String notes;
-    
+
     @Column(name = "sale_date", nullable = false)
-    private LocalDateTime saleDate;
-    
-    @Column(name = "created_at")
+    private LocalDate saleDate;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-    
-    @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<SaleItem> saleItems = new ArrayList<>();
-    
+
+    @Enumerated(EnumType.STRING)
+    private SaleType type;
+
+    @Column(name = "is_active")
+    private boolean isActive = true;
+
+    @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BodegaSale> bodegaSales = new ArrayList<>();
+
     // Enums
     public enum PaymentMethod {
-        CASH, CREDIT_CARD, DEBIT_CARD, BANK_TRANSFER, CHECK
+        CASH, CARD, TRANSFER, OTHER
     }
-    
-    public enum SaleStatus {
-        PENDING, COMPLETED, CANCELLED, REFUNDED
-    }
-    
+
     // Constructors
     public Sale() {}
-    
-    public Sale(String saleNumber, User seller, String customerName) {
-        this.saleNumber = saleNumber;
+
+    public Sale(User seller, Client client, BigDecimal totalAmount, PaymentMethod paymentMethod) {
         this.seller = seller;
-        this.customerName = customerName;
-        this.saleDate = LocalDateTime.now();
+        this.client = client;
+        this.totalAmount = totalAmount;
+        this.paymentMethod = paymentMethod;
+        this.saleDate = LocalDate.now();
+        this.type = SaleType.DOMICILIO;
     }
-    
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (saleDate == null) {
-            saleDate = LocalDateTime.now();
+            saleDate = LocalDate.now();
         }
     }
-    
+
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-        calculateTotals();
     }
-    
-    // Business logic methods
-    public void addSaleItem(SaleItem saleItem) {
-        saleItems.add(saleItem);
-        saleItem.setSale(this);
-        calculateTotals();
-    }
-    
-    public void removeSaleItem(SaleItem saleItem) {
-        saleItems.remove(saleItem);
-        saleItem.setSale(null);
-        calculateTotals();
-    }
-    
-    public void calculateTotals() {
-        subtotal = saleItems.stream()
-            .map(SaleItem::getTotalPrice)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        totalAmount = subtotal
-            .add(taxAmount != null ? taxAmount : BigDecimal.ZERO)
-            .subtract(discountAmount != null ? discountAmount : BigDecimal.ZERO);
-    }
-    
-    public int getTotalItems() {
-        return saleItems.stream()
-            .mapToInt(SaleItem::getQuantity)
-            .sum();
-    }
-    
+
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    
-    public String getSaleNumber() { return saleNumber; }
-    public void setSaleNumber(String saleNumber) { this.saleNumber = saleNumber; }
-    
+
     public User getSeller() { return seller; }
     public void setSeller(User seller) { this.seller = seller; }
-    
-    public String getCustomerName() { return customerName; }
-    public void setCustomerName(String customerName) { this.customerName = customerName; }
-    
-    public String getCustomerEmail() { return customerEmail; }
-    public void setCustomerEmail(String customerEmail) { this.customerEmail = customerEmail; }
-    
-    public String getCustomerPhone() { return customerPhone; }
-    public void setCustomerPhone(String customerPhone) { this.customerPhone = customerPhone; }
-    
-    public BigDecimal getSubtotal() { return subtotal; }
-    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
-    
-    public BigDecimal getTaxAmount() { return taxAmount; }
-    public void setTaxAmount(BigDecimal taxAmount) { 
-        this.taxAmount = taxAmount;
-        calculateTotals();
-    }
-    
-    public BigDecimal getDiscountAmount() { return discountAmount; }
-    public void setDiscountAmount(BigDecimal discountAmount) { 
-        this.discountAmount = discountAmount;
-        calculateTotals();
-    }
-    
+
+    public Client getClient() { return client; }
+    public void setClient(Client client) { this.client = client; }
+
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
-    
+
     public PaymentMethod getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }
-    
-    public SaleStatus getSaleStatus() { return saleStatus; }
-    public void setSaleStatus(SaleStatus saleStatus) { this.saleStatus = saleStatus; }
-    
+
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
-    
-    public LocalDateTime getSaleDate() { return saleDate; }
-    public void setSaleDate(LocalDateTime saleDate) { this.saleDate = saleDate; }
-    
+
+    public LocalDate getSaleDate() { return saleDate; }
+    public void setSaleDate(LocalDate saleDate) { this.saleDate = saleDate; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    
+
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public SaleType getType() { return type; }
+    public void setType(SaleType type) { this.type = type; }
+
+    public void addPrice(BigDecimal price) {
+        if (this.totalAmount == null) {
+            this.totalAmount = BigDecimal.ZERO;
+        }
+        this.totalAmount = this.totalAmount.add(price);
+    }
+
+    public boolean isActive() { return isActive; }
+    public void setActive(boolean isActive) { this.isActive = isActive; }
+
+    public List<BodegaSale> getBodegaSales() { return bodegaSales; }
+    public void setBodegaSales(List<BodegaSale> bodegaSales) { this.bodegaSales = bodegaSales; }
     
-    public List<SaleItem> getSaleItems() { return saleItems; }
-    public void setSaleItems(List<SaleItem> saleItems) { this.saleItems = saleItems; }
+    
 }
